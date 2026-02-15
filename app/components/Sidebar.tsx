@@ -12,7 +12,13 @@ import {
   Menu,
   X,
   PieChart,
-  Activity
+  Activity,
+  FlaskConical,
+  Cpu,
+  LineChart,
+  Play,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { useState } from "react";
 
@@ -21,6 +27,7 @@ interface NavItem {
   href: string;
   icon: React.ReactNode;
   badge?: string;
+  children?: NavItem[];
 }
 
 const navItems: NavItem[] = [
@@ -53,6 +60,29 @@ const navItems: NavItem[] = [
     icon: <Calendar className="w-5 h-5" />,
   },
   {
+    label: "Trading Lab",
+    href: "/trading-lab",
+    icon: <FlaskConical className="w-5 h-5" />,
+    badge: "NEW",
+    children: [
+      {
+        label: "Strategy Backtest",
+        href: "/trading-lab/backtest",
+        icon: <LineChart className="w-4 h-4" />,
+      },
+      {
+        label: "Live Scanner",
+        href: "/trading-lab/scanner",
+        icon: <Cpu className="w-4 h-4" />,
+      },
+      {
+        label: "Algo Execute",
+        href: "/trading-lab/execute",
+        icon: <Play className="w-4 h-4" />,
+      },
+    ],
+  },
+  {
     label: "Analytics",
     href: "/analytics",
     icon: <BarChart3 className="w-5 h-5" />,
@@ -67,10 +97,79 @@ const navItems: NavItem[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["/trading-lab"]);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
+  };
+
+  const toggleExpand = (href: string) => {
+    setExpandedItems(prev => 
+      prev.includes(href) 
+        ? prev.filter(h => h !== href)
+        : [...prev, href]
+    );
+  };
+
+  const renderNavItem = (item: NavItem, depth = 0) => {
+    const hasChildren = item.children && item.children.length > 0;
+    const isExpanded = expandedItems.includes(item.href);
+    const active = isActive(item.href);
+
+    return (
+      <div key={item.href}>
+        <div className="flex items-center">
+          <Link
+            href={item.href}
+            onClick={() => {
+              if (hasChildren) toggleExpand(item.href);
+              setIsMobileMenuOpen(false);
+            }}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors flex-1 ${
+              active
+                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                : "text-slate-400 hover:text-white hover:bg-slate-800"
+            } ${depth > 0 ? "ml-4 text-sm" : ""}`}
+          >
+            {item.icon}
+            <span className="flex-1">{item.label}</span>
+            {item.badge && (
+              <span className={`px-2 py-0.5 text-xs rounded-full ${
+                item.badge === "LIVE" 
+                  ? "bg-red-500/20 text-red-400 animate-pulse" 
+                  : item.badge === "NEW"
+                  ? "bg-purple-500/20 text-purple-400"
+                  : "bg-slate-800 text-slate-400"
+              }`}>
+                {item.badge}
+              </span>
+            )}
+            {hasChildren && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleExpand(item.href);
+                }}
+                className="p-1 hover:bg-slate-700 rounded"
+              >
+                {isExpanded ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </button>
+            )}
+          </Link>
+        </div>
+        {hasChildren && isExpanded && (
+          <div className="mt-1 space-y-1">
+            {item.children!.map(child => renderNavItem(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -123,68 +222,22 @@ export default function Sidebar() {
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">
             Main
           </div>
-          {navItems.slice(0, 5).map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                isActive(item.href)
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800"
-              }`}
-            >
-              {item.icon}
-              <span className="flex-1">{item.label}</span>
-              {item.badge && (
-                <span className={`px-2 py-0.5 text-xs rounded-full ${
-                  item.badge === "LIVE" 
-                    ? "bg-red-500/20 text-red-400 animate-pulse" 
-                    : "bg-slate-800 text-slate-400"
-                }`}>
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          ))}
+          {navItems.slice(0, 5).map(item => renderNavItem(item))}
+
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mt-6 mb-2">
+            Algo Trading
+          </div>
+          {renderNavItem(navItems[5])}
 
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mt-6 mb-2">
             Analysis
           </div>
-          {navItems.slice(5, 6).map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                isActive(item.href)
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800"
-              }`}
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </Link>
-          ))}
+          {renderNavItem(navItems[6])}
 
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mt-6 mb-2">
             System
           </div>
-          {navItems.slice(6).map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                isActive(item.href)
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800"
-              }`}
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </Link>
-          ))}
+          {renderNavItem(navItems[7])}
         </nav>
 
         {/* Footer */}
