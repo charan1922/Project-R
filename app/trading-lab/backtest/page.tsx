@@ -8,24 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { 
   LineChart, 
   Play, 
-  Calendar, 
   TrendingUp, 
   TrendingDown,
   Target,
-  Percent,
-  Clock,
+  AlertTriangle,
   ArrowUpRight,
   ArrowDownRight,
-  Loader2
+  Loader2,
+  Database,
+  Info
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 interface BacktestResult {
   symbol: string;
@@ -35,94 +27,35 @@ interface BacktestResult {
   exitPrice: number;
   pnl: number;
   pnlPercent: number;
-  oiSignal: "PUT_OI_UP" | "CALL_OI_UP";
-  breakoutType: "RESISTANCE" | "SUPPORT";
+  signal: "BUY" | "SELL";
   status: "WIN" | "LOSS";
 }
-
-interface BacktestStats {
-  totalTrades: number;
-  wins: number;
-  losses: number;
-  winRate: number;
-  avgWin: number;
-  avgLoss: number;
-  profitFactor: number;
-  totalReturn: number;
-  maxDrawdown: number;
-}
-
-// Mock backtest data generator
-const generateMockBacktestResults = (symbol: string, days: number): BacktestResult[] => {
-  const results: BacktestResult[] = [];
-  const now = new Date();
-  
-  for (let i = 0; i < Math.min(days, 20); i++) {
-    const isWin = Math.random() > 0.4; // 60% win rate
-    const entryPrice = 100 + Math.random() * 500;
-    const changePercent = isWin 
-      ? 3 + Math.random() * 8 
-      : -(2 + Math.random() * 5);
-    const exitPrice = entryPrice * (1 + changePercent / 100);
-    
-    results.push({
-      symbol: symbol || ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"][Math.floor(Math.random() * 5)],
-      entryDate: new Date(now.getTime() - (days - i) * 86400000).toISOString().split('T')[0],
-      exitDate: new Date(now.getTime() - (days - i - 1) * 86400000).toISOString().split('T')[0],
-      entryPrice: parseFloat(entryPrice.toFixed(2)),
-      exitPrice: parseFloat(exitPrice.toFixed(2)),
-      pnl: parseFloat((exitPrice - entryPrice).toFixed(2)),
-      pnlPercent: parseFloat(changePercent.toFixed(2)),
-      oiSignal: Math.random() > 0.5 ? "PUT_OI_UP" : "CALL_OI_UP",
-      breakoutType: Math.random() > 0.5 ? "RESISTANCE" : "SUPPORT",
-      status: isWin ? "WIN" : "LOSS",
-    });
-  }
-  
-  return results.sort((a, b) => new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime());
-};
-
-const calculateStats = (results: BacktestResult[]): BacktestStats => {
-  const wins = results.filter(r => r.status === "WIN");
-  const losses = results.filter(r => r.status === "LOSS");
-  
-  const avgWin = wins.length > 0 ? wins.reduce((sum, r) => sum + r.pnlPercent, 0) / wins.length : 0;
-  const avgLoss = losses.length > 0 ? losses.reduce((sum, r) => sum + Math.abs(r.pnlPercent), 0) / losses.length : 0;
-  
-  const totalProfit = wins.reduce((sum, r) => sum + r.pnl, 0);
-  const totalLoss = losses.reduce((sum, r) => sum + Math.abs(r.pnl), 0);
-  
-  return {
-    totalTrades: results.length,
-    wins: wins.length,
-    losses: losses.length,
-    winRate: results.length > 0 ? (wins.length / results.length) * 100 : 0,
-    avgWin: parseFloat(avgWin.toFixed(2)),
-    avgLoss: parseFloat(avgLoss.toFixed(2)),
-    profitFactor: totalLoss > 0 ? parseFloat((totalProfit / totalLoss).toFixed(2)) : totalProfit > 0 ? 999 : 0,
-    totalReturn: parseFloat(results.reduce((sum, r) => sum + r.pnlPercent, 0).toFixed(2)),
-    maxDrawdown: parseFloat((Math.random() * 15).toFixed(2)),
-  };
-};
 
 export default function BacktestPage() {
   const [symbol, setSymbol] = useState("RELIANCE");
   const [days, setDays] = useState("30");
-  const [oiThreshold, setOiThreshold] = useState("10");
-  const [breakoutThreshold, setBreakoutThreshold] = useState("2");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<BacktestResult[] | null>(null);
-  const [stats, setStats] = useState<BacktestStats | null>(null);
+  const [stats, setStats] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const runBacktest = async () => {
     setLoading(true);
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    setError(null);
     
-    const mockResults = generateMockBacktestResults(symbol, parseInt(days));
-    setResults(mockResults);
-    setStats(calculateStats(mockResults));
-    setLoading(false);
+    try {
+      // Call the real backtest API
+      const res = await fetch(`/api/backtest?symbol=${symbol}&days=${days}`);
+      if (!res.ok) throw new Error("Backtest failed");
+      
+      const data = await res.json();
+      setResults(data.trades);
+      setStats(data.stats);
+    } catch (err) {
+      setError("Backtest requires historical OI data API. This feature needs integration with historical data provider.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -138,6 +71,25 @@ export default function BacktestPage() {
         </p>
       </div>
 
+      {/* Info Card */}
+      <Card className="bg-amber-500/10 border-amber-500/20">
+        <CardContent className="p-4 flex items-start gap-3">
+          <Info className="w-5 h-5 text-amber-400 mt-0.5" />
+          <div>
+            <h4 className="font-semibold text-amber-400 mb-1">Historical Data Required</h4>
+            <p className="text-sm text-slate-400">
+              Backtesting requires historical Open Interest data. To implement this feature, 
+              you need access to:
+            </p>
+            <ul className="mt-2 text-sm text-slate-400 list-disc list-inside">
+              <li>Historical option chain data (OI by strike)</li>
+              <li>Daily price and volume history</li>
+              <li>Provider: TrueData, GlobalDataFeed, or NSE Historical</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Parameters */}
       <Card className="bg-slate-900 border-slate-800">
         <CardHeader>
@@ -147,7 +99,7 @@ export default function BacktestPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm text-slate-400 mb-2 block">Stock Symbol</label>
               <Input
@@ -166,55 +118,36 @@ export default function BacktestPage() {
                 className="bg-slate-800 border-slate-700 text-white"
               />
             </div>
-            <div>
-              <label className="text-sm text-slate-400 mb-2 block">OI Change Threshold (%)</label>
-              <Input
-                type="number"
-                value={oiThreshold}
-                onChange={(e) => setOiThreshold(e.target.value)}
-                className="bg-slate-800 border-slate-700 text-white"
-              />
+            <div className="flex items-end">
+              <Button 
+                onClick={runBacktest} 
+                disabled={loading}
+                className="bg-blue-500 hover:bg-blue-600 w-full"
+              >
+                {loading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Running...</>
+                ) : (
+                  <><Play className="w-4 h-4 mr-2" /> Run Backtest</>
+                )}
+              </Button>
             </div>
-            <div>
-              <label className="text-sm text-slate-400 mb-2 block">Breakout Threshold (%)</label>
-              <Input
-                type="number"
-                value={breakoutThreshold}
-                onChange={(e) => setBreakoutThreshold(e.target.value)}
-                className="bg-slate-800 border-slate-700 text-white"
-              />
-            </div>
-          </div>
-
-          <div className="mt-6 flex items-center gap-4">
-            <Button 
-              onClick={runBacktest} 
-              disabled={loading}
-              className="bg-blue-500 hover:bg-blue-600"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Running Backtest...
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  Run Backtest
-                </>
-              )}
-            </Button>
-            <span className="text-sm text-slate-500">
-              Simulates {days} days of trading with OI confirmation
-            </span>
           </div>
         </CardContent>
       </Card>
 
+      {/* Error */}
+      {error && (
+        <Card className="bg-red-500/10 border-red-500/30">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+            <p className="text-red-400">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Results */}
       {stats && (
         <>
-          {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="bg-slate-900 border-slate-800">
               <CardContent className="p-4">
@@ -248,87 +181,62 @@ export default function BacktestPage() {
             </Card>
           </div>
 
-          {/* Detailed Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-slate-900 border-slate-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-emerald-400 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" />
-                  Winning Trades
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">{stats.wins}</div>
-                <div className="text-sm text-slate-400">Avg Win: +{stats.avgWin}%</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-slate-900 border-slate-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-red-400 flex items-center gap-2">
-                  <TrendingDown className="w-4 h-4" />
-                  Losing Trades
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">{stats.losses}</div>
-                <div className="text-sm text-slate-400">Avg Loss: -{stats.avgLoss}%</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Trades Table */}
           <Card className="bg-slate-900 border-slate-800">
             <CardHeader>
               <CardTitle className="text-white">Trade History</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-slate-800">
-                      <TableHead className="text-slate-400">Date</TableHead>
-                      <TableHead className="text-slate-400">Symbol</TableHead>
-                      <TableHead className="text-slate-400">Signal</TableHead>
-                      <TableHead className="text-slate-400">Entry</TableHead>
-                      <TableHead className="text-slate-400">Exit</TableHead>
-                      <TableHead className="text-slate-400">P&L</TableHead>
-                      <TableHead className="text-slate-400">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left border-b border-slate-800">
+                      <th className="pb-3 text-slate-400">Date</th>
+                      <th className="pb-3 text-slate-400">Symbol</th>
+                      <th className="pb-3 text-slate-400">Signal</th>
+                      <th className="pb-3 text-slate-400">Entry</th>
+                      <th className="pb-3 text-slate-400">Exit</th>
+                      <th className="pb-3 text-slate-400">P&L</th>
+                      <th className="pb-3 text-slate-400">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {results?.map((trade, index) => (
-                      <TableRow key={index} className="border-slate-800">
-                        <TableCell className="text-slate-300">{trade.entryDate}</TableCell>
-                        <TableCell className="font-semibold text-white">{trade.symbol}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <Badge className={trade.oiSignal === "PUT_OI_UP" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}>
-                              {trade.oiSignal === "PUT_OI_UP" ? "Put OI ↑" : "Call OI ↑"}
-                            </Badge>
-                            <span className="text-xs text-slate-500">{trade.breakoutType}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-slate-300">₹{trade.entryPrice}</TableCell>
-                        <TableCell className="text-slate-300">₹{trade.exitPrice}</TableCell>
-                        <TableCell className={trade.pnl >= 0 ? "text-emerald-400" : "text-red-400"}>
-                          <div className="flex items-center gap-1">
-                            {trade.pnl >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                            {trade.pnlPercent}%
-                          </div>
-                        </TableCell>
-                        <TableCell>
+                      <tr key={index} className="border-b border-slate-800">
+                        <td className="py-3 text-slate-300">{trade.entryDate}</td>
+                        <td className="font-semibold text-white">{trade.symbol}</td>
+                        <td>
+                          <Badge className={trade.signal === "BUY" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}>
+                            {trade.signal}
+                          </Badge>
+                        </td>
+                        <td className="text-slate-300">₹{trade.entryPrice}</td>
+                        <td className="text-slate-300">₹{trade.exitPrice}</td>
+                        <td className={trade.pnl >= 0 ? "text-emerald-400" : "text-red-400"}>
+                          {trade.pnl >= 0 ? <ArrowUpRight className="w-4 h-4 inline" /> : <ArrowDownRight className="w-4 h-4 inline" />}
+                          {trade.pnlPercent}%
+                        </td>
+                        <td>
                           <Badge className={trade.status === "WIN" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}>
                             {trade.status}
                           </Badge>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
+                  </tbody>
+                </table>
               </div>
             </CardContent>
           </Card>
         </>
+      )}
+
+      {!stats && !error && !loading && (
+        <Card className="bg-slate-900 border-slate-800">
+          <CardContent className="p-12 text-center">
+            <Database className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+            <p className="text-slate-400">Configure parameters and run backtest to see results</p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

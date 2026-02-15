@@ -15,7 +15,8 @@ import {
   Target,
   AlertTriangle,
   CheckCircle2,
-  Clock
+  Clock,
+  Loader2
 } from "lucide-react";
 
 interface ScanResult {
@@ -24,87 +25,48 @@ interface ScanResult {
   price: number;
   change: number;
   changePercent: number;
+  open: number;
+  high: number;
+  low: number;
   volume: number;
-  volumeAvg: number;
-  putOiChange: number;
-  callOiChange: number;
+  totalCallOI: number;
+  totalPutOI: number;
+  putCallRatio: number;
   signal: "BUY" | "SELL" | "NEUTRAL";
   strength: "STRONG" | "MODERATE" | "WEAK";
-  breakoutLevel: number;
   timestamp: string;
 }
-
-// Mock scanner data
-const generateMockScanResults = (): ScanResult[] => {
-  const stocks = [
-    { symbol: "RELIANCE", name: "Reliance Industries" },
-    { symbol: "TCS", name: "Tata Consultancy" },
-    { symbol: "INFY", name: "Infosys" },
-    { symbol: "HDFCBANK", name: "HDFC Bank" },
-    { symbol: "ICICIBANK", name: "ICICI Bank" },
-    { symbol: "SBIN", name: "State Bank of India" },
-    { symbol: "LT", name: "Larsen & Toubro" },
-    { symbol: "ADANIENT", name: "Adani Enterprises" },
-    { symbol: "AXISBANK", name: "Axis Bank" },
-    { symbol: "MARUTI", name: "Maruti Suzuki" },
-  ];
-  
-  return stocks.map(stock => {
-    const changePercent = (Math.random() - 0.4) * 8; // -3.2% to +4.8%
-    const putOiChange = Math.random() * 25;
-    const callOiChange = Math.random() * 25;
-    
-    let signal: "BUY" | "SELL" | "NEUTRAL" = "NEUTRAL";
-    let strength: "STRONG" | "MODERATE" | "WEAK" = "MODERATE";
-    
-    if (changePercent > 2 && putOiChange > 15) {
-      signal = "BUY";
-      strength = putOiChange > 20 ? "STRONG" : "MODERATE";
-    } else if (changePercent < -2 && callOiChange > 15) {
-      signal = "SELL";
-      strength = callOiChange > 20 ? "STRONG" : "MODERATE";
-    }
-    
-    return {
-      symbol: stock.symbol,
-      name: stock.name,
-      price: 1000 + Math.random() * 3000,
-      change: changePercent * 10,
-      changePercent: parseFloat(changePercent.toFixed(2)),
-      volume: Math.floor(1000000 + Math.random() * 5000000),
-      volumeAvg: Math.floor(2000000 + Math.random() * 3000000),
-      putOiChange: parseFloat(putOiChange.toFixed(1)),
-      callOiChange: parseFloat(callOiChange.toFixed(1)),
-      signal,
-      strength,
-      breakoutLevel: parseFloat((Math.random() * 5 + 2).toFixed(1)),
-      timestamp: new Date().toLocaleTimeString(),
-    };
-  }).sort((a, b) => {
-    // Sort by signal strength
-    const signalOrder = { BUY: 0, SELL: 1, NEUTRAL: 2 };
-    return signalOrder[a.signal] - signalOrder[b.signal];
-  });
-};
 
 export default function ScannerPage() {
   const [results, setResults] = useState<ScanResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [alertsEnabled, setAlertsEnabled] = useState(false);
+  const [lastScan, setLastScan] = useState<string>("");
 
   const scan = async () => {
-    setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setResults(generateMockScanResults());
-    setLoading(false);
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch("/api/oi-data");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setResults(data.stocks);
+      setLastScan(data.scannedAt);
+    } catch (err) {
+      setError("Failed to fetch live data. Please try again.");
+      console.error("Scan error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     scan();
     
     if (autoRefresh) {
-      const interval = setInterval(scan, 30000); // Refresh every 30 seconds
+      const interval = setInterval(scan, 30000);
       return () => clearInterval(interval);
     }
   }, [autoRefresh]);
@@ -123,7 +85,7 @@ export default function ScannerPage() {
             Live Scanner
           </h1>
           <p className="text-slate-400">
-            Real-time detection of OI + Breakout opportunities
+            Real-time OI + Breakout detection using live NSE data
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -144,11 +106,21 @@ export default function ScannerPage() {
             Auto {autoRefresh ? "ON" : "OFF"}
           </Button>
           <Button onClick={scan} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600">
-            {loading ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
+            {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
             Scan Now
           </Button>
         </div>
       </div>
+
+      {/* Error Alert */}
+      {error && (
+        <Card className="bg-red-500/10 border-red-500/30">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+            <p className="text-red-400">{error}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Signal Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -187,28 +159,33 @@ export default function ScannerPage() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm text-slate-400 flex items-center gap-2">
             <Target className="w-4 h-4" />
-            Scanner Criteria
+            Real-Time Scanner Criteria (Live NSE Data)
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4 text-sm">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span className="text-slate-300">Price change &gt; 2%</span>
+              <span className="text-slate-300">Price change &gt; 1.5%</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span className="text-slate-300">OI Change &gt; 15%</span>
+              <span className="text-slate-300">Put/Call ratio analysis</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span className="text-slate-300">Volume &gt; 1.5x average</span>
+              <span className="text-slate-300">OI data from option chain</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span className="text-slate-300">Breaks key level</span>
+              <span className="text-slate-300">Live volume tracking</span>
             </div>
           </div>
+          {lastScan && (
+            <p className="mt-3 text-xs text-slate-500">
+              Last updated: {new Date(lastScan).toLocaleString()}
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -217,8 +194,14 @@ export default function ScannerPage() {
         {loading && results.length === 0 ? (
           <Card className="bg-slate-900 border-slate-800">
             <CardContent className="p-12 text-center">
-              <RefreshCw className="w-12 h-12 text-slate-600 animate-spin mx-auto mb-4" />
-              <p className="text-slate-400">Scanning market for OI + Breakout signals...</p>
+              <Loader2 className="w-12 h-12 text-slate-600 animate-spin mx-auto mb-4" />
+              <p className="text-slate-400">Fetching live NSE data...</p>
+            </CardContent>
+          </Card>
+        ) : results.length === 0 ? (
+          <Card className="bg-slate-900 border-slate-800">
+            <CardContent className="p-12 text-center">
+              <p className="text-slate-400">No data available. Please try scanning again.</p>
             </CardContent>
           </Card>
         ) : (
@@ -264,16 +247,16 @@ export default function ScannerPage() {
                   {/* OI Data */}
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <div className="text-sm text-slate-400">Put OI</div>
-                      <div className={`font-semibold ${result.putOiChange > 15 ? "text-emerald-400" : "text-slate-300"}`}>
-                        +{result.putOiChange}%
+                      <div className="text-sm text-slate-400">P/C Ratio</div>
+                      <div className={`font-semibold ${result.putCallRatio > 1.2 ? "text-emerald-400" : result.putCallRatio < 0.8 ? "text-red-400" : "text-slate-300"}`}>
+                        {result.putCallRatio.toFixed(2)}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm text-slate-400">Call OI</div>
-                      <div className={`font-semibold ${result.callOiChange > 15 ? "text-red-400" : "text-slate-300"}`}>
-                        +{result.callOiChange}%
-                      </div>
+                    <div className="text-right text-xs">
+                      <div className="text-slate-500">Call OI</div>
+                      <div className="text-slate-400">{(result.totalCallOI / 1000000).toFixed(1)}M</div>
+                      <div className="text-slate-500 mt-1">Put OI</div>
+                      <div className="text-slate-400">{(result.totalPutOI / 1000000).toFixed(1)}M</div>
                     </div>
                   </div>
 
@@ -291,7 +274,7 @@ export default function ScannerPage() {
                     )}
                     <span className="text-xs text-slate-500">
                       <Clock className="w-3 h-3 inline mr-1" />
-                      {result.timestamp}
+                      {new Date(result.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
                 </div>
@@ -304,21 +287,21 @@ export default function ScannerPage() {
       {/* Legend */}
       <Card className="bg-slate-900 border-slate-800">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-slate-400">Signal Legend</CardTitle>
+          <CardTitle className="text-sm text-slate-400">Signal Legend (Based on Live OI Data)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-emerald-500" />
-              <span className="text-slate-300"><strong>BUY:</strong> Price up + Put OI up (Sellers bearish = Bullish)</span>
+              <span className="text-slate-300"><strong>BUY:</strong> Price up + P/C Ratio &gt; 1.2 (Put OI high)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-red-500" />
-              <span className="text-slate-300"><strong>SELL:</strong> Price down + Call OI up (Sellers bullish = Bearish)</span>
+              <span className="text-slate-300"><strong>SELL:</strong> Price down + P/C Ratio &lt; 0.8 (Call OI high)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-slate-600" />
-              <span className="text-slate-300"><strong>NEUTRAL:</strong> No clear OI confirmation</span>
+              <span className="text-slate-300"><strong>NEUTRAL:</strong> No clear OI signal</span>
             </div>
           </div>
         </CardContent>

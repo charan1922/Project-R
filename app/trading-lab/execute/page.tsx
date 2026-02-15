@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { 
   Play, 
   Square, 
@@ -19,29 +18,10 @@ import {
   Clock,
   TrendingUp,
   Wallet,
-  Bot
+  Bot,
+  Info,
+  Link
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-interface Position {
-  id: string;
-  symbol: string;
-  entryPrice: number;
-  currentPrice: number;
-  quantity: number;
-  pnl: number;
-  pnlPercent: number;
-  signal: "BUY" | "SELL";
-  entryTime: string;
-  status: "OPEN" | "CLOSED";
-}
 
 interface AlgoSettings {
   enabled: boolean;
@@ -57,32 +37,7 @@ interface AlgoSettings {
 export default function ExecutePage() {
   const [isRunning, setIsRunning] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [positions, setPositions] = useState<Position[]>([
-    {
-      id: "1",
-      symbol: "RELIANCE",
-      entryPrice: 2450,
-      currentPrice: 2510,
-      quantity: 50,
-      pnl: 3000,
-      pnlPercent: 2.45,
-      signal: "BUY",
-      entryTime: "2026-02-15 10:30:00",
-      status: "OPEN",
-    },
-    {
-      id: "2",
-      symbol: "INFY",
-      entryPrice: 1680,
-      currentPrice: 1650,
-      quantity: 100,
-      pnl: -3000,
-      pnlPercent: -1.79,
-      signal: "SELL",
-      entryTime: "2026-02-15 11:15:00",
-      status: "OPEN",
-    },
-  ]);
+  const [positions, setPositions] = useState<any[]>([]);
   
   const [settings, setSettings] = useState<AlgoSettings>({
     enabled: false,
@@ -96,14 +51,17 @@ export default function ExecutePage() {
   });
 
   const toggleAlgo = () => {
+    if (!isRunning) {
+      // Would start the algorithm
+      alert("To run live algorithm, you need to connect a broker API (e.g., Angel One, Zerodha, Upstox)");
+    }
     setIsRunning(!isRunning);
     setSettings(prev => ({ ...prev, enabled: !isRunning }));
   };
 
-  const openPositions = positions.filter(p => p.status === "OPEN");
-  const closedPositions = positions.filter(p => p.status === "CLOSED");
-  const totalPnl = positions.reduce((sum, p) => sum + p.pnl, 0);
-  const availableCapital = settings.capital - openPositions.reduce((sum, p) => sum + (p.entryPrice * p.quantity), 0);
+  const openPositions = positions.filter((p: any) => p.status === "OPEN");
+  const totalPnl = positions.reduce((sum, p) => sum + (p.pnl || 0), 0);
+  const availableCapital = settings.capital - openPositions.reduce((sum, p) => sum + ((p.entryPrice || 0) * (p.quantity || 0)), 0);
 
   return (
     <div className="p-6 space-y-6">
@@ -115,7 +73,7 @@ export default function ExecutePage() {
             Algo Execution
           </h1>
           <p className="text-slate-400">
-            Deploy and monitor automated trading algorithm
+            Deploy automated trading algorithm (requires broker API)
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -135,13 +93,33 @@ export default function ExecutePage() {
             }
           >
             {isRunning ? (
-              <><Square className="w-4 h-4 mr-2" /> Stop Algo</>
+              <><Square className="w-4 h-4 mr-2" /> Stop</>
             ) : (
-              <><Play className="w-4 h-4 mr-2" /> Start Algo</>
+              <><Play className="w-4 h-4 mr-2" /> Start</>
             )}
           </Button>
         </div>
       </div>
+
+      {/* Broker API Info */}
+      <Card className="bg-amber-500/10 border-amber-500/20">
+        <CardContent className="p-4 flex items-start gap-3">
+          <Info className="w-5 h-5 text-amber-400 mt-0.5" />
+          <div>
+            <h4 className="font-semibold text-amber-400 mb-1">Broker API Required</h4>
+            <p className="text-sm text-slate-400">
+              Live execution requires integration with a broker API. Supported brokers:
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Badge variant="secondary" className="bg-slate-800">Angel One</Badge>
+              <Badge variant="secondary" className="bg-slate-800">Zerodha Kite</Badge>
+              <Badge variant="secondary" className="bg-slate-800">Upstox</Badge>
+              <Badge variant="secondary" className="bg-slate-800">5paisa</Badge>
+              <Badge variant="secondary" className="bg-slate-800">ICICI Direct</Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Status Banner */}
       <Card className={isRunning ? "bg-emerald-500/10 border-emerald-500/30" : "bg-slate-900 border-slate-800"}>
@@ -156,16 +134,10 @@ export default function ExecutePage() {
                 <p className="text-sm text-slate-500">
                   {isRunning 
                     ? "Monitoring market for OI + Breakout signals..." 
-                    : "Algorithm is idle. Click Start to begin trading."}
+                    : "Algorithm is idle. Connect broker API to start trading."}
                 </p>
               </div>
             </div>
-            {isRunning && (
-              <div className="flex items-center gap-2 text-sm text-emerald-400">
-                <Activity className="w-4 h-4 animate-pulse" />
-                Live
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -307,105 +279,32 @@ export default function ExecutePage() {
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Activity className="w-5 h-5 text-blue-400" />
-            Open Positions ({openPositions.length})
+            Open Positions
           </CardTitle>
         </CardHeader>
         <CardContent>
           {openPositions.length === 0 ? (
             <div className="text-center py-8 text-slate-500">
-              No open positions. Algorithm will enter trades when signals trigger.
+              No open positions. Start the algorithm to begin trading.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-slate-800">
-                    <TableHead className="text-slate-400">Symbol</TableHead>
-                    <TableHead className="text-slate-400">Signal</TableHead>
-                    <TableHead className="text-slate-400">Qty</TableHead>
-                    <TableHead className="text-slate-400">Entry</TableHead>
-                    <TableHead className="text-slate-400">Current</TableHead>
-                    <TableHead className="text-slate-400">P&L</TableHead>
-                    <TableHead className="text-slate-400">Time</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {openPositions.map((pos) => (
-                    <TableRow key={pos.id} className="border-slate-800">
-                      <TableCell className="font-semibold text-white">{pos.symbol}</TableCell>
-                      <TableCell>
-                        <Badge className={pos.signal === "BUY" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}>
-                          {pos.signal}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-slate-300">{pos.quantity}</TableCell>
-                      <TableCell className="text-slate-300">₹{pos.entryPrice}</TableCell>
-                      <TableCell className="text-slate-300">₹{pos.currentPrice}</TableCell>
-                      <TableCell className={pos.pnl >= 0 ? "text-emerald-400" : "text-red-400"}>
-                        {pos.pnl >= 0 ? "+" : ""}₹{pos.pnl.toLocaleString()} ({pos.pnlPercent}%)
-                      </TableCell>
-                      <TableCell className="text-slate-400 text-sm">
-                        <Clock className="w-3 h-3 inline mr-1" />
-                        {pos.entryTime}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="text-center py-8 text-slate-500">
+              Position tracking requires broker API connection.
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Algorithm Log */}
-      <Card className="bg-slate-900 border-slate-800">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Clock className="w-5 h-5 text-slate-400" />
-            Algorithm Log
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            <div className="flex items-center gap-3 p-2 rounded bg-slate-800/50">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm text-slate-300">Algorithm initialized with ₹{settings.capital.toLocaleString()} capital</span>
-              <span className="text-xs text-slate-500 ml-auto">10:00:00</span>
-            </div>
-            <div className="flex items-center gap-3 p-2 rounded bg-slate-800/50">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm text-slate-300">BUY signal triggered for RELIANCE - Put OI +18%, Breakout +2.5%</span>
-              <span className="text-xs text-slate-500 ml-auto">10:30:15</span>
-            </div>
-            <div className="flex items-center gap-3 p-2 rounded bg-slate-800/50">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm text-slate-300">Entered LONG position: RELIANCE @ ₹2450 (50 shares)</span>
-              <span className="text-xs text-slate-500 ml-auto">10:30:22</span>
-            </div>
-            <div className="flex items-center gap-3 p-2 rounded bg-slate-800/50">
-              <TrendingDown className="w-4 h-4 text-red-400" />
-              <span className="text-sm text-slate-300">SELL signal triggered for INFY - Call OI +16%, Breakdown -2.1%</span>
-              <span className="text-xs text-slate-500 ml-auto">11:15:45</span>
-            </div>
-            <div className="flex items-center gap-3 p-2 rounded bg-slate-800/50">
-              <TrendingDown className="w-4 h-4 text-red-400" />
-              <span className="text-sm text-slate-300">Entered SHORT position: INFY @ ₹1680 (100 shares)</span>
-              <span className="text-xs text-slate-500 ml-auto">11:15:52</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Risk Disclaimer */}
-      <Card className="bg-amber-500/10 border-amber-500/20">
+      <Card className="bg-red-500/10 border-red-500/20">
         <CardContent className="p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-400 mt-0.5" />
+          <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-amber-400 mb-1">Risk Warning</h4>
+            <h4 className="font-semibold text-red-400 mb-1">Risk Warning</h4>
             <p className="text-sm text-slate-400">
-              Algorithmic trading carries significant risk. This is a demonstration interface. 
-              For live trading, ensure you have proper risk management, position sizing, and 
-              stop-losses configured. Start with paper trading before deploying real capital.
+              Algorithmic trading involves significant risk. This is a demonstration interface. 
+              For live trading, integrate with a broker API and start with paper trading. 
+              Never risk capital you cannot afford to lose.
             </p>
           </div>
         </CardContent>
