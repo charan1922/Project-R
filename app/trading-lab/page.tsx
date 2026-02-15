@@ -11,7 +11,10 @@ import {
   Eye,
   Target,
   Shield,
-  ArrowRight
+  ArrowRight,
+  Youtube,
+  ExternalLink,
+  BookOpen
 } from "lucide-react";
 import Link from "next/link";
 
@@ -29,11 +32,66 @@ export default function TradingLabPage() {
         </p>
       </div>
 
+      {/* Video Resources */}
+      <Card className="bg-red-500/10 border-red-500/20">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-white flex items-center gap-2">
+            <Youtube className="w-5 h-5 text-red-400" />
+            Strategy Videos (Learn the Method)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a 
+              href="https://www.youtube.com/watch?v=rdcV5u5cKmg&t=11s" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors"
+            >
+              <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                <Play className="w-5 h-5 text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-white flex items-center gap-2">
+                  Understanding Open Interest (OI)
+                  <ExternalLink className="w-3 h-3 text-slate-500" />
+                </h4>
+                <p className="text-sm text-slate-400 mt-1">
+                  Learn how to read OI from the seller's perspective. Understand Put/Call 
+                  OI and how large players build positions.
+                </p>
+              </div>
+            </a>
+            
+            <a 
+              href="https://www.youtube.com/watch?v=RfIg4D4C_Q0" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors"
+            >
+              <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                <Play className="w-5 h-5 text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-white flex items-center gap-2">
+                  The "Blasting Stock" Strategy
+                  <ExternalLink className="w-3 h-3 text-slate-500" />
+                </h4>
+                <p className="text-sm text-slate-400 mt-1">
+                  Complete breakdown of the OI + Breakout strategy. How to identify 
+                  stocks with large-scale participation.
+                </p>
+              </div>
+            </a>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Strategy Overview */}
       <Card className="bg-slate-900 border-slate-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
-            <Target className="w-5 h-5 text-purple-400" />
+            <BookOpen className="w-5 h-5 text-purple-400" />
             The Strategy: OI + Breakout
           </CardTitle>
         </CardHeader>
