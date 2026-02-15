@@ -1,0 +1,333 @@
+{
+  "totalTrades": 9,
+  "totalDays": 9,
+  "extractedAt": "2026-02-15T18:18:55.443204",
+  "trades": [
+    {
+      "Date": "2026-02-13",
+      "Symbol": "ADANIGREEN",
+      "Option_Type": "STOCK",
+      "Strike": "",
+      "Expiry": "",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "31.80",
+      "P_L": "16410",
+      "Daily_Total_PnL": "16410",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 1
+    },
+    {
+      "Date": "2026-02-12",
+      "Symbol": "KPITTECH",
+      "Option_Type": "STOCK",
+      "Strike": "",
+      "Expiry": "",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "46.50",
+      "P_L": "15725",
+      "Daily_Total_PnL": "15725",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 1
+    },
+    {
+      "Date": "2026-02-11",
+      "Symbol": "LAURUSLABS",
+      "Option_Type": "STOCK",
+      "Strike": "",
+      "Expiry": "",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "33.15",
+      "P_L": "18785",
+      "Daily_Total_PnL": "18785",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 1
+    },
+    {
+      "Date": "2026-02-09",
+      "Symbol": "CROMPTON",
+      "Option_Type": "STOCK",
+      "Strike": "",
+      "Expiry": "",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "15.04",
+      "P_L": "20700",
+      "Daily_Total_PnL": "20700",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 1
+    },
+    {
+      "Date": "2026-02-06",
+      "Symbol": "ITC",
+      "Option_Type": "STOCK",
+      "Strike": "",
+      "Expiry": "",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "8.95",
+      "P_L": "17600",
+      "Daily_Total_PnL": "17600",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 1
+    },
+    {
+      "Date": "2026-02-05",
+      "Symbol": "TIINDIA",
+      "Option_Type": "STOCK",
+      "Strike": "",
+      "Expiry": "",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "166.15",
+      "P_L": "34300",
+      "Daily_Total_PnL": "34300",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 1
+    },
+    {
+      "Date": "2026-02-04",
+      "Symbol": "ETERNAL",
+      "Option_Type": "STOCK",
+      "Strike": "",
+      "Expiry": "",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "11.65",
+      "P_L": "20976",
+      "Daily_Total_PnL": "20976",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 1
+    },
+    {
+      "Date": "2026-02-03",
+      "Symbol": "TIINDIA",
+      "Option_Type": "STOCK",
+      "Strike": "",
+      "Expiry": "",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "118.90",
+      "P_L": "16000",
+      "Daily_Total_PnL": "16000",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 1
+    },
+    {
+      "Date": "2026-02-02",
+      "Symbol": "GLENMARK",
+      "Option_Type": "STOCK",
+      "Strike": "",
+      "Expiry": "",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "41.45",
+      "P_L": "18750",
+      "Daily_Total_PnL": "18750",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 1
+    }
+  ],
+  "dailySummaries": [
+    {
+      "date": "2026-02-13",
+      "totalPnL": "16410",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2026-02-13",
+          "Symbol": "ADANIGREEN",
+          "Option_Type": "STOCK",
+          "Strike": "",
+          "Expiry": "",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "31.80",
+          "P_L": "16410",
+          "Daily_Total_PnL": "16410",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-02-12",
+      "totalPnL": "15725",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2026-02-12",
+          "Symbol": "KPITTECH",
+          "Option_Type": "STOCK",
+          "Strike": "",
+          "Expiry": "",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "46.50",
+          "P_L": "15725",
+          "Daily_Total_PnL": "15725",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-02-11",
+      "totalPnL": "18785",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2026-02-11",
+          "Symbol": "LAURUSLABS",
+          "Option_Type": "STOCK",
+          "Strike": "",
+          "Expiry": "",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "33.15",
+          "P_L": "18785",
+          "Daily_Total_PnL": "18785",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-02-09",
+      "totalPnL": "20700",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2026-02-09",
+          "Symbol": "CROMPTON",
+          "Option_Type": "STOCK",
+          "Strike": "",
+          "Expiry": "",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "15.04",
+          "P_L": "20700",
+          "Daily_Total_PnL": "20700",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-02-06",
+      "totalPnL": "17600",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2026-02-06",
+          "Symbol": "ITC",
+          "Option_Type": "STOCK",
+          "Strike": "",
+          "Expiry": "",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "8.95",
+          "P_L": "17600",
+          "Daily_Total_PnL": "17600",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-02-05",
+      "totalPnL": "34300",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2026-02-05",
+          "Symbol": "TIINDIA",
+          "Option_Type": "STOCK",
+          "Strike": "",
+          "Expiry": "",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "166.15",
+          "P_L": "34300",
+          "Daily_Total_PnL": "34300",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-02-04",
+      "totalPnL": "20976",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2026-02-04",
+          "Symbol": "ETERNAL",
+          "Option_Type": "STOCK",
+          "Strike": "",
+          "Expiry": "",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "11.65",
+          "P_L": "20976",
+          "Daily_Total_PnL": "20976",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-02-03",
+      "totalPnL": "16000",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2026-02-03",
+          "Symbol": "TIINDIA",
+          "Option_Type": "STOCK",
+          "Strike": "",
+          "Expiry": "",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "118.90",
+          "P_L": "16000",
+          "Daily_Total_PnL": "16000",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-02-02",
+      "totalPnL": "18750",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2026-02-02",
+          "Symbol": "GLENMARK",
+          "Option_Type": "STOCK",
+          "Strike": "",
+          "Expiry": "",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "41.45",
+          "P_L": "18750",
+          "Daily_Total_PnL": "18750",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 1
+        }
+      ]
+    }
+  ]
+}

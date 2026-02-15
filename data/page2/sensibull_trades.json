@@ -1,0 +1,441 @@
+{
+  "totalTrades": 12,
+  "totalDays": 12,
+  "extractedAt": "2026-02-15T18:53:47.355631",
+  "trades": [
+    {
+      "Date": "2026-01-02",
+      "Symbol": "BOSCHLTD",
+      "Option_Type": "CE",
+      "Strike": "38000",
+      "Expiry": "2026-01-27th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "1875.00",
+      "P_L": "20000",
+      "Daily_Total_PnL": "20000",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 2
+    },
+    {
+      "Date": "2026-01-01",
+      "Symbol": "ITC",
+      "Option_Type": "PE",
+      "Strike": "380",
+      "Expiry": "2026-01-27th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "18.15",
+      "P_L": "19200",
+      "Daily_Total_PnL": "19200",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 2
+    },
+    {
+      "Date": "2025-12-31",
+      "Symbol": "HINDPETRO",
+      "Option_Type": "CE",
+      "Strike": "480",
+      "Expiry": "2026-01-27th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "28.10",
+      "P_L": "33311",
+      "Daily_Total_PnL": "33311",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 2
+    },
+    {
+      "Date": "2025-12-29",
+      "Symbol": "HINDALCO",
+      "Option_Type": "PE",
+      "Strike": "870",
+      "Expiry": "2026-01-27th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "25.70",
+      "P_L": "18305",
+      "Daily_Total_PnL": "18305",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 2
+    },
+    {
+      "Date": "2025-12-26",
+      "Symbol": "RVNL",
+      "Option_Type": "CE",
+      "Strike": "370",
+      "Expiry": "2025-12-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "20.30",
+      "P_L": "31625",
+      "Daily_Total_PnL": "31625",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 2
+    },
+    {
+      "Date": "2025-12-24",
+      "Symbol": "IIFL",
+      "Option_Type": "CE",
+      "Strike": "580",
+      "Expiry": "2025-12-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "22.75",
+      "P_L": "20625",
+      "Daily_Total_PnL": "20625",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 2
+    },
+    {
+      "Date": "2025-12-23",
+      "Symbol": "RECLTD",
+      "Option_Type": "CE",
+      "Strike": "345",
+      "Expiry": "2025-12-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "10.20",
+      "P_L": "21293",
+      "Daily_Total_PnL": "21293",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 2
+    },
+    {
+      "Date": "2025-12-22",
+      "Symbol": "MCX",
+      "Option_Type": "CE",
+      "Strike": "10500",
+      "Expiry": "2025-12-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "366.00",
+      "P_L": "20250",
+      "Daily_Total_PnL": "20250",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 2
+    },
+    {
+      "Date": "2025-12-19",
+      "Symbol": "HDFCAMC",
+      "Option_Type": "PE",
+      "Strike": "2700",
+      "Expiry": "2025-12-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "50.80",
+      "P_L": "18750",
+      "Daily_Total_PnL": "18750",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 2
+    },
+    {
+      "Date": "2025-12-18",
+      "Symbol": "POLICYBZR",
+      "Option_Type": "CE",
+      "Strike": "1800",
+      "Expiry": "2025-12-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "61.10",
+      "P_L": "17727",
+      "Daily_Total_PnL": "17727",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 2
+    },
+    {
+      "Date": "2025-12-12",
+      "Symbol": "GMRAIRPORT",
+      "Option_Type": "CE",
+      "Strike": "102",
+      "Expiry": "2025-12-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "3.74",
+      "P_L": "18484",
+      "Daily_Total_PnL": "18484",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 2
+    },
+    {
+      "Date": "2025-12-10",
+      "Symbol": "ICICIPRULI",
+      "Option_Type": "CE",
+      "Strike": "630",
+      "Expiry": "2025-12-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "21.95",
+      "P_L": "19887",
+      "Daily_Total_PnL": "19887",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 2
+    }
+  ],
+  "dailySummaries": [
+    {
+      "date": "2026-01-02",
+      "totalPnL": "20000",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2026-01-02",
+          "Symbol": "BOSCHLTD",
+          "Option_Type": "CE",
+          "Strike": "38000",
+          "Expiry": "2026-01-27th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "1875.00",
+          "P_L": "20000",
+          "Daily_Total_PnL": "20000",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 2
+        }
+      ]
+    },
+    {
+      "date": "2026-01-01",
+      "totalPnL": "19200",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2026-01-01",
+          "Symbol": "ITC",
+          "Option_Type": "PE",
+          "Strike": "380",
+          "Expiry": "2026-01-27th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "18.15",
+          "P_L": "19200",
+          "Daily_Total_PnL": "19200",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 2
+        }
+      ]
+    },
+    {
+      "date": "2025-12-31",
+      "totalPnL": "33311",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-12-31",
+          "Symbol": "HINDPETRO",
+          "Option_Type": "CE",
+          "Strike": "480",
+          "Expiry": "2026-01-27th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "28.10",
+          "P_L": "33311",
+          "Daily_Total_PnL": "33311",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 2
+        }
+      ]
+    },
+    {
+      "date": "2025-12-29",
+      "totalPnL": "18305",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-12-29",
+          "Symbol": "HINDALCO",
+          "Option_Type": "PE",
+          "Strike": "870",
+          "Expiry": "2026-01-27th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "25.70",
+          "P_L": "18305",
+          "Daily_Total_PnL": "18305",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 2
+        }
+      ]
+    },
+    {
+      "date": "2025-12-26",
+      "totalPnL": "31625",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-12-26",
+          "Symbol": "RVNL",
+          "Option_Type": "CE",
+          "Strike": "370",
+          "Expiry": "2025-12-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "20.30",
+          "P_L": "31625",
+          "Daily_Total_PnL": "31625",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 2
+        }
+      ]
+    },
+    {
+      "date": "2025-12-24",
+      "totalPnL": "20625",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-12-24",
+          "Symbol": "IIFL",
+          "Option_Type": "CE",
+          "Strike": "580",
+          "Expiry": "2025-12-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "22.75",
+          "P_L": "20625",
+          "Daily_Total_PnL": "20625",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 2
+        }
+      ]
+    },
+    {
+      "date": "2025-12-23",
+      "totalPnL": "21293",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-12-23",
+          "Symbol": "RECLTD",
+          "Option_Type": "CE",
+          "Strike": "345",
+          "Expiry": "2025-12-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "10.20",
+          "P_L": "21293",
+          "Daily_Total_PnL": "21293",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 2
+        }
+      ]
+    },
+    {
+      "date": "2025-12-22",
+      "totalPnL": "20250",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-12-22",
+          "Symbol": "MCX",
+          "Option_Type": "CE",
+          "Strike": "10500",
+          "Expiry": "2025-12-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "366.00",
+          "P_L": "20250",
+          "Daily_Total_PnL": "20250",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 2
+        }
+      ]
+    },
+    {
+      "date": "2025-12-19",
+      "totalPnL": "18750",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-12-19",
+          "Symbol": "HDFCAMC",
+          "Option_Type": "PE",
+          "Strike": "2700",
+          "Expiry": "2025-12-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "50.80",
+          "P_L": "18750",
+          "Daily_Total_PnL": "18750",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 2
+        }
+      ]
+    },
+    {
+      "date": "2025-12-18",
+      "totalPnL": "17727",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-12-18",
+          "Symbol": "POLICYBZR",
+          "Option_Type": "CE",
+          "Strike": "1800",
+          "Expiry": "2025-12-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "61.10",
+          "P_L": "17727",
+          "Daily_Total_PnL": "17727",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 2
+        }
+      ]
+    },
+    {
+      "date": "2025-12-12",
+      "totalPnL": "18484",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-12-12",
+          "Symbol": "GMRAIRPORT",
+          "Option_Type": "CE",
+          "Strike": "102",
+          "Expiry": "2025-12-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "3.74",
+          "P_L": "18484",
+          "Daily_Total_PnL": "18484",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 2
+        }
+      ]
+    },
+    {
+      "date": "2025-12-10",
+      "totalPnL": "19887",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-12-10",
+          "Symbol": "ICICIPRULI",
+          "Option_Type": "CE",
+          "Strike": "630",
+          "Expiry": "2025-12-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "21.95",
+          "P_L": "19887",
+          "Daily_Total_PnL": "19887",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 2
+        }
+      ]
+    }
+  ]
+}

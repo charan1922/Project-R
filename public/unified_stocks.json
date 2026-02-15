@@ -1,0 +1,892 @@
+{
+  "stocks": [
+    {
+      "symbol": "LT",
+      "name": "Larsen & Toubro",
+      "sector": "Infrastructure",
+      "exchange": "NSE",
+      "tradeCount": 100,
+      "totalPnL": 1423859.0,
+      "firstTrade": "2025-04-01",
+      "lastTrade": "2026-03-28"
+    },
+    {
+      "symbol": "AUROPHARMA",
+      "name": "Aurobindo Pharma",
+      "sector": "Pharma",
+      "exchange": "NSE",
+      "tradeCount": 6,
+      "totalPnL": 52471.78,
+      "firstTrade": "2025-04-04",
+      "lastTrade": "2025-10-31"
+    },
+    {
+      "symbol": "EICHERMOT",
+      "name": "Eicher Motors",
+      "sector": "Automobiles",
+      "exchange": "NSE",
+      "tradeCount": 6,
+      "totalPnL": 71595.0,
+      "firstTrade": "2025-06-18",
+      "lastTrade": "2026-01-02"
+    },
+    {
+      "symbol": "GODREJPROP",
+      "name": "Godrej Properties",
+      "sector": "Real Estate",
+      "exchange": "NSE",
+      "tradeCount": 5,
+      "totalPnL": 95376.0,
+      "firstTrade": "2025-04-30",
+      "lastTrade": "2026-01-19"
+    },
+    {
+      "symbol": "HDFCAMC",
+      "name": "HDFC AMC",
+      "sector": "Financial Services",
+      "exchange": "NSE",
+      "tradeCount": 5,
+      "totalPnL": 89790.0,
+      "firstTrade": "2025-04-21",
+      "lastTrade": "2026-01-15"
+    },
+    {
+      "symbol": "ADANIENSOL",
+      "name": "Adani Energy Solutions",
+      "sector": "Power",
+      "exchange": "NSE",
+      "tradeCount": 4,
+      "totalPnL": 61991.0,
+      "firstTrade": "2025-07-25",
+      "lastTrade": "2026-03-10"
+    },
+    {
+      "symbol": "ADANIGREEN",
+      "name": "Adani Green Energy",
+      "sector": "Power",
+      "exchange": "NSE",
+      "tradeCount": 4,
+      "totalPnL": 57829.0,
+      "firstTrade": "2025-09-22",
+      "lastTrade": "2026-02-13"
+    },
+    {
+      "symbol": "GLENMARK",
+      "name": "Glenmark Pharma",
+      "sector": "Pharma",
+      "exchange": "NSE",
+      "tradeCount": 4,
+      "totalPnL": 71477.0,
+      "firstTrade": "2025-11-18",
+      "lastTrade": "2026-02-17"
+    },
+    {
+      "symbol": "LAURUSLABS",
+      "name": "Laurus Labs",
+      "sector": "Pharma",
+      "exchange": "NSE",
+      "tradeCount": 4,
+      "totalPnL": 79390.0,
+      "firstTrade": "2025-09-19",
+      "lastTrade": "2026-02-11"
+    },
+    {
+      "symbol": "LTIM",
+      "name": "LTIMindtree",
+      "sector": "IT",
+      "exchange": "NSE",
+      "tradeCount": 4,
+      "totalPnL": 35288.0,
+      "firstTrade": "2025-06-13",
+      "lastTrade": "2026-02-19"
+    },
+    {
+      "symbol": "ATGL",
+      "name": "Adani Total Gas",
+      "sector": "Gas Distribution",
+      "exchange": "NSE",
+      "tradeCount": 3,
+      "totalPnL": 61320.0,
+      "firstTrade": "2025-05-05",
+      "lastTrade": "2025-06-27"
+    },
+    {
+      "symbol": "COLPAL",
+      "name": "Colgate-Palmolive",
+      "sector": "FMCG",
+      "exchange": "NSE",
+      "tradeCount": 3,
+      "totalPnL": 41145.0,
+      "firstTrade": "2025-04-22",
+      "lastTrade": "2025-07-23"
+    },
+    {
+      "symbol": "HAL",
+      "name": "Hindustan Aeronautics",
+      "sector": "Defense",
+      "exchange": "NSE",
+      "tradeCount": 3,
+      "totalPnL": 42660.0,
+      "firstTrade": "2025-04-29",
+      "lastTrade": "2025-05-13"
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "name": "Kotak Mahindra Bank",
+      "sector": "Banking",
+      "exchange": "NSE",
+      "tradeCount": 3,
+      "totalPnL": 57940.0,
+      "firstTrade": "2025-09-16",
+      "lastTrade": "2026-03-24"
+    },
+    {
+      "symbol": "KPITTECH",
+      "name": "KPIT Technologies",
+      "sector": "IT",
+      "exchange": "NSE",
+      "tradeCount": 3,
+      "totalPnL": 42385.0,
+      "firstTrade": "2025-06-16",
+      "lastTrade": "2026-02-12"
+    },
+    {
+      "symbol": "MCX",
+      "name": "MCX India",
+      "sector": "Exchange",
+      "exchange": "NSE",
+      "tradeCount": 3,
+      "totalPnL": 64138.0,
+      "firstTrade": "2025-09-17",
+      "lastTrade": "2025-12-22"
+    },
+    {
+      "symbol": "TITAN",
+      "name": "Titan Company",
+      "sector": "Retail",
+      "exchange": "NSE",
+      "tradeCount": 3,
+      "totalPnL": 64654.0,
+      "firstTrade": "2025-04-02",
+      "lastTrade": "2026-02-28"
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "name": "Bosch Limited",
+      "sector": "Auto Ancillaries",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 50335.0,
+      "firstTrade": "2025-07-03",
+      "lastTrade": "2026-01-02"
+    },
+    {
+      "symbol": "BSE",
+      "name": "BSE Limited",
+      "sector": "Stock Exchange",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 58388.0,
+      "firstTrade": "2025-06-11",
+      "lastTrade": "2025-07-08"
+    },
+    {
+      "symbol": "DELHIVERY",
+      "name": "Delhivery",
+      "sector": "Logistics",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 73200.0,
+      "firstTrade": "2025-04-08",
+      "lastTrade": "2025-04-08"
+    },
+    {
+      "symbol": "DLF",
+      "name": "DLF Limited",
+      "sector": "Real Estate",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 41992.0,
+      "firstTrade": "2025-04-25",
+      "lastTrade": "2025-04-25"
+    },
+    {
+      "symbol": "ETERNAL",
+      "name": "Eternal Limited",
+      "sector": "Consumer Durables",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 36976.0,
+      "firstTrade": "2025-05-23",
+      "lastTrade": "2026-02-04"
+    },
+    {
+      "symbol": "HEROMOTOCO",
+      "name": "Hero MotoCorp",
+      "sector": "Automobiles",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 37890.0,
+      "firstTrade": "2025-05-15",
+      "lastTrade": "2025-11-17"
+    },
+    {
+      "symbol": "HINDPETRO",
+      "name": "Hindustan Petroleum",
+      "sector": "Oil & Gas",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 58624.0,
+      "firstTrade": "2025-09-29",
+      "lastTrade": "2025-12-31"
+    },
+    {
+      "symbol": "ITC",
+      "name": "ITC Limited",
+      "sector": "FMCG",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 36800.0,
+      "firstTrade": "2026-01-01",
+      "lastTrade": "2026-02-06"
+    },
+    {
+      "symbol": "JINDALSTEL",
+      "name": "Jindal Steel & Power",
+      "sector": "Metals",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 31874.0,
+      "firstTrade": "2025-04-17",
+      "lastTrade": "2025-04-17"
+    },
+    {
+      "symbol": "LODHA",
+      "name": "Macrotech Developers",
+      "sector": "Real Estate",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 26100.0,
+      "firstTrade": "2025-04-15",
+      "lastTrade": "2025-04-15"
+    },
+    {
+      "symbol": "LUPIN",
+      "name": "Lupin Limited",
+      "sector": "Pharma",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 34935.0,
+      "firstTrade": "2025-11-25",
+      "lastTrade": "2026-01-08"
+    },
+    {
+      "symbol": "M&M",
+      "name": "Mahindra & Mahindra",
+      "sector": "Automobiles",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 25410.0,
+      "firstTrade": "2026-02-20",
+      "lastTrade": "2026-02-21"
+    },
+    {
+      "symbol": "MANKIND",
+      "name": "Mankind Pharma",
+      "sector": "Pharma",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 36934.0,
+      "firstTrade": "2025-07-02",
+      "lastTrade": "2025-07-09"
+    },
+    {
+      "symbol": "MARUTI",
+      "name": "Maruti Suzuki",
+      "sector": "Automobiles",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 7207.0,
+      "firstTrade": "2025-09-23",
+      "lastTrade": "2026-01-01"
+    },
+    {
+      "symbol": "OFSS",
+      "name": "Oracle Financial",
+      "sector": "IT",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 30485.0,
+      "firstTrade": "2025-05-12",
+      "lastTrade": "2025-06-10"
+    },
+    {
+      "symbol": "POLICYBZR",
+      "name": "PB Fintech",
+      "sector": "Fintech",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 35569.0,
+      "firstTrade": "2025-12-18",
+      "lastTrade": "2026-01-17"
+    },
+    {
+      "symbol": "PRESTIGE",
+      "name": "Prestige Estates",
+      "sector": "Real Estate",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 28245.0,
+      "firstTrade": "2025-06-05",
+      "lastTrade": "2026-01-20"
+    },
+    {
+      "symbol": "RBLBANK",
+      "name": "RBL Bank",
+      "sector": "Banking",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 30000.0,
+      "firstTrade": "2025-04-28",
+      "lastTrade": "2025-04-28"
+    },
+    {
+      "symbol": "TIINDIA",
+      "name": "Tube Investments",
+      "sector": "Auto Ancillaries",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 50300.0,
+      "firstTrade": "2026-02-03",
+      "lastTrade": "2026-02-05"
+    },
+    {
+      "symbol": "TITAGARH",
+      "name": "Titagarh Rail Systems",
+      "sector": "Railways",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 33875.0,
+      "firstTrade": "2025-05-14",
+      "lastTrade": "2025-05-16"
+    },
+    {
+      "symbol": "ZYDUSLIFE",
+      "name": "Zydus Lifesciences",
+      "sector": "Pharma",
+      "exchange": "NSE",
+      "tradeCount": 2,
+      "totalPnL": 66780.0,
+      "firstTrade": "2025-04-16",
+      "lastTrade": "2025-04-16"
+    },
+    {
+      "symbol": "AMBUJACEM",
+      "name": "Ambuja Cements",
+      "sector": "Cement",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 19950.0,
+      "firstTrade": "2025-06-24",
+      "lastTrade": "2025-06-24"
+    },
+    {
+      "symbol": "APOLLOTYRE",
+      "name": "Apollo Tyres",
+      "sector": "Auto Tyres",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 10115.0,
+      "firstTrade": "2025-05-09",
+      "lastTrade": "2025-05-09"
+    },
+    {
+      "symbol": "ASTRAL",
+      "name": "Astral Limited",
+      "sector": "Plastics",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 18717.0,
+      "firstTrade": "2025-05-22",
+      "lastTrade": "2025-05-22"
+    },
+    {
+      "symbol": "AXISBANK",
+      "name": "Axis Bank",
+      "sector": "Banking",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 18437.0,
+      "firstTrade": "2026-01-14",
+      "lastTrade": "2026-01-14"
+    },
+    {
+      "symbol": "BALKRISIND",
+      "name": "Balkrishna Industries",
+      "sector": "Auto Tyres",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 11355.0,
+      "firstTrade": "2025-05-26",
+      "lastTrade": "2025-05-26"
+    },
+    {
+      "symbol": "BANDHANBNK",
+      "name": "Bandhan Bank",
+      "sector": "Banking",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 23240.0,
+      "firstTrade": "2025-06-09",
+      "lastTrade": "2025-06-09"
+    },
+    {
+      "symbol": "BANKINDIA",
+      "name": "Bank of India",
+      "sector": "Banking",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 26000.0,
+      "firstTrade": "2025-10-20",
+      "lastTrade": "2025-10-20"
+    },
+    {
+      "symbol": "BDL",
+      "name": "Bharat Dynamics",
+      "sector": "Defense",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 17387.0,
+      "firstTrade": "2025-07-18",
+      "lastTrade": "2025-07-18"
+    },
+    {
+      "symbol": "BHARTIARTL",
+      "name": "Bharti Airtel",
+      "sector": "Telecom",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 18192.0,
+      "firstTrade": "2025-06-20",
+      "lastTrade": "2025-06-20"
+    },
+    {
+      "symbol": "BPCL",
+      "name": "Bharat Petroleum",
+      "sector": "Oil & Gas",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 14813.0,
+      "firstTrade": "2025-10-30",
+      "lastTrade": "2025-10-30"
+    },
+    {
+      "symbol": "BSOFT",
+      "name": "Birlasoft",
+      "sector": "IT",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": -2050.0,
+      "firstTrade": "2025-05-29",
+      "lastTrade": "2025-05-29"
+    },
+    {
+      "symbol": "CIPLA",
+      "name": "Cipla",
+      "sector": "Pharma",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 17250.0,
+      "firstTrade": "2025-10-10",
+      "lastTrade": "2025-10-10"
+    },
+    {
+      "symbol": "COFORGE",
+      "name": "Coforge",
+      "sector": "IT",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 18000.0,
+      "firstTrade": "2025-07-24",
+      "lastTrade": "2025-07-24"
+    },
+    {
+      "symbol": "CONCOR",
+      "name": "Container Corporation",
+      "sector": "Logistics",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 18300.0,
+      "firstTrade": "2025-05-27",
+      "lastTrade": "2025-05-27"
+    },
+    {
+      "symbol": "CROMPTON",
+      "name": "Crompton Greaves",
+      "sector": "Consumer Durables",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 20700.0,
+      "firstTrade": "2026-02-09",
+      "lastTrade": "2026-02-09"
+    },
+    {
+      "symbol": "CUMMINSIND",
+      "name": "Cummins India",
+      "sector": "Auto Ancillaries",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 15380.0,
+      "firstTrade": "2026-01-12",
+      "lastTrade": "2026-01-12"
+    },
+    {
+      "symbol": "CYIENT",
+      "name": "Cyient",
+      "sector": "IT",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": -2486.0,
+      "firstTrade": "2025-06-25",
+      "lastTrade": "2025-06-25"
+    },
+    {
+      "symbol": "DALBHARAT",
+      "name": "Dalmia Bharat",
+      "sector": "Cement",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 13000.0,
+      "firstTrade": "2025-06-26",
+      "lastTrade": "2025-06-26"
+    },
+    {
+      "symbol": "DIXON",
+      "name": "Dixon Technologies",
+      "sector": "Consumer Durables",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 27500.0,
+      "firstTrade": "2026-01-13",
+      "lastTrade": "2026-01-13"
+    },
+    {
+      "symbol": "DRREDDY",
+      "name": "Dr. Reddy's Laboratories",
+      "sector": "Pharma",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 11406.0,
+      "firstTrade": "2026-01-16",
+      "lastTrade": "2026-01-16"
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "name": "Federal Bank",
+      "sector": "Banking",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 27000.0,
+      "firstTrade": "2026-01-16",
+      "lastTrade": "2026-01-16"
+    },
+    {
+      "symbol": "GAIL",
+      "name": "GAIL India",
+      "sector": "Oil & Gas",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 11750.0,
+      "firstTrade": "2025-06-12",
+      "lastTrade": "2025-06-12"
+    },
+    {
+      "symbol": "GMRAIRPORT",
+      "name": "GMR Airports",
+      "sector": "Airports",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 18484.0,
+      "firstTrade": "2025-12-12",
+      "lastTrade": "2025-12-12"
+    },
+    {
+      "symbol": "HCLTECH",
+      "name": "HCL Technologies",
+      "sector": "IT",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 20195.0,
+      "firstTrade": "2025-11-19",
+      "lastTrade": "2025-11-19"
+    },
+    {
+      "symbol": "HINDALCO",
+      "name": "Hindalco Industries",
+      "sector": "Metals",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 18305.0,
+      "firstTrade": "2025-12-29",
+      "lastTrade": "2025-12-29"
+    },
+    {
+      "symbol": "HINDUNILVR",
+      "name": "Hindustan Unilever",
+      "sector": "FMCG",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 14700.0,
+      "firstTrade": "2025-07-07",
+      "lastTrade": "2025-07-07"
+    },
+    {
+      "symbol": "HINDZINC",
+      "name": "Hindustan Zinc",
+      "sector": "Metals",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 18987.0,
+      "firstTrade": "2026-01-30",
+      "lastTrade": "2026-01-30"
+    },
+    {
+      "symbol": "ICICIGI",
+      "name": "ICICI Lombard",
+      "sector": "Insurance",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 15974.0,
+      "firstTrade": "2026-01-08",
+      "lastTrade": "2026-01-08"
+    },
+    {
+      "symbol": "ICICIPRULI",
+      "name": "ICICI Prudential Life",
+      "sector": "Insurance",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 19887.0,
+      "firstTrade": "2025-12-10",
+      "lastTrade": "2025-12-10"
+    },
+    {
+      "symbol": "IIFL",
+      "name": "IIFL Finance",
+      "sector": "Financial Services",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 20625.0,
+      "firstTrade": "2025-12-24",
+      "lastTrade": "2025-12-24"
+    },
+    {
+      "symbol": "INDIANB",
+      "name": "Indian Bank",
+      "sector": "Banking",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": -2090.0,
+      "firstTrade": "2025-05-21",
+      "lastTrade": "2025-05-21"
+    },
+    {
+      "symbol": "INDUSINDBK",
+      "name": "IndusInd Bank",
+      "sector": "Banking",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": -3325.0,
+      "firstTrade": "2025-07-22",
+      "lastTrade": "2025-07-22"
+    },
+    {
+      "symbol": "KALYANKJIL",
+      "name": "Kalyan Jewellers",
+      "sector": "Retail",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 17390.0,
+      "firstTrade": "2026-01-21",
+      "lastTrade": "2026-01-21"
+    },
+    {
+      "symbol": "KEI",
+      "name": "KEI Industries",
+      "sector": "Cables",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 12075.0,
+      "firstTrade": "2026-03-20",
+      "lastTrade": "2026-03-20"
+    },
+    {
+      "symbol": "LICI",
+      "name": "LIC of India",
+      "sector": "Insurance",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 13800.0,
+      "firstTrade": "2025-05-28",
+      "lastTrade": "2025-05-28"
+    },
+    {
+      "symbol": "NAUKRI",
+      "name": "Info Edge (Naukri)",
+      "sector": "Internet",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 17213.0,
+      "firstTrade": "2026-01-22",
+      "lastTrade": "2026-01-22"
+    },
+    {
+      "symbol": "NESTLEIND",
+      "name": "Nestle India",
+      "sector": "FMCG",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 15500.0,
+      "firstTrade": "2025-07-16",
+      "lastTrade": "2025-07-16"
+    },
+    {
+      "symbol": "OIL",
+      "name": "Oil India",
+      "sector": "Oil & Gas",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": -2100.0,
+      "firstTrade": "2026-01-05",
+      "lastTrade": "2026-01-05"
+    },
+    {
+      "symbol": "PAYTM",
+      "name": "One97 Communications",
+      "sector": "Fintech",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 12506.0,
+      "firstTrade": "2026-01-23",
+      "lastTrade": "2026-01-23"
+    },
+    {
+      "symbol": "PEL",
+      "name": "Piramal Enterprises",
+      "sector": "Financial Services",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 24900.0,
+      "firstTrade": "2025-07-14",
+      "lastTrade": "2025-07-14"
+    },
+    {
+      "symbol": "POLYCAB",
+      "name": "Polycab India",
+      "sector": "Cables",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 16937.0,
+      "firstTrade": "2025-06-23",
+      "lastTrade": "2025-06-23"
+    },
+    {
+      "symbol": "RECLTD",
+      "name": "REC Limited",
+      "sector": "Financial Services",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 21293.0,
+      "firstTrade": "2025-12-23",
+      "lastTrade": "2025-12-23"
+    },
+    {
+      "symbol": "RVNL",
+      "name": "RVNL",
+      "sector": "Infrastructure",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 31625.0,
+      "firstTrade": "2025-12-26",
+      "lastTrade": "2025-12-26"
+    },
+    {
+      "symbol": "SBICARD",
+      "name": "SBI Cards",
+      "sector": "Financial Services",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 17840.0,
+      "firstTrade": "2025-06-19",
+      "lastTrade": "2025-06-19"
+    },
+    {
+      "symbol": "SOLARINDS",
+      "name": "Solar Industries",
+      "sector": "Chemicals",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 17445.0,
+      "firstTrade": "2026-01-28",
+      "lastTrade": "2026-01-28"
+    },
+    {
+      "symbol": "SONACOMS",
+      "name": "Sona BLW",
+      "sector": "Auto Ancillaries",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 17115.0,
+      "firstTrade": "2025-07-17",
+      "lastTrade": "2025-07-17"
+    },
+    {
+      "symbol": "TORNTPHARM",
+      "name": "Torrent Pharma",
+      "sector": "Pharma",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 11375.0,
+      "firstTrade": "2025-05-08",
+      "lastTrade": "2025-05-08"
+    },
+    {
+      "symbol": "TVSMOTOR",
+      "name": "TVS Motor",
+      "sector": "Automobiles",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 18008.0,
+      "firstTrade": "2025-07-15",
+      "lastTrade": "2025-07-15"
+    },
+    {
+      "symbol": "UNIONBANK",
+      "name": "Union Bank of India",
+      "sector": "Banking",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 5531.0,
+      "firstTrade": "2025-05-30",
+      "lastTrade": "2025-05-30"
+    },
+    {
+      "symbol": "UPL",
+      "name": "UPL Limited",
+      "sector": "Agrochemicals",
+      "exchange": "NSE",
+      "tradeCount": 1,
+      "totalPnL": 16396.0,
+      "firstTrade": "2025-07-21",
+      "lastTrade": "2025-07-21"
+    }
+  ],
+  "metadata": {
+    "totalStocks": 88,
+    "lastUpdated": "2026-02-15",
+    "source": "Sensibull Verified P&L Extraction",
+    "pages": 11,
+    "totalTrades": 255,
+    "stocksWithTrades": 88
+  }
+}

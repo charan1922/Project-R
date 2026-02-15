@@ -1,0 +1,28 @@
+[
+  {
+    "Date": "2026-01-65",
+    "Symbol": "NRML26thDec4300 CE",
+    "Option_Type": "STOCK",
+    "Strike": "",
+    "Expiry": "",
+    "Qty": "0",
+    "Avg_Price": "0.00",
+    "LTP": "264.15",
+    "P_L": "9369",
+    "Daily_Total_PnL": "9369",
+    "Verification_Timestamp": "Taken @ 2 Dec 2024, 3:52 PM"
+  },
+  {
+    "Date": "2026-02-13",
+    "Symbol": "NRML24thFeb960 PE",
+    "Option_Type": "STOCK",
+    "Strike": "",
+    "Expiry": "",
+    "Qty": "0",
+    "Avg_Price": "0.00",
+    "LTP": "31.80",
+    "P_L": "16410",
+    "Daily_Total_PnL": "16410",
+    "Verification_Timestamp": "Taken @ 2 Dec 2024, 3:52 PM"
+  }
+]

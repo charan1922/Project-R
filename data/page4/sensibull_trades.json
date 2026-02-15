@@ -1,0 +1,909 @@
+{
+  "totalTrades": 25,
+  "totalDays": 25,
+  "extractedAt": "2026-02-15T19:05:15.578375",
+  "trades": [
+    {
+      "Date": "2025-10-14",
+      "Symbol": "LT",
+      "Option_Type": "PE",
+      "Strike": "17000",
+      "Expiry": "2025-10-28th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "695.35",
+      "P_L": "21000",
+      "Daily_Total_PnL": "21000",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-10-13",
+      "Symbol": "LT",
+      "Option_Type": "PE",
+      "Strike": "6700",
+      "Expiry": "2025-10-28th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "135.35",
+      "P_L": "29500",
+      "Daily_Total_PnL": "29500",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-10-10",
+      "Symbol": "CIPLA",
+      "Option_Type": "CE",
+      "Strike": "1540",
+      "Expiry": "2025-10-28th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "50.25",
+      "P_L": "17250",
+      "Daily_Total_PnL": "17250",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-10-09",
+      "Symbol": "MCX",
+      "Option_Type": "CE",
+      "Strike": "8400",
+      "Expiry": "2025-10-28th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "467.00",
+      "P_L": "21250",
+      "Daily_Total_PnL": "21250",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-10-08",
+      "Symbol": "LT",
+      "Option_Type": "PE",
+      "Strike": "25000",
+      "Expiry": "",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "75.30",
+      "P_L": "17363",
+      "Daily_Total_PnL": "17363",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-10-07",
+      "Symbol": "LT",
+      "Option_Type": "CE",
+      "Strike": "5900",
+      "Expiry": "2025-10-28th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "282.85",
+      "P_L": "21400",
+      "Daily_Total_PnL": "21400",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-10-06",
+      "Symbol": "LT",
+      "Option_Type": "CE",
+      "Strike": "1040",
+      "Expiry": "2025-10-28th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "36.80",
+      "P_L": "20576",
+      "Daily_Total_PnL": "20576",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-10-01",
+      "Symbol": "KOTAKBANK",
+      "Option_Type": "CE",
+      "Strike": "2040",
+      "Expiry": "2025-10-28th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "64.05",
+      "P_L": "20400",
+      "Daily_Total_PnL": "20400",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-30",
+      "Symbol": "LT",
+      "Option_Type": "CE",
+      "Strike": "210",
+      "Expiry": "2025-10-28th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "10.55",
+      "P_L": "23063",
+      "Daily_Total_PnL": "23063",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-29",
+      "Symbol": "HINDPETRO",
+      "Option_Type": "CE",
+      "Strike": "430",
+      "Expiry": "2025-10-28th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "24.40",
+      "P_L": "25313",
+      "Daily_Total_PnL": "25313",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-26",
+      "Symbol": "LAURUSLABS",
+      "Option_Type": "PE",
+      "Strike": "860",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "29.90",
+      "P_L": "18105",
+      "Daily_Total_PnL": "18105",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-25",
+      "Symbol": "LT",
+      "Option_Type": "PE",
+      "Strike": "2440",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "53.45",
+      "P_L": "17488",
+      "Daily_Total_PnL": "17488",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-24",
+      "Symbol": "LT",
+      "Option_Type": "PE",
+      "Strike": "1620",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "22.30",
+      "P_L": "19600",
+      "Daily_Total_PnL": "19600",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-23",
+      "Symbol": "MARUTI",
+      "Option_Type": "CE",
+      "Strike": "16200",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "138.00",
+      "P_L": "-993",
+      "Daily_Total_PnL": "-993",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-22",
+      "Symbol": "ADANIGREEN",
+      "Option_Type": "CE",
+      "Strike": "1060",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "103.05",
+      "P_L": "25200",
+      "Daily_Total_PnL": "25200",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-19",
+      "Symbol": "LAURUSLABS",
+      "Option_Type": "CE",
+      "Strike": "920",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "23.50",
+      "P_L": "17000",
+      "Daily_Total_PnL": "17000",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-18",
+      "Symbol": "LT",
+      "Option_Type": "CE",
+      "Strike": "580",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "18.25",
+      "P_L": "14000",
+      "Daily_Total_PnL": "14000",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-17",
+      "Symbol": "MCX",
+      "Option_Type": "CE",
+      "Strike": "7800",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "294.00",
+      "P_L": "22638",
+      "Daily_Total_PnL": "22638",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-16",
+      "Symbol": "KOTAKBANK",
+      "Option_Type": "CE",
+      "Strike": "1980",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "55.50",
+      "P_L": "24100",
+      "Daily_Total_PnL": "24100",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-12",
+      "Symbol": "LT",
+      "Option_Type": "CE",
+      "Strike": "1550",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "55.95",
+      "P_L": "23286",
+      "Daily_Total_PnL": "23286",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-11",
+      "Symbol": "LT",
+      "Option_Type": "PE",
+      "Strike": "9200",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "251.10",
+      "P_L": "11288",
+      "Daily_Total_PnL": "11288",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-10",
+      "Symbol": "LT",
+      "Option_Type": "CE",
+      "Strike": "700",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "21.15",
+      "P_L": "17680",
+      "Daily_Total_PnL": "17680",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-09",
+      "Symbol": "LT",
+      "Option_Type": "CE",
+      "Strike": "860",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "47.45",
+      "P_L": "23635",
+      "Daily_Total_PnL": "23635",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-08",
+      "Symbol": "EICHERMOT",
+      "Option_Type": "CE",
+      "Strike": "6700",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "191.80",
+      "P_L": "23537",
+      "Daily_Total_PnL": "23537",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    },
+    {
+      "Date": "2025-09-05",
+      "Symbol": "LT",
+      "Option_Type": "PE",
+      "Strike": "1500",
+      "Expiry": "2025-09-30th",
+      "Qty": "0",
+      "Avg_Price": "0.00",
+      "LTP": "44.20",
+      "P_L": "21825",
+      "Daily_Total_PnL": "21825",
+      "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "Page": 4
+    }
+  ],
+  "dailySummaries": [
+    {
+      "date": "2025-10-14",
+      "totalPnL": "21000",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-10-14",
+          "Symbol": "LT",
+          "Option_Type": "PE",
+          "Strike": "17000",
+          "Expiry": "2025-10-28th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "695.35",
+          "P_L": "21000",
+          "Daily_Total_PnL": "21000",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-10-13",
+      "totalPnL": "29500",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-10-13",
+          "Symbol": "LT",
+          "Option_Type": "PE",
+          "Strike": "6700",
+          "Expiry": "2025-10-28th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "135.35",
+          "P_L": "29500",
+          "Daily_Total_PnL": "29500",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-10-10",
+      "totalPnL": "17250",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-10-10",
+          "Symbol": "CIPLA",
+          "Option_Type": "CE",
+          "Strike": "1540",
+          "Expiry": "2025-10-28th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "50.25",
+          "P_L": "17250",
+          "Daily_Total_PnL": "17250",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-10-09",
+      "totalPnL": "21250",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-10-09",
+          "Symbol": "MCX",
+          "Option_Type": "CE",
+          "Strike": "8400",
+          "Expiry": "2025-10-28th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "467.00",
+          "P_L": "21250",
+          "Daily_Total_PnL": "21250",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-10-08",
+      "totalPnL": "17363",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-10-08",
+          "Symbol": "LT",
+          "Option_Type": "PE",
+          "Strike": "25000",
+          "Expiry": "",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "75.30",
+          "P_L": "17363",
+          "Daily_Total_PnL": "17363",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-10-07",
+      "totalPnL": "21400",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-10-07",
+          "Symbol": "LT",
+          "Option_Type": "CE",
+          "Strike": "5900",
+          "Expiry": "2025-10-28th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "282.85",
+          "P_L": "21400",
+          "Daily_Total_PnL": "21400",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-10-06",
+      "totalPnL": "20576",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-10-06",
+          "Symbol": "LT",
+          "Option_Type": "CE",
+          "Strike": "1040",
+          "Expiry": "2025-10-28th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "36.80",
+          "P_L": "20576",
+          "Daily_Total_PnL": "20576",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-10-01",
+      "totalPnL": "20400",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-10-01",
+          "Symbol": "KOTAKBANK",
+          "Option_Type": "CE",
+          "Strike": "2040",
+          "Expiry": "2025-10-28th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "64.05",
+          "P_L": "20400",
+          "Daily_Total_PnL": "20400",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-30",
+      "totalPnL": "23063",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-30",
+          "Symbol": "LT",
+          "Option_Type": "CE",
+          "Strike": "210",
+          "Expiry": "2025-10-28th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "10.55",
+          "P_L": "23063",
+          "Daily_Total_PnL": "23063",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-29",
+      "totalPnL": "25313",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-29",
+          "Symbol": "HINDPETRO",
+          "Option_Type": "CE",
+          "Strike": "430",
+          "Expiry": "2025-10-28th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "24.40",
+          "P_L": "25313",
+          "Daily_Total_PnL": "25313",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-26",
+      "totalPnL": "18105",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-26",
+          "Symbol": "LAURUSLABS",
+          "Option_Type": "PE",
+          "Strike": "860",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "29.90",
+          "P_L": "18105",
+          "Daily_Total_PnL": "18105",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-25",
+      "totalPnL": "17488",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-25",
+          "Symbol": "LT",
+          "Option_Type": "PE",
+          "Strike": "2440",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "53.45",
+          "P_L": "17488",
+          "Daily_Total_PnL": "17488",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-24",
+      "totalPnL": "19600",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-24",
+          "Symbol": "LT",
+          "Option_Type": "PE",
+          "Strike": "1620",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "22.30",
+          "P_L": "19600",
+          "Daily_Total_PnL": "19600",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-23",
+      "totalPnL": "-993",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-23",
+          "Symbol": "MARUTI",
+          "Option_Type": "CE",
+          "Strike": "16200",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "138.00",
+          "P_L": "-993",
+          "Daily_Total_PnL": "-993",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-22",
+      "totalPnL": "25200",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-22",
+          "Symbol": "ADANIGREEN",
+          "Option_Type": "CE",
+          "Strike": "1060",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "103.05",
+          "P_L": "25200",
+          "Daily_Total_PnL": "25200",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-19",
+      "totalPnL": "17000",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-19",
+          "Symbol": "LAURUSLABS",
+          "Option_Type": "CE",
+          "Strike": "920",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "23.50",
+          "P_L": "17000",
+          "Daily_Total_PnL": "17000",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-18",
+      "totalPnL": "14000",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-18",
+          "Symbol": "LT",
+          "Option_Type": "CE",
+          "Strike": "580",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "18.25",
+          "P_L": "14000",
+          "Daily_Total_PnL": "14000",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-17",
+      "totalPnL": "22638",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-17",
+          "Symbol": "MCX",
+          "Option_Type": "CE",
+          "Strike": "7800",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "294.00",
+          "P_L": "22638",
+          "Daily_Total_PnL": "22638",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-16",
+      "totalPnL": "24100",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-16",
+          "Symbol": "KOTAKBANK",
+          "Option_Type": "CE",
+          "Strike": "1980",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "55.50",
+          "P_L": "24100",
+          "Daily_Total_PnL": "24100",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-12",
+      "totalPnL": "23286",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-12",
+          "Symbol": "LT",
+          "Option_Type": "CE",
+          "Strike": "1550",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "55.95",
+          "P_L": "23286",
+          "Daily_Total_PnL": "23286",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-11",
+      "totalPnL": "11288",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-11",
+          "Symbol": "LT",
+          "Option_Type": "PE",
+          "Strike": "9200",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "251.10",
+          "P_L": "11288",
+          "Daily_Total_PnL": "11288",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-10",
+      "totalPnL": "17680",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-10",
+          "Symbol": "LT",
+          "Option_Type": "CE",
+          "Strike": "700",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "21.15",
+          "P_L": "17680",
+          "Daily_Total_PnL": "17680",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-09",
+      "totalPnL": "23635",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-09",
+          "Symbol": "LT",
+          "Option_Type": "CE",
+          "Strike": "860",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "47.45",
+          "P_L": "23635",
+          "Daily_Total_PnL": "23635",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-08",
+      "totalPnL": "23537",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-08",
+          "Symbol": "EICHERMOT",
+          "Option_Type": "CE",
+          "Strike": "6700",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "191.80",
+          "P_L": "23537",
+          "Daily_Total_PnL": "23537",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    },
+    {
+      "date": "2025-09-05",
+      "totalPnL": "21825",
+      "timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+      "numTrades": 1,
+      "trades": [
+        {
+          "Date": "2025-09-05",
+          "Symbol": "LT",
+          "Option_Type": "PE",
+          "Strike": "1500",
+          "Expiry": "2025-09-30th",
+          "Qty": "0",
+          "Avg_Price": "0.00",
+          "LTP": "44.20",
+          "P_L": "21825",
+          "Daily_Total_PnL": "21825",
+          "Verification_Timestamp": "Taken @ 13 Feb 2026, 4:12 PM",
+          "Page": 4
+        }
+      ]
+    }
+  ]
+}
