@@ -12,7 +12,8 @@ import {
   Activity,
   Search,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  BarChart3
 } from "lucide-react";
 
 interface Stock {
@@ -40,6 +41,7 @@ interface SectorInfo {
 interface MarketData {
   stocks: Stock[];
   sectorData: Record<string, SectorInfo>;
+  totalFnOStocks: number;
   lastUpdated: string;
 }
 
@@ -64,8 +66,8 @@ export default function SectorScopePage() {
 
   useEffect(() => {
     fetchData();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchData, 30000);
+    // Auto-refresh every 60 seconds
+    const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -74,7 +76,7 @@ export default function SectorScopePage() {
       <div className="p-6 flex items-center justify-center h-screen">
         <div className="text-white text-xl flex items-center gap-3">
           <RefreshCw className="w-6 h-6 animate-spin" />
-          Loading live market data...
+          Loading NSE F&O market data...
         </div>
       </div>
     );
@@ -88,15 +90,17 @@ export default function SectorScopePage() {
     );
   }
 
-  const { sectorData } = data;
-  const sectors = Object.keys(sectorData).sort();
+  const { sectorData, totalFnOStocks } = data;
+  const sectors = Object.keys(sectorData).sort((a, b) => {
+    // Sort by absolute performance (most volatile first)
+    return Math.abs(sectorData[b].avgChange) - Math.abs(sectorData[a].avgChange);
+  });
 
   // Filter sectors based on search
   const filteredSectors = sectors.filter((sector) => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     if (sector.toLowerCase().includes(term)) return true;
-    // Check if any stock in sector matches
     return sectorData[sector].stocks.some(
       (s) =>
         s.symbol.toLowerCase().includes(term) ||
@@ -110,6 +114,17 @@ export default function SectorScopePage() {
   const stocksDown = data.stocks.filter((s) => s.percentChange < 0).length;
   const stocksUnchanged = totalStocks - stocksUp - stocksDown;
 
+  // Get top movers
+  const topGainers = [...data.stocks]
+    .filter(s => s.percentChange > 0)
+    .sort((a, b) => b.percentChange - a.percentChange)
+    .slice(0, 5);
+    
+  const topLosers = [...data.stocks]
+    .filter(s => s.percentChange < 0)
+    .sort((a, b) => a.percentChange - b.percentChange)
+    .slice(0, 5);
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -117,10 +132,10 @@ export default function SectorScopePage() {
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
             <PieChart className="w-8 h-8 text-emerald-400" />
-            Sector Scope
+            F&O Sector Scope
           </h1>
           <p className="text-slate-400">
-            Live NSE market data by sector • {totalStocks} stocks tracked
+            Live NSE Futures & Options market • {totalFnOStocks}+ F&O stocks
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -139,7 +154,7 @@ export default function SectorScopePage() {
       </div>
 
       {/* Market Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="bg-slate-900 border-slate-800">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-emerald-400">{stocksUp}</div>
@@ -168,13 +183,66 @@ export default function SectorScopePage() {
             <div className="text-sm text-slate-400">Sectors</div>
           </CardContent>
         </Card>
+        <Card className="bg-slate-900 border-slate-800">
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-purple-400">{totalFnOStocks}+</div>
+            <div className="text-sm text-slate-400">F&O Stocks</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top Movers */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="bg-slate-900 border-slate-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-emerald-400 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Top Gainers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {topGainers.map((stock) => (
+                <div key={stock.symbol} className="flex items-center justify-between p-2 rounded bg-slate-800/50">
+                  <div>
+                    <span className="font-semibold text-white">{stock.symbol}</span>
+                    <span className="text-xs text-slate-400 ml-2">{stock.sector}</span>
+                  </div>
+                  <span className="text-emerald-400 font-medium">+{stock.percentChange.toFixed(2)}%</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-900 border-slate-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-red-400 flex items-center gap-2">
+              <TrendingDown className="w-4 h-4" />
+              Top Losers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {topLosers.map((stock) => (
+                <div key={stock.symbol} className="flex items-center justify-between p-2 rounded bg-slate-800/50">
+                  <div>
+                    <span className="font-semibold text-white">{stock.symbol}</span>
+                    <span className="text-xs text-slate-400 ml-2">{stock.sector}</span>
+                  </div>
+                  <span className="text-red-400 font-medium">{stock.percentChange.toFixed(2)}%</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <Input
-          placeholder="Search sectors or stocks..."
+          placeholder="Search F&O stocks or sectors..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10 bg-slate-800 border-slate-700 text-white"
@@ -185,7 +253,7 @@ export default function SectorScopePage() {
       <Card className="bg-slate-900 border-slate-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
-            <Activity className="w-5 h-5 text-emerald-400" />
+            <BarChart3 className="w-5 h-5 text-emerald-400" />
             Sector Performance Heatmap
           </CardTitle>
         </CardHeader>
@@ -194,7 +262,7 @@ export default function SectorScopePage() {
             {filteredSectors.map((sector) => {
               const info = sectorData[sector];
               const isPositive = info.avgChange >= 0;
-              const intensity = Math.min(Math.abs(info.avgChange) / 2, 1); // Cap at 2%
+              const intensity = Math.min(Math.abs(info.avgChange) / 2, 1);
               
               return (
                 <button
@@ -323,7 +391,9 @@ export default function SectorScopePage() {
       <div className="text-center text-slate-500 text-sm pb-4">
         Last updated: {new Date(data.lastUpdated).toLocaleString()}
         <span className="mx-2">•</span>
-        Auto-refreshes every 30 seconds
+        Auto-refreshes every 60 seconds
+        <span className="mx-2">•</span>
+        Data source: NSE India
       </div>
     </div>
   );
