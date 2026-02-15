@@ -10,7 +10,9 @@ import {
   BarChart3,
   Settings,
   Menu,
-  X
+  X,
+  PieChart,
+  Activity
 } from "lucide-react";
 import { useState } from "react";
 
@@ -26,6 +28,12 @@ const navItems: NavItem[] = [
     label: "Dashboard",
     href: "/",
     icon: <LayoutDashboard className="w-5 h-5" />,
+  },
+  {
+    label: "Sector Scope",
+    href: "/sector-scope",
+    icon: <PieChart className="w-5 h-5" />,
+    badge: "LIVE",
   },
   {
     label: "Stocks Universe",
@@ -71,7 +79,7 @@ export default function Sidebar() {
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 border-b border-slate-800 z-50 flex items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-white" />
+            <Activity className="w-5 h-5 text-white" />
           </div>
           <span className="text-lg font-bold text-white">Sensibull</span>
         </Link>
@@ -101,7 +109,7 @@ export default function Sidebar() {
         <div className="h-16 flex items-center px-6 border-b border-slate-800">
           <Link href="/" className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-white" />
+              <Activity className="w-5 h-5 text-white" />
             </div>
             <div>
               <span className="text-lg font-bold text-white">Sensibull</span>
@@ -115,7 +123,7 @@ export default function Sidebar() {
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">
             Main
           </div>
-          {navItems.slice(0, 4).map((item) => (
+          {navItems.slice(0, 5).map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -129,7 +137,11 @@ export default function Sidebar() {
               {item.icon}
               <span className="flex-1">{item.label}</span>
               {item.badge && (
-                <span className="px-2 py-0.5 text-xs rounded-full bg-slate-800 text-slate-400">
+                <span className={`px-2 py-0.5 text-xs rounded-full ${
+                  item.badge === "LIVE" 
+                    ? "bg-red-500/20 text-red-400 animate-pulse" 
+                    : "bg-slate-800 text-slate-400"
+                }`}>
                   {item.badge}
                 </span>
               )}
@@ -139,7 +151,7 @@ export default function Sidebar() {
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mt-6 mb-2">
             Analysis
           </div>
-          {navItems.slice(4, 5).map((item) => (
+          {navItems.slice(5, 6).map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -158,7 +170,7 @@ export default function Sidebar() {
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mt-6 mb-2">
             System
           </div>
-          {navItems.slice(5).map((item) => (
+          {navItems.slice(6).map((item) => (
             <Link
               key={item.href}
               href={item.href}
