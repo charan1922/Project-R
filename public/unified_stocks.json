@@ -3,7 +3,7 @@
     {
       "symbol": "LT",
       "name": "Larsen & Toubro",
-      "sector": "Infrastructure",
+      "sector": "INFRA",
       "exchange": "NSE",
       "tradeCount": 100,
       "totalPnL": 1423859.0,
@@ -13,7 +13,7 @@
     {
       "symbol": "AUROPHARMA",
       "name": "Aurobindo Pharma",
-      "sector": "Pharma",
+      "sector": "PHARMA",
       "exchange": "NSE",
       "tradeCount": 6,
       "totalPnL": 52471.78,
@@ -23,7 +23,7 @@
     {
       "symbol": "EICHERMOT",
       "name": "Eicher Motors",
-      "sector": "Automobiles",
+      "sector": "AUTO",
       "exchange": "NSE",
       "tradeCount": 6,
       "totalPnL": 71595.0,
@@ -33,7 +33,7 @@
     {
       "symbol": "GODREJPROP",
       "name": "Godrej Properties",
-      "sector": "Real Estate",
+      "sector": "REALTY",
       "exchange": "NSE",
       "tradeCount": 5,
       "totalPnL": 95376.0,
@@ -43,7 +43,7 @@
     {
       "symbol": "HDFCAMC",
       "name": "HDFC AMC",
-      "sector": "Financial Services",
+      "sector": "FINANCIAL SERVICES",
       "exchange": "NSE",
       "tradeCount": 5,
       "totalPnL": 89790.0,
@@ -53,7 +53,7 @@
     {
       "symbol": "ADANIENSOL",
       "name": "Adani Energy Solutions",
-      "sector": "Power",
+      "sector": "POWER",
       "exchange": "NSE",
       "tradeCount": 4,
       "totalPnL": 61991.0,
@@ -63,7 +63,7 @@
     {
       "symbol": "ADANIGREEN",
       "name": "Adani Green Energy",
-      "sector": "Power",
+      "sector": "ENERGY",
       "exchange": "NSE",
       "tradeCount": 4,
       "totalPnL": 57829.0,
@@ -73,7 +73,7 @@
     {
       "symbol": "GLENMARK",
       "name": "Glenmark Pharma",
-      "sector": "Pharma",
+      "sector": "PHARMA",
       "exchange": "NSE",
       "tradeCount": 4,
       "totalPnL": 71477.0,
@@ -83,7 +83,7 @@
     {
       "symbol": "LAURUSLABS",
       "name": "Laurus Labs",
-      "sector": "Pharma",
+      "sector": "PHARMA",
       "exchange": "NSE",
       "tradeCount": 4,
       "totalPnL": 79390.0,
@@ -103,7 +103,7 @@
     {
       "symbol": "ATGL",
       "name": "Adani Total Gas",
-      "sector": "Gas Distribution",
+      "sector": "ENERGY",
       "exchange": "NSE",
       "tradeCount": 3,
       "totalPnL": 61320.0,
@@ -123,7 +123,7 @@
     {
       "symbol": "HAL",
       "name": "Hindustan Aeronautics",
-      "sector": "Defense",
+      "sector": "DEFENCE",
       "exchange": "NSE",
       "tradeCount": 3,
       "totalPnL": 42660.0,
@@ -133,7 +133,7 @@
     {
       "symbol": "KOTAKBANK",
       "name": "Kotak Mahindra Bank",
-      "sector": "Banking",
+      "sector": "PRIVATE BANK",
       "exchange": "NSE",
       "tradeCount": 3,
       "totalPnL": 57940.0,
@@ -153,7 +153,7 @@
     {
       "symbol": "MCX",
       "name": "MCX India",
-      "sector": "Exchange",
+      "sector": "FINANCIAL SERVICES",
       "exchange": "NSE",
       "tradeCount": 3,
       "totalPnL": 64138.0,
@@ -163,7 +163,7 @@
     {
       "symbol": "TITAN",
       "name": "Titan Company",
-      "sector": "Retail",
+      "sector": "FMCG",
       "exchange": "NSE",
       "tradeCount": 3,
       "totalPnL": 64654.0,
@@ -173,7 +173,7 @@
     {
       "symbol": "BOSCHLTD",
       "name": "Bosch Limited",
-      "sector": "Auto Ancillaries",
+      "sector": "AUTO",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 50335.0,
@@ -183,7 +183,7 @@
     {
       "symbol": "BSE",
       "name": "BSE Limited",
-      "sector": "Stock Exchange",
+      "sector": "FINANCIAL SERVICES",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 58388.0,
@@ -193,7 +193,7 @@
     {
       "symbol": "DELHIVERY",
       "name": "Delhivery",
-      "sector": "Logistics",
+      "sector": "INFRA",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 73200.0,
@@ -203,7 +203,7 @@
     {
       "symbol": "DLF",
       "name": "DLF Limited",
-      "sector": "Real Estate",
+      "sector": "REALTY",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 41992.0,
@@ -213,7 +213,7 @@
     {
       "symbol": "ETERNAL",
       "name": "Eternal Limited",
-      "sector": "Consumer Durables",
+      "sector": "FMCG",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 36976.0,
@@ -223,7 +223,7 @@
     {
       "symbol": "HEROMOTOCO",
       "name": "Hero MotoCorp",
-      "sector": "Automobiles",
+      "sector": "AUTO",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 37890.0,
@@ -233,7 +233,7 @@
     {
       "symbol": "HINDPETRO",
       "name": "Hindustan Petroleum",
-      "sector": "Oil & Gas",
+      "sector": "OIL & GAS",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 58624.0,
@@ -253,7 +253,7 @@
     {
       "symbol": "JINDALSTEL",
       "name": "Jindal Steel & Power",
-      "sector": "Metals",
+      "sector": "METAL",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 31874.0,
@@ -263,7 +263,7 @@
     {
       "symbol": "LODHA",
       "name": "Macrotech Developers",
-      "sector": "Real Estate",
+      "sector": "REALTY",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 26100.0,
@@ -273,7 +273,7 @@
     {
       "symbol": "LUPIN",
       "name": "Lupin Limited",
-      "sector": "Pharma",
+      "sector": "PHARMA",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 34935.0,
@@ -283,7 +283,7 @@
     {
       "symbol": "M&M",
       "name": "Mahindra & Mahindra",
-      "sector": "Automobiles",
+      "sector": "AUTO",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 25410.0,
@@ -293,7 +293,7 @@
     {
       "symbol": "MANKIND",
       "name": "Mankind Pharma",
-      "sector": "Pharma",
+      "sector": "PHARMA",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 36934.0,
@@ -303,7 +303,7 @@
     {
       "symbol": "MARUTI",
       "name": "Maruti Suzuki",
-      "sector": "Automobiles",
+      "sector": "AUTO",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 7207.0,
@@ -323,7 +323,7 @@
     {
       "symbol": "POLICYBZR",
       "name": "PB Fintech",
-      "sector": "Fintech",
+      "sector": "FINTECH",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 35569.0,
@@ -333,7 +333,7 @@
     {
       "symbol": "PRESTIGE",
       "name": "Prestige Estates",
-      "sector": "Real Estate",
+      "sector": "REALTY",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 28245.0,
@@ -343,7 +343,7 @@
     {
       "symbol": "RBLBANK",
       "name": "RBL Bank",
-      "sector": "Banking",
+      "sector": "PRIVATE BANK",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 30000.0,
@@ -353,7 +353,7 @@
     {
       "symbol": "TIINDIA",
       "name": "Tube Investments",
-      "sector": "Auto Ancillaries",
+      "sector": "AUTO",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 50300.0,
@@ -363,7 +363,7 @@
     {
       "symbol": "TITAGARH",
       "name": "Titagarh Rail Systems",
-      "sector": "Railways",
+      "sector": "RAILWAYS",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 33875.0,
@@ -373,7 +373,7 @@
     {
       "symbol": "ZYDUSLIFE",
       "name": "Zydus Lifesciences",
-      "sector": "Pharma",
+      "sector": "PHARMA",
       "exchange": "NSE",
       "tradeCount": 2,
       "totalPnL": 66780.0,
@@ -383,7 +383,7 @@
     {
       "symbol": "AMBUJACEM",
       "name": "Ambuja Cements",
-      "sector": "Cement",
+      "sector": "CEMENT",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 19950.0,
@@ -393,7 +393,7 @@
     {
       "symbol": "APOLLOTYRE",
       "name": "Apollo Tyres",
-      "sector": "Auto Tyres",
+      "sector": "AUTO",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 10115.0,
@@ -403,7 +403,7 @@
     {
       "symbol": "ASTRAL",
       "name": "Astral Limited",
-      "sector": "Plastics",
+      "sector": "FMCG",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 18717.0,
@@ -413,7 +413,7 @@
     {
       "symbol": "AXISBANK",
       "name": "Axis Bank",
-      "sector": "Banking",
+      "sector": "PRIVATE BANK",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 18437.0,
@@ -423,7 +423,7 @@
     {
       "symbol": "BALKRISIND",
       "name": "Balkrishna Industries",
-      "sector": "Auto Tyres",
+      "sector": "AUTO",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 11355.0,
@@ -433,7 +433,7 @@
     {
       "symbol": "BANDHANBNK",
       "name": "Bandhan Bank",
-      "sector": "Banking",
+      "sector": "PRIVATE BANK",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 23240.0,
@@ -443,7 +443,7 @@
     {
       "symbol": "BANKINDIA",
       "name": "Bank of India",
-      "sector": "Banking",
+      "sector": "PSU BANK",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 26000.0,
@@ -453,7 +453,7 @@
     {
       "symbol": "BDL",
       "name": "Bharat Dynamics",
-      "sector": "Defense",
+      "sector": "DEFENCE",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 17387.0,
@@ -463,7 +463,7 @@
     {
       "symbol": "BHARTIARTL",
       "name": "Bharti Airtel",
-      "sector": "Telecom",
+      "sector": "TELECOM",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 18192.0,
@@ -473,7 +473,7 @@
     {
       "symbol": "BPCL",
       "name": "Bharat Petroleum",
-      "sector": "Oil & Gas",
+      "sector": "OIL & GAS",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 14813.0,
@@ -493,7 +493,7 @@
     {
       "symbol": "CIPLA",
       "name": "Cipla",
-      "sector": "Pharma",
+      "sector": "PHARMA",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 17250.0,
@@ -513,7 +513,7 @@
     {
       "symbol": "CONCOR",
       "name": "Container Corporation",
-      "sector": "Logistics",
+      "sector": "INFRA",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 18300.0,
@@ -523,7 +523,7 @@
     {
       "symbol": "CROMPTON",
       "name": "Crompton Greaves",
-      "sector": "Consumer Durables",
+      "sector": "CONSUMER DURABLES",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 20700.0,
@@ -533,7 +533,7 @@
     {
       "symbol": "CUMMINSIND",
       "name": "Cummins India",
-      "sector": "Auto Ancillaries",
+      "sector": "AUTO",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 15380.0,
@@ -553,7 +553,7 @@
     {
       "symbol": "DALBHARAT",
       "name": "Dalmia Bharat",
-      "sector": "Cement",
+      "sector": "CEMENT",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 13000.0,
@@ -563,7 +563,7 @@
     {
       "symbol": "DIXON",
       "name": "Dixon Technologies",
-      "sector": "Consumer Durables",
+      "sector": "CONSUMER DURABLES",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 27500.0,
@@ -573,7 +573,7 @@
     {
       "symbol": "DRREDDY",
       "name": "Dr. Reddy's Laboratories",
-      "sector": "Pharma",
+      "sector": "PHARMA",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 11406.0,
@@ -583,7 +583,7 @@
     {
       "symbol": "FEDERALBNK",
       "name": "Federal Bank",
-      "sector": "Banking",
+      "sector": "PRIVATE BANK",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 27000.0,
@@ -593,7 +593,7 @@
     {
       "symbol": "GAIL",
       "name": "GAIL India",
-      "sector": "Oil & Gas",
+      "sector": "OIL & GAS",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 11750.0,
@@ -603,7 +603,7 @@
     {
       "symbol": "GMRAIRPORT",
       "name": "GMR Airports",
-      "sector": "Airports",
+      "sector": "INFRA",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 18484.0,
@@ -623,7 +623,7 @@
     {
       "symbol": "HINDALCO",
       "name": "Hindalco Industries",
-      "sector": "Metals",
+      "sector": "METAL",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 18305.0,
@@ -643,7 +643,7 @@
     {
       "symbol": "HINDZINC",
       "name": "Hindustan Zinc",
-      "sector": "Metals",
+      "sector": "METAL",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 18987.0,
@@ -653,7 +653,7 @@
     {
       "symbol": "ICICIGI",
       "name": "ICICI Lombard",
-      "sector": "Insurance",
+      "sector": "INSURANCE",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 15974.0,
@@ -663,7 +663,7 @@
     {
       "symbol": "ICICIPRULI",
       "name": "ICICI Prudential Life",
-      "sector": "Insurance",
+      "sector": "INSURANCE",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 19887.0,
@@ -673,7 +673,7 @@
     {
       "symbol": "IIFL",
       "name": "IIFL Finance",
-      "sector": "Financial Services",
+      "sector": "FINANCIAL SERVICES",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 20625.0,
@@ -683,7 +683,7 @@
     {
       "symbol": "INDIANB",
       "name": "Indian Bank",
-      "sector": "Banking",
+      "sector": "PSU BANK",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": -2090.0,
@@ -693,7 +693,7 @@
     {
       "symbol": "INDUSINDBK",
       "name": "IndusInd Bank",
-      "sector": "Banking",
+      "sector": "PRIVATE BANK",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": -3325.0,
@@ -703,7 +703,7 @@
     {
       "symbol": "KALYANKJIL",
       "name": "Kalyan Jewellers",
-      "sector": "Retail",
+      "sector": "FMCG",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 17390.0,
@@ -713,7 +713,7 @@
     {
       "symbol": "KEI",
       "name": "KEI Industries",
-      "sector": "Cables",
+      "sector": "INFRA",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 12075.0,
@@ -723,7 +723,7 @@
     {
       "symbol": "LICI",
       "name": "LIC of India",
-      "sector": "Insurance",
+      "sector": "INSURANCE",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 13800.0,
@@ -733,7 +733,7 @@
     {
       "symbol": "NAUKRI",
       "name": "Info Edge (Naukri)",
-      "sector": "Internet",
+      "sector": "IT",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 17213.0,
@@ -753,7 +753,7 @@
     {
       "symbol": "OIL",
       "name": "Oil India",
-      "sector": "Oil & Gas",
+      "sector": "OIL & GAS",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": -2100.0,
@@ -763,7 +763,7 @@
     {
       "symbol": "PAYTM",
       "name": "One97 Communications",
-      "sector": "Fintech",
+      "sector": "FINTECH",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 12506.0,
@@ -773,7 +773,7 @@
     {
       "symbol": "PEL",
       "name": "Piramal Enterprises",
-      "sector": "Financial Services",
+      "sector": "FINANCIAL SERVICES",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 24900.0,
@@ -783,7 +783,7 @@
     {
       "symbol": "POLYCAB",
       "name": "Polycab India",
-      "sector": "Cables",
+      "sector": "INFRA",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 16937.0,
@@ -793,7 +793,7 @@
     {
       "symbol": "RECLTD",
       "name": "REC Limited",
-      "sector": "Financial Services",
+      "sector": "FINANCIAL SERVICES",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 21293.0,
@@ -803,7 +803,7 @@
     {
       "symbol": "RVNL",
       "name": "RVNL",
-      "sector": "Infrastructure",
+      "sector": "INFRA",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 31625.0,
@@ -813,7 +813,7 @@
     {
       "symbol": "SBICARD",
       "name": "SBI Cards",
-      "sector": "Financial Services",
+      "sector": "FINANCIAL SERVICES",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 17840.0,
@@ -823,7 +823,7 @@
     {
       "symbol": "SOLARINDS",
       "name": "Solar Industries",
-      "sector": "Chemicals",
+      "sector": "DEFENCE",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 17445.0,
@@ -833,7 +833,7 @@
     {
       "symbol": "SONACOMS",
       "name": "Sona BLW",
-      "sector": "Auto Ancillaries",
+      "sector": "AUTO",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 17115.0,
@@ -843,7 +843,7 @@
     {
       "symbol": "TORNTPHARM",
       "name": "Torrent Pharma",
-      "sector": "Pharma",
+      "sector": "PHARMA",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 11375.0,
@@ -853,7 +853,7 @@
     {
       "symbol": "TVSMOTOR",
       "name": "TVS Motor",
-      "sector": "Automobiles",
+      "sector": "AUTO",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 18008.0,
@@ -863,7 +863,7 @@
     {
       "symbol": "UNIONBANK",
       "name": "Union Bank of India",
-      "sector": "Banking",
+      "sector": "PSU BANK",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 5531.0,
@@ -873,7 +873,7 @@
     {
       "symbol": "UPL",
       "name": "UPL Limited",
-      "sector": "Agrochemicals",
+      "sector": "FMCG",
       "exchange": "NSE",
       "tradeCount": 1,
       "totalPnL": 16396.0,
