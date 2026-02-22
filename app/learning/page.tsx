@@ -15,129 +15,150 @@ import {
   GraduationCap,
   ExternalLink,
   FileText,
+  Cpu,
+  FlaskConical,
+  Clock,
+  Activity,
+  ShieldCheck
 } from "lucide-react";
 
-const modules = [
+const foundations = [
   {
     id: 1,
-    title: "Stock Market Basics",
-    description:
-      "Understand how stock markets work, what drives prices, and the role of exchanges like NSE and BSE in India.",
-    href: "/learning/stock-basics",
+    title: "The Foundation of Flow",
+    description: "Understand the river of money and institutional flow through analogies.",
+    href: "/learning/foundation-of-flow",
     icon: <BookOpen className="w-6 h-6" />,
     color: "text-sky-400",
     bg: "bg-sky-500/10 border-sky-500/20",
-    topics: ["Market Structure", "Order Types", "Price Discovery", "NSE/BSE"],
+    topics: ["River Analogy", "Volume vs Noise", "Z-Score Intro"],
   },
   {
     id: 2,
-    title: "Options Trading 101",
-    description:
-      "Learn calls, puts, strike prices, expiry dates, and the fundamentals of options contracts in the Indian F&O segment.",
-    href: "/learning/options-101",
+    title: "The 4-Factor Model",
+    description: "Master the security gate: Volume, OI, Turnover, and Spread Z-Scores.",
+    href: "/learning/4-factor-model",
     icon: <Layers className="w-6 h-6" />,
     color: "text-emerald-400",
     bg: "bg-emerald-500/10 border-emerald-500/20",
-    topics: ["Calls & Puts", "Strike Price", "Expiry Cycles", "Option Greeks"],
+    topics: ["Activation Gate", "Directional Compass", "Quality Filter", "Regime Detector"],
   },
   {
     id: 3,
-    title: "Volume & Open Interest",
-    description:
-      "Discover how volume and open interest data reveal the true conviction behind price movements.",
-    href: "/learning/volume-oi",
-    icon: <BarChart2 className="w-6 h-6" />,
-    color: "text-amber-400",
-    bg: "bg-amber-500/10 border-amber-500/20",
-    topics: ["Volume Analysis", "OI Interpretation", "Put/Call Ratio", "Seller's Perspective"],
-  },
-  {
-    id: 4,
-    title: "Z-Score & R-Factor Model",
-    description:
-      "Master the 4-Factor Z-Score R-Factor Model that normalizes market data to detect institutional anomalies.",
-    href: "/learning/z-score-r-factor",
-    icon: <Calculator className="w-6 h-6" />,
-    color: "text-indigo-400",
-    bg: "bg-indigo-500/10 border-indigo-500/20",
-    topics: ["Z-Score Math", "4-Factor Weights", "R-Factor Formula", "Sigma Events"],
-  },
-  {
-    id: 5,
-    title: "Smart Money Detection",
-    description:
-      'Learn to identify "Elephant" and "Cheetah" stock regimes and detect institutional footprints in market microstructure.',
-    href: "/learning/smart-money",
+    title: "Market Regimes",
+    description: "Identify stock personalities: Elephant (High Liquidity) vs. Cheetah (High Beta).",
+    href: "/learning/market-regimes",
     icon: <Brain className="w-6 h-6" />,
     color: "text-rose-400",
     bg: "bg-rose-500/10 border-rose-500/20",
-    topics: ["Elephant vs Cheetah", "Institutional Flow", "Bid-Ask Spreads", "Turnover Integral"],
+    topics: ["Regime DNA", "Spread Z-Score", "Order Execution"],
   },
   {
-    id: 6,
-    title: "Breakout Strategies",
-    description:
-      'The "Blast Protocol" - combining Breakout Beacons with Intraday Boost for high-momentum trade entries.',
-    href: "/learning/breakout-strategies",
+    id: 4,
+    title: "The Blast Protocol",
+    description: "The execution blueprint for high-momentum institutional breakouts.",
+    href: "/learning/blast-protocol",
     icon: <Target className="w-6 h-6" />,
     color: "text-orange-400",
     bg: "bg-orange-500/10 border-orange-500/20",
-    topics: ["Breakout Beacon", "Intraday Boost", "Blast Protocol", "Risk Management"],
+    topics: ["ORB Setup", "Triple Confirmation", "Dynamic Exits"],
+  },
+];
+
+const advancedLab = [
+  {
+    id: 5,
+    title: "Algo Implementation",
+    description: "From theory to code: Building the R-Factor engine and connecting to NSE.",
+    href: "/learning/algo-implementation",
+    icon: <Cpu className="w-6 h-6" />,
+    color: "text-indigo-400",
+    bg: "bg-indigo-500/10 border-indigo-500/20",
+    topics: ["Node.js/Python", "API Integration", "Historical Processing"],
+  },
+  {
+    id: 6,
+    title: "Advanced Factor Eng.",
+    description: "Higher-order math: PCA for OI Vectors and india VIX regime filtering.",
+    href: "/learning/advanced-factors",
+    icon: <FlaskConical className="w-6 h-6" />,
+    color: "text-purple-400",
+    bg: "bg-purple-500/10 border-purple-500/20",
+    topics: ["Principal Component Analysis", "Volatility Normalization", "Second Derivatives"],
   },
   {
     id: 7,
-    title: "Backtesting Fundamentals",
-    description:
-      "Understand walk-forward analysis, parameter optimization, and how to validate trading strategies before going live.",
-    href: "/learning/backtesting-fundamentals",
-    icon: <Lightbulb className="w-6 h-6" />,
-    color: "text-teal-400",
-    bg: "bg-teal-500/10 border-teal-500/20",
-    topics: ["Walk-Forward", "Overfitting", "Parameter Sensitivity", "Risk Metrics"],
+    title: "Quantitative Validation",
+    description: "Ensuring robustness: Walk-forward analysis and parameter sensitivity.",
+    href: "/learning/quant-validation",
+    icon: <Calculator className="w-6 h-6" />,
+    color: "text-rose-400",
+    bg: "bg-rose-500/10 border-rose-500/20",
+    topics: ["Overfitting Prevention", "Sliding Windows", "Risk Optimization"],
+  },
+  {
+    id: 8,
+    title: "OpenClaw Architecture",
+    description: "Modern 6-layer topography for deterministic document and trading systems.",
+    href: "/learning/openclaw-arch",
+    icon: <Layers className="w-6 h-6" />,
+    color: "text-amber-400",
+    bg: "bg-amber-500/10 border-amber-500/20",
+    topics: ["Control Planes", "Protocol Mechanics", "Local-First Persistence"],
+  },
+  {
+    id: 9,
+    title: "Temporal Anomalies",
+    description: "Understanding the 12:40 PM Intraday Pivot and global flow overlaps.",
+    href: "/learning/temporal-anomalies",
+    icon: <Clock className="w-6 h-6" />,
+    color: "text-sky-400",
+    bg: "bg-sky-500/10 border-sky-500/20",
+    topics: ["European Overlap", "Intraday Boost", "Volume Completion"],
+  },
+  {
+    id: 10,
+    title: "Execution Microstructure",
+    description: "Deep dive into Elephant vs. Cheetah protocols and hidden accumulation.",
+    href: "/learning/execution-microstructure",
+    icon: <Activity className="w-6 h-6" />,
+    color: "text-emerald-400",
+    bg: "bg-emerald-500/10 border-emerald-500/20",
+    topics: ["Passive Orders", "Market Urgency", "Absorption Logic"],
+  },
+  {
+    id: 11,
+    title: "System Sovereignty",
+    description: "Protecting your alpha: Docker isolation, RPC mechanics, and eBPF tracing.",
+    href: "/learning/system-sovereignty",
+    icon: <ShieldCheck className="w-6 h-6" />,
+    color: "text-indigo-400",
+    bg: "bg-indigo-500/10 border-indigo-500/20",
+    topics: ["Sandboxing", "Idempotency", "Kernel-Level Security"],
   },
 ];
 
-const referenceSites = [
-  {
-    title: "Deep Quant Forensic Lab",
-    description: "Interactive 4-Factor Z-Score strategy dashboard with forensic stock analysis, AI assistant, and signal simulator.",
-    href: "/learning/deep-quant-lab",
-    icon: <FileText className="w-5 h-5" />,
-  },
+const liveTools = [
   {
     title: "R-Factor Engine & Analysis",
-    description: "Comprehensive R-Factor model documentation, case studies (PNB, Dixon, Aurobindo Pharma), and interactive tools.",
+    description: "Real-time 4-Factor Z-Score scanner with regime detection and live signal visualization.",
     href: "/learning/r-factor-engine",
-    icon: <FileText className="w-5 h-5" />,
-  },
-];
-
-const videoResources = [
-  {
-    title: "This Indicator Changed My Trading Forever",
-    url: "https://www.youtube.com/watch?v=rdcV5u5cKmg",
-    description: "Volume and OI-based breakout detection methodology (Breakout Beacon).",
-  },
-  {
-    title: "Intraday Boost Strategy Explained",
-    url: "https://www.youtube.com/watch?v=RfIg4D4C_Q0",
-    description: "The 20-parameter intraday boost strategy for live trading signals.",
+    icon: <Activity className="w-5 h-5" />,
   },
 ];
 
 export default function LearningPage() {
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-6 space-y-12 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <GraduationCap className="w-8 h-8 text-sky-400" />
-          <h1 className="text-3xl font-bold text-slate-100">Learning Curriculum</h1>
+      <div className="space-y-4 text-center">
+        <div className="inline-flex items-center justify-center p-2 rounded-xl bg-sky-500/10 border border-sky-500/20 mb-2">
+          <GraduationCap className="w-10 h-10 text-sky-400" />
         </div>
-        <p className="text-slate-400 max-w-2xl">
-          A structured, progressive curriculum covering stock trading, options, institutional
-          flow detection, and algorithmic backtesting. Follow the modules in order for
-          the best learning experience.
+        <h1 className="text-4xl font-bold text-slate-100">Deep Quant Curriculum</h1>
+        <p className="text-slate-400 max-w-2xl mx-auto">
+          A progressive, institutional-grade curriculum designed to move you from technical analysis 
+          to statistical market microstructure.
         </p>
       </div>
 
@@ -145,8 +166,8 @@ export default function LearningPage() {
       <Card className="bg-slate-900 border-slate-800">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-300">Your Progress</span>
-            <span className="text-sm text-slate-500">0 / 7 modules completed</span>
+            <span className="text-sm font-medium text-slate-300">Curriculum Completion</span>
+            <span className="text-sm text-slate-500">0 / 9 modules</span>
           </div>
           <div className="w-full bg-slate-800 rounded-full h-2">
             <div
@@ -157,72 +178,36 @@ export default function LearningPage() {
         </CardContent>
       </Card>
 
-      {/* Module Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {modules.map((mod) => (
-          <Link key={mod.id} href={mod.href}>
-            <Card
-              className={`bg-slate-900 border-slate-800 hover:border-slate-700 transition-all cursor-pointer group h-full`}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`w-12 h-12 rounded-lg ${mod.bg} flex items-center justify-center shrink-0`}
-                  >
-                    <span className={mod.color}>{mod.icon}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge
-                        variant="secondary"
-                        className="bg-slate-800 text-slate-400 text-xs"
-                      >
-                        Module {mod.id}
-                      </Badge>
-                    </div>
-                    <h3 className="text-lg font-semibold text-slate-100 group-hover:text-emerald-400 transition-colors">
-                      {mod.title}
-                    </h3>
-                    <p className="text-sm text-slate-400 mt-1 leading-relaxed">
-                      {mod.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {mod.topics.map((topic) => (
-                        <span
-                          key={topic}
-                          className="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded"
-                        >
-                          {topic}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-1 mt-3 text-sm text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                      Start Learning <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-
-      {/* Reference Sites */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-100">Reference Sites</h2>
+      {/* Section 1: Foundations */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-800 pb-2">
+          <BookOpen className="w-5 h-5 text-sky-400" />
+          <h2 className="text-2xl font-bold text-slate-100">Quant Foundations</h2>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {referenceSites.map((site) => (
-            <Link key={site.href} href={site.href}>
-              <Card className="bg-slate-900 border-slate-800 hover:border-sky-500/30 transition-all cursor-pointer group h-full">
-                <CardContent className="p-5 flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
-                    <span className="text-sky-400">{site.icon}</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-100 group-hover:text-sky-400 transition-colors">
-                      {site.title}
-                    </h3>
-                    <p className="text-sm text-slate-400 mt-1">{site.description}</p>
+          {foundations.map((mod) => (
+            <Link key={mod.id} href={mod.href}>
+              <Card className="bg-slate-900 border-slate-800 hover:border-slate-700 transition-all cursor-pointer group h-full">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-lg ${mod.bg} flex items-center justify-center shrink-0`}>
+                      <span className={mod.color}>{mod.icon}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-slate-100 group-hover:text-sky-400 transition-colors">
+                        {mod.title}
+                      </h3>
+                      <p className="text-sm text-slate-400 mt-1 leading-relaxed line-clamp-2">
+                        {mod.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {mod.topics.map((topic) => (
+                          <span key={topic} className="text-[10px] bg-slate-800 text-slate-500 px-2 py-0.5 rounded border border-slate-700/50 uppercase font-bold">
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -231,32 +216,70 @@ export default function LearningPage() {
         </div>
       </div>
 
-      {/* Video Resources */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-100">Video Resources</h2>
+      {/* Section 2: Advanced Lab */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-800 pb-2">
+          <FlaskConical className="w-5 h-5 text-purple-400" />
+          <h2 className="text-2xl font-bold text-slate-100">Advanced Lab</h2>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {videoResources.map((video) => (
-            <a
-              key={video.url}
-              href={video.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Card className="bg-slate-900 border-slate-800 hover:border-red-500/30 transition-all cursor-pointer group h-full">
-                <CardContent className="p-5 flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
-                    <ExternalLink className="w-5 h-5 text-red-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-100 group-hover:text-red-400 transition-colors flex items-center gap-2">
-                      {video.title}
-                      <ExternalLink className="w-3 h-3" />
-                    </h3>
-                    <p className="text-sm text-slate-400 mt-1">{video.description}</p>
+          {advancedLab.map((mod) => (
+            <Link key={mod.id} href={mod.href}>
+              <Card className="bg-slate-900 border-slate-800 hover:border-purple-500/20 transition-all cursor-pointer group h-full">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-lg ${mod.bg} flex items-center justify-center shrink-0`}>
+                      <span className={mod.color}>{mod.icon}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-slate-100 group-hover:text-purple-400 transition-colors">
+                        {mod.title}
+                      </h3>
+                      <p className="text-sm text-slate-400 mt-1 leading-relaxed line-clamp-2">
+                        {mod.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {mod.topics.map((topic) => (
+                          <span key={topic} className="text-[10px] bg-slate-800 text-slate-500 px-2 py-0.5 rounded border border-slate-700/50 uppercase font-bold">
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            </a>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Section 3: Live Tools */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-800 pb-2">
+          <Activity className="w-5 h-5 text-emerald-400" />
+          <h2 className="text-2xl font-bold text-slate-100">Execution Tools</h2>
+        </div>
+        <div className="grid grid-cols-1 gap-4">
+          {liveTools.map((site) => (
+            <Link key={site.href} href={site.href}>
+              <Card className="bg-slate-900 border-emerald-500/20 hover:border-emerald-500/40 transition-all cursor-pointer group h-full">
+                <CardContent className="p-6 flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                    <span className="text-emerald-400">{site.icon}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">
+                      {site.title}
+                    </h3>
+                    <p className="text-slate-400 mt-1">{site.description}</p>
+                    <div className="flex items-center gap-2 mt-4 text-emerald-400 text-sm font-bold uppercase tracking-wider">
+                      Launch Tool <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>
