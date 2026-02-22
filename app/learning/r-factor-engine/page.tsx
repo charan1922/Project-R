@@ -1,72 +1,51 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Activity, BarChart2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Activity, BarChart2, Search, RefreshCw, AlertCircle } from "lucide-react";
+import { MarketScanner } from "./MarketScanner";
 
 const caseStudies = [
-  {
-    ticker: "PNB",
-    regime: "Elephant",
-    febVol: "37.05M",
-    avgVol: "~14.0M",
-    zScore: "+4.6",
-    signal: "Blast (Long)",
-    signalColor: "bg-emerald-500/20 text-emerald-400",
-    context: "Clean break > 125 with massive institutional participation.",
-  },
-  {
-    ticker: "DIXON",
-    regime: "Cheetah",
-    febVol: "0.28M (Feb 17)",
-    avgVol: "~0.60M",
-    zScore: "-1.5",
-    signal: "Consolidation",
-    signalColor: "bg-slate-600/20 text-slate-400",
-    context: "Pullback on low volume after Feb 16 breakout.",
-  },
-  {
-    ticker: "AUROPHARMA",
-    regime: "Cheetah",
-    febVol: "3.29M",
-    avgVol: "~1.6M",
-    zScore: "+2.5",
-    signal: "Breakdown (Short)",
-    signalColor: "bg-red-500/20 text-red-400",
-    context: "News-driven panic; high volume reversal.",
-  },
-  {
-    ticker: "HDFCLIFE",
-    regime: "Elephant",
-    febVol: "4.97M",
-    avgVol: "~1.5M",
-    zScore: "+5.2",
-    signal: "Blast (Long)",
-    signalColor: "bg-emerald-500/20 text-emerald-400",
-    context: "Sector rotation; highest relative volume spike.",
-  },
+  // ... existing case studies ...
 ];
 
 const volumeProfiles = [
-  { ticker: "Bharti Airtel", regime: "Super-Elephant", volBy1240: "60-62%", driver: "High institutional VWAP usage; steady flow." },
-  { ticker: "M&M", regime: "Elephant", volBy1240: "58-60%", driver: "Consistent institutional accumulation." },
-  { ticker: "HCL Tech", regime: "Elephant", volBy1240: "58-60%", driver: "Passive index/dividend flows." },
-  { ticker: "Bajaj Auto", regime: "Hybrid", volBy1240: "54-57%", driver: "High price deters retail; waits for FII flow." },
-  { ticker: "Hero MotoCorp", regime: "Cheetah", volBy1240: "50-55%", driver: "Morning burst, then lull until rural news." },
-  { ticker: "Persistent Sys", regime: "Cheetah", volBy1240: "40-70%", driver: "Bi-modal: Either huge morning breakout or dead." },
-  { ticker: "Marico", regime: "Defensive", volBy1240: "45-50%", driver: "U-Shaped profile; dead midday liquidity." },
-  { ticker: "Colgate", regime: "Defensive", volBy1240: "45-50%", driver: "U-Shaped profile; low midday speculation." },
+  // ... existing volume profiles ...
 ];
 
 const factorTable = [
-  { factor: "Volume", metric: "Z(Vol)", role: "Activation Gate: Wake up algo if Z > 3.0." },
-  { factor: "Open Interest", metric: "Z(OI)", role: "Directional Compass: Put Writing = Bullish." },
-  { factor: "Turnover", metric: "Z(Turn)", role: "Quality Filter: Filters penny stock noise." },
-  { factor: "Spread", metric: "Z(Spread)", role: "Regime Detector: Elephant vs. Cheetah classification." },
+  // ... existing factor table ...
 ];
 
 export default function RFactorEnginePage() {
+  const [symbol, setSymbol] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [signal, setSignal] = useState<any>(null);
+  const [error, setError] = useState("");
+
+  const fetchSignal = async () => {
+    if (!symbol) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/r-factor?symbol=${symbol}`);
+      const result = await res.json();
+      if (result.success) {
+        setSignal(result.data);
+      } else {
+        setError(result.error || "Failed to fetch signal");
+      }
+    } catch (err) {
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6 max-w-6xl">
       {/* Breadcrumb */}
@@ -95,6 +74,94 @@ export default function RFactorEnginePage() {
           Comprehensive R-Factor model documentation with real case studies from February 2026 data,
           12:40 PM volume profiles, and the complete 4-Factor component breakdown.
         </p>
+      </div>
+
+      {/* Live Signal Scanner */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-slate-900 border-sky-500/30">
+          <CardHeader>
+            <CardTitle className="text-sky-400 flex items-center gap-2">
+              <Search className="w-5 h-5" />
+              Single Symbol Lookup
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Enter Symbol (e.g. PNB, RELIANCE)" 
+                value={symbol}
+                onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+                className="bg-slate-950 border-slate-800"
+                onKeyDown={(e) => e.key === 'Enter' && fetchSignal()}
+              />
+              <Button 
+                onClick={fetchSignal} 
+                disabled={loading || !symbol}
+                className="bg-sky-600 hover:bg-sky-500"
+              >
+                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : "Scan"}
+              </Button>
+            </div>
+
+            {error && (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                {error}
+              </div>
+            )}
+
+            {signal && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2">
+                <Card className="bg-slate-950 border-slate-800">
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-slate-500 uppercase">Composite R-Factor</p>
+                    <p className={`text-2xl font-bold ${signal.compositeRFactor > 2 ? 'text-emerald-400' : 'text-slate-300'}`}>
+                      {signal.compositeRFactor.toFixed(2)}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-slate-950 border-slate-800">
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-slate-500 uppercase">Regime</p>
+                    <p className={`text-2xl font-bold ${signal.regime === 'Cheetah' ? 'text-amber-400' : 'text-sky-400'}`}>
+                      {signal.regime}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-slate-950 border-slate-800">
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-slate-500 uppercase">Signal</p>
+                    {signal.isBlastTrade ? (
+                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">BLAST TRADE</Badge>
+                    ) : (
+                      <p className="text-slate-500">Normal Activity</p>
+                    )}
+                  </CardContent>
+                </Card>
+                <div className="md:col-span-3">
+                  <p className="text-xs text-slate-500 mb-2">Individual Z-Scores</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {[
+                      { label: 'Volume', val: signal.zScores.volume },
+                      { label: 'OI', val: signal.zScores.oi },
+                      { label: 'Turnover', val: signal.zScores.turnover },
+                      { label: 'Spread', val: signal.zScores.spread },
+                    ].map(z => (
+                      <div key={z.label} className="p-2 rounded bg-slate-950 border border-slate-800">
+                        <p className="text-[10px] text-slate-500">{z.label}</p>
+                        <p className={`text-sm font-mono font-bold ${z.val > 2 ? 'text-emerald-400' : 'text-slate-300'}`}>
+                          {z.val.toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <MarketScanner />
       </div>
 
       {/* Case Studies Table */}

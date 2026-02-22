@@ -29,6 +29,8 @@ import {
   ExternalLink,
   FileText,
   Calculator,
+  Zap,
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -74,60 +76,83 @@ const navItems: NavItem[] = [
 
 const learningItems: NavItem[] = [
   {
-    label: "Learning",
-    href: "/learning",
+    label: "Quant Foundations",
+    href: "/learning/foundations",
     icon: <GraduationCap className="w-5 h-5" />,
-    badge: "NEW",
     children: [
       {
-        label: "1. Stock Market Basics",
-        href: "/learning/stock-basics",
+        label: "1. Foundation of Flow",
+        href: "/learning/foundation-of-flow",
         icon: <BookOpen className="w-4 h-4" />,
       },
       {
-        label: "2. Options Trading 101",
-        href: "/learning/options-101",
+        label: "2. The 4-Factor Model",
+        href: "/learning/4-factor-model",
         icon: <Layers className="w-4 h-4" />,
       },
       {
-        label: "3. Volume & OI Analysis",
-        href: "/learning/volume-oi",
-        icon: <BarChart2 className="w-4 h-4" />,
-      },
-      {
-        label: "4. Z-Score & R-Factor",
-        href: "/learning/z-score-r-factor",
-        icon: <Calculator className="w-4 h-4" />,
-      },
-      {
-        label: "5. Smart Money Detection",
-        href: "/learning/smart-money",
+        label: "3. Market Regimes",
+        href: "/learning/market-regimes",
         icon: <Brain className="w-4 h-4" />,
       },
       {
-        label: "6. Breakout Strategies",
-        href: "/learning/breakout-strategies",
+        label: "4. The Blast Protocol",
+        href: "/learning/blast-protocol",
         icon: <Target className="w-4 h-4" />,
       },
+    ],
+  },
+  {
+    label: "Advanced Lab",
+    href: "/learning/advanced",
+    icon: <FlaskConical className="w-5 h-5" />,
+    badge: "PRO",
+    children: [
       {
-        label: "7. Backtesting Fundamentals",
-        href: "/learning/backtesting-fundamentals",
-        icon: <Lightbulb className="w-4 h-4" />,
+        label: "5. Algo Implementation",
+        href: "/learning/algo-implementation",
+        icon: <Cpu className="w-4 h-4" />,
+      },
+      {
+        label: "6. Advanced Factor Eng.",
+        href: "/learning/advanced-factors",
+        icon: <Activity className="w-4 h-4" />,
+      },
+      {
+        label: "7. Quant Validation",
+        href: "/learning/quant-validation",
+        icon: <Calculator className="w-4 h-4" />,
+      },
+      {
+        label: "8. OpenClaw Architecture",
+        href: "/learning/openclaw-arch",
+        icon: <Layers className="w-4 h-4" />,
+      },
+      {
+        label: "9. Temporal Anomalies",
+        href: "/learning/temporal-anomalies",
+        icon: <Calendar className="w-4 h-4" />,
+      },
+      {
+        label: "10. Execution Micro.",
+        href: "/learning/execution-microstructure",
+        icon: <Zap className="w-4 h-4" />,
+      },
+      {
+        label: "11. System Sovereignty",
+        href: "/learning/system-sovereignty",
+        icon: <ShieldCheck className="w-4 h-4" />,
       },
     ],
   },
 ];
 
-const websiteItems: NavItem[] = [
-  {
-    label: "Deep Quant Lab",
-    href: "/learning/deep-quant-lab",
-    icon: <FileText className="w-4 h-4" />,
-  },
+const liveTools: NavItem[] = [
   {
     label: "R-Factor Engine",
     href: "/learning/r-factor-engine",
-    icon: <FileText className="w-4 h-4" />,
+    icon: <Activity className="w-4 h-4" />,
+    badge: "LIVE",
   },
 ];
 
@@ -312,11 +337,11 @@ export default function Sidebar() {
             Learning
           </div>
           {learningItems.map((item) => renderNavItem(item))}
-          {/* Website sub-items under Learning section */}
-          <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider px-3 ml-4 mt-3 mb-1">
-            Reference Sites
+          
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mt-6 mb-2">
+            Live Tools
           </div>
-          {websiteItems.map((item) => renderNavItem(item, 1))}
+          {liveTools.map((item) => renderNavItem(item))}
 
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mt-6 mb-2">
             Backtesting

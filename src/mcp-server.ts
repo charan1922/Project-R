@@ -11,6 +11,8 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import * as fs from 'fs';
+import * as path from 'path';
+import { nseService } from '../lib/nse-service';
 
 interface Trade {
   Date: string;
@@ -29,13 +31,31 @@ interface Trade {
 
 // Load trade data
 function loadTrades(): Trade[] {
-  try {
-    const data = fs.readFileSync('sensibull_trades.json', 'utf-8');
-    const json = JSON.parse(data);
-    return json.trades || [];
-  } catch {
+  const rootDir = process.cwd();
+  const searchPaths = [
+    path.join(rootDir, 'data', 'data.json'),
+    path.join(rootDir, 'sensibull_trades.json'),
+    path.join(rootDir, 'data', 'sensibull_trades.json')
+  ];
+
+  for (const filePath of searchPaths) {
     try {
-      const csv = fs.readFileSync('sensibull_trades.csv', 'utf-8');
+      if (fs.existsSync(filePath)) {
+        const data = fs.readFileSync(filePath, 'utf-8');
+        const json = JSON.parse(data);
+        if (json.trades) return json.trades;
+        if (Array.isArray(json)) return json;
+      }
+    } catch (e) {
+      console.error(`Error loading from ${filePath}:`, e);
+    }
+  }
+  
+  // Fallback to CSV if JSON fails
+  try {
+    const csvPath = path.join(rootDir, 'sensibull_trades.csv');
+    if (fs.existsSync(csvPath)) {
+      const csv = fs.readFileSync(csvPath, 'utf-8');
       const lines = csv.split('\n').slice(1);
       return lines.filter(l => l.trim()).map(line => {
         const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"'));
@@ -54,10 +74,12 @@ function loadTrades(): Trade[] {
           Page: parseInt(cols[11]) || 0
         };
       });
-    } catch {
-      return [];
     }
+  } catch (e) {
+    console.error('Error loading CSV:', e);
   }
+
+  return [];
 }
 
 const server = new Server(
@@ -164,6 +186,27 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         name: 'get_overall_statistics',
         description: 'Get overall trading statistics',
         inputSchema: { type: 'object', properties: {} },
+      },
+      {
+        name: 'get_r_factor_signal',
+        description: 'Get live R-Factor quantitative signal for a specific symbol',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            symbol: { type: 'string', description: 'Stock symbol (e.g., PNB, RELIANCE)' },
+          },
+          required: ['symbol'],
+        },
+      },
+      {
+        name: 'scan_market_r_factor',
+        description: 'Scan top F&O symbols for R-Factor signals and Blast trades',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            limit: { type: 'number', default: 15, description: 'Number of symbols to scan' },
+          },
+        },
       },
     ],
   };
@@ -347,6 +390,56 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             `  Losing Trades: ${lossTrades} (${((lossTrades/trades.length)*100).toFixed(1)}%)`
         }],
       };
+    }
+
+    case 'get_r_factor_signal': {
+      const symbol = (request.params.arguments as any).symbol.toUpperCase();
+      try {
+        const signal = await nseService.getRFactorSignal(symbol);
+        return {
+          content: [{
+            type: 'text',
+            text: `R-Factor Signal for ${symbol}:\n\n` +
+              `Regime: ${signal.regime}\n` +
+              `Composite Score: ${signal.compositeRFactor.toFixed(2)}\n` +
+              `Blast Trade: ${signal.isBlastTrade ? 'YES 🚀' : 'NO'}\n\n` +
+              `Individual Z-Scores:\n` +
+              `  Volume: ${signal.zScores.volume.toFixed(2)}σ\n` +
+              `  OI: ${signal.zScores.oi.toFixed(2)}σ\n` +
+              `  Turnover: ${signal.zScores.turnover.toFixed(2)}σ\n` +
+              `  Spread: ${signal.zScores.spread.toFixed(2)}σ`
+          }]
+        };
+      } catch (err) {
+        return {
+          content: [{ type: 'text', text: `Error calculating R-Factor for ${symbol}: ${(err as Error).message}` }],
+          isError: true
+        };
+      }
+    }
+
+    case 'scan_market_r_factor': {
+      const limit = (request.params.arguments as any).limit || 15;
+      try {
+        const signals = await nseService.scanAllSymbols(limit);
+        const blastTrades = signals.filter(s => s.isBlastTrade);
+        
+        return {
+          content: [{
+            type: 'text',
+            text: `Market Scan Results (Limit: ${limit}):\n\n` +
+              `Found ${blastTrades.length} Blast Trades!\n` +
+              signals.map(s => 
+                `${s.symbol} | R:${s.compositeRFactor.toFixed(2)} | ${s.regime} ${s.isBlastTrade ? '🚀' : ''}`
+              ).join('\n')
+          }]
+        };
+      } catch (err) {
+        return {
+          content: [{ type: 'text', text: `Market scan failed: ${(err as Error).message}` }],
+          isError: true
+        };
+      }
     }
     
     default:
