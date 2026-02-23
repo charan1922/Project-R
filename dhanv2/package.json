@@ -1,0 +1,48 @@
+{
+    "name": "dhanhq-ts",
+    "version": "1.0.0",
+    "description": "Production-grade TypeScript SDK for the DhanHQ trading API v2",
+    "type": "module",
+    "main": "./dist/cjs/index.js",
+    "module": "./dist/esm/index.js",
+    "types": "./dist/esm/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/esm/index.d.ts",
+            "import": "./dist/esm/index.js",
+            "require": "./dist/cjs/index.js"
+        }
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "lint": "tsc --noEmit"
+    },
+    "keywords": [
+        "dhan",
+        "dhanhq",
+        "trading",
+        "stock",
+        "nse",
+        "bse",
+        "sdk",
+        "typescript"
+    ],
+    "license": "MIT",
+    "dependencies": {
+        "axios": "^1.13.5",
+        "ws": "^8.19.0"
+    },
+    "devDependencies": {
+        "@types/node": "^25.3.0",
+        "@types/ws": "^8.18.1",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.18"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}
