@@ -45,32 +45,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    label: "Dashboard",
-    href: "/",
-    icon: <LayoutDashboard className="w-5 h-5" />,
-  },
-  {
     label: "Sector Scope",
     href: "/sector-scope",
     icon: <PieChart className="w-5 h-5" />,
     badge: "LIVE",
-  },
-  {
-    label: "Stocks Universe",
-    href: "/stocks",
-    icon: <Building2 className="w-5 h-5" />,
-    badge: "88",
-  },
-  {
-    label: "Trade History",
-    href: "/trades",
-    icon: <TrendingUp className="w-5 h-5" />,
-    badge: "255",
-  },
-  {
-    label: "Daily P&L",
-    href: "/daily",
-    icon: <Calendar className="w-5 h-5" />,
   },
 ];
 
@@ -148,6 +126,12 @@ const learningItems: NavItem[] = [
 ];
 
 const liveTools: NavItem[] = [
+  {
+    label: "Market Intelligence",
+    href: "/trading-lab/intelligence",
+    icon: <Brain className="w-4 h-4" />,
+    badge: "NEW",
+  },
   {
     label: "R-Factor Engine",
     href: "/learning/r-factor-engine",

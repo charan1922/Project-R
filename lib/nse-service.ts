@@ -6,7 +6,7 @@ import path from "path";
 const nseIndia = new NseIndia();
 
 export class NseService {
-  private readonly CACHE_DIR = path.join(process.cwd(), "data", "cache");
+  private readonly CACHE_DIR = path.join(process.cwd(), "lib", "cache");
   private readonly CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours for historical data
 
   /**
@@ -14,7 +14,7 @@ export class NseService {
    */
   async getFnOStocks(): Promise<string[]> {
     try {
-      const filePath = path.join(process.cwd(), "data", "fno_stocks_list.json");
+      const filePath = path.join(process.cwd(), "lib", "data", "fno_stocks_list.json");
       const data = await fs.readFile(filePath, "utf8");
       const json = JSON.parse(data);
       return json.stocks;

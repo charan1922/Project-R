@@ -8,7 +8,7 @@ const nseIndia = new NseIndia();
 // Load F&O stocks list
 async function getFnOStocks(): Promise<string[]> {
   try {
-    const filePath = path.join(process.cwd(), "data", "fno_stocks_list.json");
+    const filePath = path.join(process.cwd(), "lib", "data", "fno_stocks_list.json");
     const data = await fs.readFile(filePath, "utf8");
     const json = JSON.parse(data);
     return json.stocks;
@@ -26,7 +26,7 @@ async function getFnOStocks(): Promise<string[]> {
 // Load sector mappings
 async function getSectorMappings(): Promise<Record<string, string>> {
   try {
-    const filePath = path.join(process.cwd(), "data", "fno_sectors.json");
+    const filePath = path.join(process.cwd(), "lib", "data", "fno_sectors.json");
     const data = await fs.readFile(filePath, "utf8");
     return JSON.parse(data);
   } catch (err) {
