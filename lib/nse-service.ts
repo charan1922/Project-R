@@ -28,7 +28,7 @@ export class NseService {
    */
   async getHistoricalFactorData(symbol: string, days: number = 30): Promise<FactorData[]> {
     const cacheFile = path.join(this.CACHE_DIR, `${symbol}_${days}.json`);
-    
+
     try {
       const stats = await fs.stat(cacheFile);
       if (Date.now() - stats.mtimeMs < this.CACHE_TTL) {
@@ -45,7 +45,7 @@ export class NseService {
 
     const historical = await nseIndia.getEquityHistoricalData(symbol, { start, end });
     const allPoints = historical.flatMap((d: any) => d.data || []);
-    
+
     const data = allPoints.map((p: any) => ({
       volume: p.chTotTradedQty || 0,
       oi: 0,
@@ -55,6 +55,7 @@ export class NseService {
 
     // Save to cache
     try {
+      await fs.mkdir(this.CACHE_DIR, { recursive: true });
       await fs.writeFile(cacheFile, JSON.stringify(data));
     } catch (e) {
       console.error(`Failed to write cache for ${symbol}:`, e);
@@ -69,7 +70,7 @@ export class NseService {
   async getCurrentFactorData(symbol: string): Promise<FactorData> {
     const details = await nseIndia.getEquityDetails(symbol);
     const p = details.priceInfo;
-    
+
     let totalOI = 0;
     try {
       const oc: any = await nseIndia.getEquityOptionChain(symbol);
@@ -98,7 +99,7 @@ export class NseService {
     ]);
 
     if (historical.length < 15) {
-       throw new Error(`Insufficient historical data for ${symbol}. Found ${historical.length} days.`);
+      throw new Error(`Insufficient historical data for ${symbol}. Found ${historical.length} days.`);
     }
 
     return engine.calculateSignal(symbol, current, historical);
@@ -126,7 +127,7 @@ export class NseService {
   async scanAllSymbols(limit: number = 20): Promise<SignalOutput[]> {
     const symbols = await this.getFnOStocks();
     const targetSymbols = symbols.slice(0, limit);
-    
+
     const results = await Promise.allSettled(
       targetSymbols.map(s => this.getRFactorSignal(s))
     );

@@ -157,6 +157,12 @@ const v1Items: NavItem[] = [
         icon: <LineChart className="w-4 h-4" />,
         badge: "ANALYTICS",
       },
+      {
+        label: "F&O Universe",
+        href: "/trading-lab/fno-universe",
+        icon: <Layers className="w-4 h-4" />,
+        badge: "NEW",
+      },
     ],
   },
 ];
@@ -225,8 +231,8 @@ export default function Sidebar() {
               setIsMobileMenuOpen(false);
             }}
             className={`group flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 ease-in-out flex-1 ${active
-                ? "bg-slate-800/80 text-slate-100 shadow-sm"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+              ? "bg-slate-800/80 text-slate-100 shadow-sm"
+              : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
               } ${depth > 0 ? `ml-${depth * 4} text-sm` : "text-sm font-medium"}`}
           >
             <div className={`flex-shrink-0 transition-colors ${active ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-300'}`}>
@@ -241,7 +247,9 @@ export default function Sidebar() {
                       ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                       : item.badge === "PRO"
                         ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
-                        : "bg-slate-800 text-slate-400 border border-slate-700"
+                        : item.badge === "ANALYTICS"
+                          ? "bg-violet-500/10 text-violet-400 border border-violet-500/20"
+                          : "bg-slate-800 text-slate-400 border border-slate-700"
                   }`}
               >
                 {item.badge}
