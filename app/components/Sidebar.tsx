@@ -106,12 +106,6 @@ const learningItems: NavItem[] = [
 
 const liveTools: NavItem[] = [
   {
-    label: "Market Intelligence",
-    href: "/trading-lab/intelligence",
-    icon: <Brain className="w-4 h-4" />,
-    badge: "NEW",
-  },
-  {
     label: "R-Factor Engine",
     href: "/learning/r-factor-engine",
     icon: <Activity className="w-4 h-4" />,
@@ -140,6 +134,28 @@ const backtestingItems: NavItem[] = [
         label: "Algo Execute",
         href: "/trading-lab/execute",
         icon: <Play className="w-3.5 h-3.5" />,
+      },
+    ],
+  },
+];
+
+const v1Items: NavItem[] = [
+  {
+    label: "v1.0 (Current)",
+    href: "/v1",
+    icon: <Zap className="w-4 h-4" />,
+    children: [
+      {
+        label: "Market Intelligence",
+        href: "/trading-lab/intelligence",
+        icon: <Brain className="w-4 h-4" />,
+        badge: "NEW",
+      },
+      {
+        label: "Trade Journal",
+        href: "/trading-lab/tradefinder",
+        icon: <LineChart className="w-4 h-4" />,
+        badge: "ANALYTICS",
       },
     ],
   },
@@ -176,7 +192,7 @@ const v01Items: NavItem[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>(["/v0.1"]);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["/v1"]);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -208,11 +224,10 @@ export default function Sidebar() {
               }
               setIsMobileMenuOpen(false);
             }}
-            className={`group flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 ease-in-out flex-1 ${
-              active
+            className={`group flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 ease-in-out flex-1 ${active
                 ? "bg-slate-800/80 text-slate-100 shadow-sm"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
-            } ${depth > 0 ? `ml-${depth * 4} text-sm` : "text-sm font-medium"}`}
+              } ${depth > 0 ? `ml-${depth * 4} text-sm` : "text-sm font-medium"}`}
           >
             <div className={`flex-shrink-0 transition-colors ${active ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-300'}`}>
               {item.icon}
@@ -220,15 +235,14 @@ export default function Sidebar() {
             <span className="flex-1 tracking-tight">{item.label}</span>
             {item.badge && (
               <span
-                className={`px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-sm ${
-                  item.badge === "LIVE"
+                className={`px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-sm ${item.badge === "LIVE"
                     ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
                     : item.badge === "NEW"
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                    : item.badge === "PRO"
-                    ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
-                    : "bg-slate-800 text-slate-400 border border-slate-700"
-                }`}
+                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                      : item.badge === "PRO"
+                        ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+                        : "bg-slate-800 text-slate-400 border border-slate-700"
+                  }`}
               >
                 {item.badge}
               </span>
@@ -286,10 +300,9 @@ export default function Sidebar() {
       {/* Sidebar - Enterprise Style */}
       <aside
         className={`fixed top-0 left-0 h-full w-64 bg-slate-950 border-r border-slate-800/60 z-50 transform transition-transform duration-300 ease-out
-          ${
-            isMobileMenuOpen
-              ? "translate-x-0"
-              : "-translate-x-full lg:translate-x-0"
+          ${isMobileMenuOpen
+            ? "translate-x-0"
+            : "-translate-x-full lg:translate-x-0"
           }
           lg:static lg:transform-none flex flex-col`}
       >
@@ -308,20 +321,28 @@ export default function Sidebar() {
 
         {/* Navigation Sections */}
         <nav className="flex-1 py-6 px-3.5 space-y-6 overflow-y-auto custom-scrollbar">
-          
+
           <div className="space-y-1.5">
             <div className="px-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <span>System Version</span>
+              <span>Current System</span>
+              <div className="h-px bg-slate-800/60 flex-1"></div>
+            </div>
+            {v1Items.map((item) => renderNavItem(item))}
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="px-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <span>Legacy Features</span>
               <div className="h-px bg-slate-800/60 flex-1"></div>
             </div>
             {v01Items.map((item) => renderNavItem(item))}
           </div>
 
         </nav>
-        
+
         {/* Subdued footer watermark */}
         <div className="p-4 border-t border-slate-800/60 text-center">
-           <span className="text-[10px] text-slate-600 font-mono tracking-widest">SYSTEM V2.5.0</span>
+          <span className="text-[10px] text-slate-600 font-mono tracking-widest">SYSTEM V2.5.0</span>
         </div>
       </aside>
 
