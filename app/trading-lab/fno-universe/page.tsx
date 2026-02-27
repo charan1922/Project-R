@@ -50,7 +50,7 @@ export default function FnOUniversePage() {
 
         const all = uniqueFnoStocks.map(symbol => {
             const stats = tradedMap.get(symbol) ?? null;
-            return { symbol, symbolUpper: symbol, stats, traded: stats !== null };
+            return { symbol, symbolUpper: symbol, stats, traded: stats !== null, isLegacy: false };
         });
 
         // Also add stocks from Tradefinder that aren't in the official F&O list
@@ -58,7 +58,7 @@ export default function FnOUniversePage() {
         analytics.stockList.forEach(s => {
             const symUpper = s.name.toUpperCase();
             if (!inList.has(symUpper)) {
-                all.push({ symbol: s.name, symbolUpper: symUpper, stats: s, traded: true });
+                all.push({ symbol: s.name, symbolUpper: symUpper, stats: s, traded: true, isLegacy: true });
             }
         });
         return all;
@@ -178,7 +178,7 @@ export default function FnOUniversePage() {
 
                 {/* Stock Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                    {filtered.map(({ symbol, stats, traded: isTr }) => {
+                    {filtered.map(({ symbol, stats, traded: isTr, isLegacy }) => {
                         if (!isTr) {
                             return (
                                 <div key={symbol} className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex items-center gap-3 hover:border-slate-700 transition-colors">
@@ -203,7 +203,14 @@ export default function FnOUniversePage() {
                                 <div className="flex items-start justify-between gap-2 mb-2">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <CheckCircle2 className={`w-4 h-4 ${cfg.text} shrink-0`} />
-                                        <span className="text-sm font-mono font-bold text-white truncate">{symbol}</span>
+                                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                            <span className="text-sm font-mono font-bold text-white truncate">{symbol}</span>
+                                            {isLegacy && (
+                                                <span className="px-1 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[9px] font-bold shrink-0 leading-none">
+                                                    LEGACY/INDEX
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                     <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${cfg.bg} ${cfg.text} border ${cfg.border} shrink-0`}>
                                         {stats.tier}
