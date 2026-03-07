@@ -1,7 +1,7 @@
 {
-  "name": "sensibull-extractor",
+  "name": "project-r",
   "version": "2.0.0",
-  "description": "Complete Sensibull Verified P&L Extractor with Web Dashboard",
+  "description": "Project-R — Dhan V2 algorithmic trading platform with Historify historical data management",
   "private": true,
   "packageManager": "pnpm@10.29.2",
   "scripts": {
@@ -25,9 +25,12 @@
     "better-sqlite3": "^12.6.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "lightweight-charts": "^5.1.0",
     "lucide-react": "^0.564.0",
     "mathjs": "^15.1.1",
     "next": "16.1.6",
+    "next-themes": "^0.4.6",
     "playwright": "^1.58.2",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
