@@ -9,15 +9,15 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Activity, BarChart2, Search, RefreshCw, AlertCircle } from "lucide-react";
 import { MarketScanner } from "./MarketScanner";
 
-const caseStudies = [
+const caseStudies: any[] = [
   // ... existing case studies ...
 ];
 
-const volumeProfiles = [
+const volumeProfiles: any[] = [
   // ... existing volume profiles ...
 ];
 
-const factorTable = [
+const factorTable: any[] = [
   // ... existing factor table ...
 ];
 
@@ -87,15 +87,15 @@ export default function RFactorEnginePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-2">
-              <Input 
-                placeholder="Enter Symbol (e.g. PNB, RELIANCE)" 
+              <Input
+                placeholder="Enter Symbol (e.g. PNB, RELIANCE)"
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value.toUpperCase())}
                 className="bg-slate-950 border-slate-800"
                 onKeyDown={(e) => e.key === 'Enter' && fetchSignal()}
               />
-              <Button 
-                onClick={fetchSignal} 
+              <Button
+                onClick={fetchSignal}
                 disabled={loading || !symbol}
                 className="bg-sky-600 hover:bg-sky-500"
               >
@@ -236,10 +236,10 @@ export default function RFactorEnginePage() {
                           vp.regime.includes("Elephant")
                             ? "bg-sky-500/20 text-sky-400"
                             : vp.regime.includes("Cheetah")
-                            ? "bg-amber-500/20 text-amber-400"
-                            : vp.regime.includes("Defensive")
-                            ? "bg-slate-600/20 text-slate-400"
-                            : "bg-indigo-500/20 text-indigo-400"
+                              ? "bg-amber-500/20 text-amber-400"
+                              : vp.regime.includes("Defensive")
+                                ? "bg-slate-600/20 text-slate-400"
+                                : "bg-indigo-500/20 text-indigo-400"
                         }
                       >
                         {vp.regime}
