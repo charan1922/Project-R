@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 import { nseService } from "@/lib/nse-service";
 
 export async function GET(req: NextRequest) {
@@ -30,9 +32,9 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("R-Factor API Error:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: (error as Error).message || "Failed to calculate R-Factor" 
+      {
+        success: false,
+        error: (error as Error).message || "Failed to calculate R-Factor"
       },
       { status: 500 }
     );

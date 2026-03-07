@@ -54,6 +54,7 @@ screenshots/
 
 # Data files (sample data can be committed, extracted data should not)
 data/*.csv
+data/historify-settings.json
 # Keep data.json as it contains the extracted trades
 
 # Vercel

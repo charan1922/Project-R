@@ -22,14 +22,14 @@ export async function GET() {
           // Get equity details for price
           const details = await nseIndia.getEquityDetails(symbol);
           const priceInfo = details.priceInfo;
-          
+
           // Get option chain for OI data
           let totalCallOI = 0;
           let totalPutOI = 0;
-          
+
           try {
-            const optionChain = await nseIndia.getEquityOptionChain(symbol);
-            
+            const optionChain: any = await nseIndia.getEquityOptionChain(symbol);
+
             // Extract OI from option chain data
             if (optionChain && optionChain.records && optionChain.records.data) {
               for (const item of optionChain.records.data) {
@@ -44,16 +44,16 @@ export async function GET() {
           } catch (oiErr) {
             console.log(`OI data not available for ${symbol}`);
           }
-          
+
           const putCallRatio = totalCallOI > 0 ? totalPutOI / totalCallOI : 1;
-          
+
           // Calculate price change
           const changePercent = priceInfo?.pChange || 0;
-          
+
           // Determine signal based on price movement and OI
           let signal: "BUY" | "SELL" | "NEUTRAL" = "NEUTRAL";
           let strength: "STRONG" | "MODERATE" | "WEAK" = "WEAK";
-          
+
           // Buy: Price up + High Put/Call ratio (more puts = sellers bearish = bullish)
           if (changePercent > 1.5 && putCallRatio > 1.0) {
             signal = "BUY";
@@ -72,7 +72,7 @@ export async function GET() {
             signal = "SELL";
             strength = "MODERATE";
           }
-          
+
           return {
             symbol,
             name: details.info?.companyName || symbol,
@@ -101,7 +101,7 @@ export async function GET() {
     // Filter out nulls and sort by signal strength
     const validResults = results.filter(Boolean).sort((a: any, b: any) => {
       const signalOrder = { BUY: 0, SELL: 1, NEUTRAL: 2 };
-      return signalOrder[a!.signal] - signalOrder[b!.signal];
+      return signalOrder[a.signal as keyof typeof signalOrder] - signalOrder[b.signal as keyof typeof signalOrder];
     });
 
     return NextResponse.json({

@@ -1,20 +1,43 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  ## Project: Project-R — Dhan V2 Algorithmic Trading Platform
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  ### Purpose
+  Project-R is a personal algorithmic trading dashboard for Indian markets, built around the
+  Dhan HQ V2 API. It powers historical data download, chart visualization, watchlist management,
+  automated scheduling, and strategy backtesting — all self-hosted.
+
+  ### Tech Stack
+  - **Runtime**: Node.js 22+, TypeScript 5.7+
+  - **Framework**: Next.js 16 (App Router), React 19
+  - **Package Manager**: pnpm
+  - **Database**: better-sqlite3 — SQLite file at `data/historify.db`
+    - Tables: `watchlist`, `historical_data`, `activity_log`
+    - DB helpers live in `lib/historify/db.ts`
+    - NO DuckDB — replaced by better-sqlite3 due to native module build issues
+  - **Styling**: Tailwind CSS v4 — dark slate-950 base, teal/sky/amber/violet/emerald accents per section
+  - **Icons**: lucide-react only
+  - **Charts**: lightweight-charts (TradingView) v5 — already installed
+  - **HTTP**: native fetch — no axios
+
+  ### Dhan V2 Integration
+  - In-repo TypeScript SDK at `dhanv2/src` — exports `DhanHQClient`
+  - `lib/historify/dhan-client.ts` wraps it as `HistorifyDhanClient` with rate limiting (250ms between calls) and automatic 90-day intraday chunking
+  - Credentials from `.env.local`: `DHAN_CLIENT_ID`, `DHAN_ACCESS_TOKEN`
+  - Rate limit: stay at ≤ 4 data API calls/sec (250ms delay)
+  - Exchange segments: NSE, NSE_INDEX, NFO, BSE, BFO, BCD, BSE_INDEX, MCX, CDS
+
+  ### App Structure
+  - `app/historify/**` — Historify section pages ("use client" components)
+  - `app/api/historify/**` — Historify API routes (server-side Route Handlers)
+  - `lib/historify/**` — shared server-side logic (db.ts, dhan-client.ts, master-contracts.ts, scheduler.ts)
+  - `dhanv2/` — in-repo Dhan V2 TypeScript SDK
+  - `data/` — runtime data (historify.db, settings JSON) — gitignored, auto-created
+
+  ### Conventions
+  - All Historify pages: `"use client"`, dark bg-slate-950, section page header with icon badge + title + subtitle
+  - API routes call `lib/historify/db.ts` functions directly (no ORM, no extra abstraction)
+  - No new npm dependencies unless unavoidable
+  - monetary values in INR (₹)
+  - Scheduler: `lib/historify/scheduler.ts` using node-schedule

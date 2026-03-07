@@ -20,8 +20,16 @@ import {
   Calculator,
   Zap,
   ShieldCheck,
+  Database,
+  List,
+  BarChart2,
+  Upload,
+  Download,
+  Clock,
+  HardDrive,
 } from "lucide-react";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface NavItem {
   label: string;
@@ -167,6 +175,52 @@ const v1Items: NavItem[] = [
   },
 ];
 
+const historifyItems: NavItem[] = [
+  {
+    label: "Historify",
+    href: "/historify",
+    icon: <Database className="w-4 h-4" />,
+    badge: "DATA",
+    children: [
+      {
+        label: "Dashboard",
+        href: "/historify",
+        icon: <Activity className="w-4 h-4" />,
+      },
+      {
+        label: "Watchlist",
+        href: "/historify/watchlist",
+        icon: <List className="w-4 h-4" />,
+      },
+      {
+        label: "Charts",
+        href: "/historify/charts",
+        icon: <BarChart2 className="w-4 h-4" />,
+      },
+      {
+        label: "Import Symbols",
+        href: "/historify/import",
+        icon: <Upload className="w-4 h-4" />,
+      },
+      {
+        label: "Export Data",
+        href: "/historify/export",
+        icon: <Download className="w-4 h-4" />,
+      },
+      {
+        label: "Bulk Download",
+        href: "/historify/download",
+        icon: <HardDrive className="w-4 h-4" />,
+      },
+      {
+        label: "Scheduler",
+        href: "/historify/scheduler",
+        icon: <Clock className="w-4 h-4" />,
+      },
+    ],
+  },
+];
+
 const v01Items: NavItem[] = [
   {
     label: "v0.1 (Legacy)",
@@ -242,13 +296,15 @@ export default function Sidebar() {
             {item.badge && (
               <span
                 className={`px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-sm ${item.badge === "LIVE"
-                    ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
-                    : item.badge === "NEW"
-                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                      : item.badge === "PRO"
-                        ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
-                        : item.badge === "ANALYTICS"
-                          ? "bg-violet-500/10 text-violet-400 border border-violet-500/20"
+                  ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
+                  : item.badge === "NEW"
+                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                    : item.badge === "PRO"
+                      ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+                      : item.badge === "ANALYTICS"
+                        ? "bg-violet-500/10 text-violet-400 border border-violet-500/20"
+                        : item.badge === "DATA"
+                          ? "bg-teal-500/10 text-teal-400 border border-teal-500/20"
                           : "bg-slate-800 text-slate-400 border border-slate-700"
                   }`}
               >
@@ -315,8 +371,8 @@ export default function Sidebar() {
           lg:static lg:transform-none flex flex-col`}
       >
         {/* Logo Section */}
-        <div className="h-16 flex items-center px-5 border-b border-slate-800/60">
-          <Link href="/" className="flex items-center gap-3 group w-full">
+        <div className="h-16 flex items-center justify-between px-5 border-b border-slate-800/60">
+          <Link href="/" className="flex items-center gap-3 group">
             <div className="w-8 h-8 rounded bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 shadow-sm flex items-center justify-center group-hover:border-sky-500/50 transition-colors">
               <Activity className="w-4 h-4 text-slate-300 group-hover:text-sky-400 transition-colors" />
             </div>
@@ -325,6 +381,7 @@ export default function Sidebar() {
               <span className="text-[10px] uppercase tracking-widest text-slate-500 font-medium">Enterprise Analytics</span>
             </div>
           </Link>
+          <ThemeToggle />
         </div>
 
         {/* Navigation Sections */}
@@ -336,6 +393,14 @@ export default function Sidebar() {
               <div className="h-px bg-slate-800/60 flex-1"></div>
             </div>
             {v1Items.map((item) => renderNavItem(item))}
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="px-2 text-[10px] font-bold text-teal-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <span>Data Platform</span>
+              <div className="h-px bg-teal-800/40 flex-1"></div>
+            </div>
+            {historifyItems.map((item) => renderNavItem(item))}
           </div>
 
           <div className="space-y-1.5">
