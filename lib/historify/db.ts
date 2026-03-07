@@ -132,6 +132,38 @@ export async function getChartData(symbol: string, exchange: string, interval: s
     }));
 }
 
+/** Fetch all candles for a specific calendar date (YYYY-MM-DD) for intraday use */
+export async function getChartDataForDate(symbol: string, exchange: string, interval: string, date: string) {
+    const rows = getDb().prepare(`
+        SELECT timestamp, open, high, low, close, volume
+        FROM historical_data
+        WHERE symbol = ? AND exchange = ? AND interval = ?
+          AND date(timestamp, 'unixepoch', 'localtime') = ?
+        ORDER BY timestamp ASC
+    `).all(symbol, exchange, interval, date) as any[];
+
+    return rows.map(r => ({
+        time: new Date(r.timestamp * 1000).toISOString(),
+        timestamp: r.timestamp,
+        open: r.open,
+        high: r.high,
+        low: r.low,
+        close: r.close,
+        volume: r.volume,
+    }));
+}
+
+/** Get distinct dates that have candle data for a symbol+interval */
+export async function getAvailableDates(symbol: string, exchange: string, interval: string): Promise<string[]> {
+    const rows = getDb().prepare(`
+        SELECT DISTINCT date(timestamp, 'unixepoch', 'localtime') as d
+        FROM historical_data
+        WHERE symbol = ? AND exchange = ? AND interval = ?
+        ORDER BY d DESC LIMIT 365
+    `).all(symbol, exchange, interval) as { d: string }[];
+    return rows.map(r => r.d);
+}
+
 // ── Stats ────────────────────────────────────────────────────────────────────
 
 export async function getStats() {

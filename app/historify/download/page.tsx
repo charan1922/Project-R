@@ -12,7 +12,15 @@ type DownloadJob = {
 type HistoryItem = { symbol: string; interval: string; rows: number; status: "success" | "failed"; time: string };
 type WatchlistItem = { symbol: string; exchange: string };
 
-const INTERVALS = ["1min", "5min", "15min", "30min", "1hour", "Daily"];
+const INTERVALS = [
+    { value: "Daily", label: "Daily" },
+    { value: "1min", label: "1 Minute" },
+    { value: "3min", label: "3 Minutes" },
+    { value: "5min", label: "5 Minutes" },
+    { value: "15min", label: "15 Minutes" },
+    { value: "30min", label: "30 Minutes" },
+    { value: "1hour", label: "1 Hour" },
+];
 const DATE_PRESETS: [string, string][] = [
     ["5d", "Last 5 Days"], ["30d", "Last 30 Days"], ["90d", "Last 90 Days"],
     ["1y", "Last 1 Year"], ["2y", "Last 2 Years"], ["5y", "Last 5 Years"],
@@ -170,7 +178,7 @@ export default function DownloadPage() {
                             <div>
                                 <label className="text-xs text-slate-500 uppercase tracking-wider mb-1.5 block font-medium">Data Interval</label>
                                 <select value={interval} onChange={e => setInterval(e.target.value)} className={inputCls}>
-                                    {INTERVALS.map(i => <option key={i}>{i}</option>)}
+                                    {INTERVALS.map(i => <option key={i.value} value={i.value}>{i.label}</option>)}
                                 </select>
                                 {interval !== "Daily" && (
                                     <p className="text-xs text-amber-400 mt-1">⚠ Intraday uses 90-day chunking via Dhan API</p>

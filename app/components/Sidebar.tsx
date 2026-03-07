@@ -27,6 +27,8 @@ import {
   Download,
   Clock,
   HardDrive,
+  Settings,
+  CalendarDays,
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -198,24 +200,35 @@ const historifyItems: NavItem[] = [
         icon: <BarChart2 className="w-4 h-4" />,
       },
       {
-        label: "Import Symbols",
+        label: "Day Chart",
+        href: "/historify/day-chart",
+        icon: <CalendarDays className="w-4 h-4" />,
+        badge: "NEW",
+      },
+      {
+        label: "Download",
+        href: "/historify/download",
+        icon: <Download className="w-4 h-4" />,
+      },
+      {
+        label: "Import",
         href: "/historify/import",
         icon: <Upload className="w-4 h-4" />,
       },
       {
-        label: "Export Data",
+        label: "Export",
         href: "/historify/export",
-        icon: <Download className="w-4 h-4" />,
-      },
-      {
-        label: "Bulk Download",
-        href: "/historify/download",
         icon: <HardDrive className="w-4 h-4" />,
       },
       {
         label: "Scheduler",
         href: "/historify/scheduler",
         icon: <Clock className="w-4 h-4" />,
+      },
+      {
+        label: "Settings",
+        href: "/historify/settings",
+        icon: <Settings className="w-4 h-4" />,
       },
     ],
   },
@@ -252,7 +265,7 @@ const v01Items: NavItem[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>(["/v1"]);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["/v1", "/historify"]);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";

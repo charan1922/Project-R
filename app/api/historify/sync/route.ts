@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 const INTERVAL_MAP: Record<string, number> = {
     "1min": 1,
+    "3min": 3,
     "5min": 5,
     "15min": 15,
     "25min": 25,
@@ -45,14 +46,22 @@ export async function POST(request: NextRequest) {
                     continue;
                 }
 
-                // Incremental: only fetch what's missing
+                // Incremental: prefer explicit payload dates, otherwise use lastSync or default
                 const lastSync = await getLastSync(symbol, exchange, interval);
-                const fromDate = lastSync
-                    ? new Date((lastSync + 1) * 1000).toISOString().split("T")[0]
-                    : "2020-01-01";
-                const toDate = new Date().toISOString().split("T")[0];
+                const lastSyncDate = lastSync ? new Date((lastSync + 1) * 1000).toISOString().split("T")[0] : null;
 
-                if (fromDate > toDate) {
+                // For fromDate: Use payload if provided, else use lastSync (if exists), else use default
+                const fromDate = payload.fromDate
+                    ? payload.fromDate
+                    : (lastSyncDate || "2020-01-01");
+
+                // For toDate: Use payload if provided, else use today
+                const toDate = payload.toDate
+                    ? payload.toDate
+                    : new Date().toISOString().split("T")[0];
+
+                // Only skip if we are relying on lastSync and it's already caught up to the requested toDate
+                if (!payload.fromDate && fromDate > toDate) {
                     results.push({ symbol, rows: 0, status: "up_to_date" });
                     continue;
                 }
