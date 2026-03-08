@@ -6,261 +6,13 @@ import {
   Menu,
   X,
   Activity,
-  FlaskConical,
-  Cpu,
-  LineChart,
-  Play,
   ChevronDown,
   ChevronRight,
-  GraduationCap,
-  BookOpen,
-  Layers,
-  Brain,
-  Target,
-  Calculator,
-  Zap,
-  ShieldCheck,
-  Database,
-  List,
-  BarChart2,
-  Upload,
-  Download,
-  Clock,
-  HardDrive,
-  Settings,
-  CalendarDays,
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-  badge?: string;
-  children?: NavItem[];
-}
-
-const learningItems: NavItem[] = [
-  {
-    label: "Quant Foundations",
-    href: "/learning/foundations",
-    icon: <GraduationCap className="w-4 h-4" />,
-    children: [
-      {
-        label: "Foundation of Flow",
-        href: "/learning/foundation-of-flow",
-        icon: <BookOpen className="w-3.5 h-3.5" />,
-      },
-      {
-        label: "The 4-Factor Model",
-        href: "/learning/4-factor-model",
-        icon: <Layers className="w-3.5 h-3.5" />,
-      },
-      {
-        label: "Market Regimes",
-        href: "/learning/market-regimes",
-        icon: <Brain className="w-3.5 h-3.5" />,
-      },
-      {
-        label: "The Blast Protocol",
-        href: "/learning/blast-protocol",
-        icon: <Target className="w-3.5 h-3.5" />,
-      },
-    ],
-  },
-  {
-    label: "Advanced Lab",
-    href: "/learning/advanced",
-    icon: <FlaskConical className="w-4 h-4" />,
-    badge: "PRO",
-    children: [
-      {
-        label: "Algo Implementation",
-        href: "/learning/algo-implementation",
-        icon: <Cpu className="w-3.5 h-3.5" />,
-      },
-      {
-        label: "Advanced Factor Eng.",
-        href: "/learning/advanced-factors",
-        icon: <Activity className="w-3.5 h-3.5" />,
-      },
-      {
-        label: "Quant Validation",
-        href: "/learning/quant-validation",
-        icon: <Calculator className="w-3.5 h-3.5" />,
-      },
-      {
-        label: "OpenClaw Architecture",
-        href: "/learning/openclaw-arch",
-        icon: <Layers className="w-3.5 h-3.5" />,
-      },
-      {
-        label: "Temporal Anomalies",
-        href: "/learning/temporal-anomalies",
-        icon: <LineChart className="w-3.5 h-3.5" />,
-      },
-      {
-        label: "Execution Micro.",
-        href: "/learning/execution-microstructure",
-        icon: <Zap className="w-3.5 h-3.5" />,
-      },
-      {
-        label: "System Sovereignty",
-        href: "/learning/system-sovereignty",
-        icon: <ShieldCheck className="w-3.5 h-3.5" />,
-      },
-    ],
-  },
-];
-
-const liveTools: NavItem[] = [
-  {
-    label: "R-Factor Engine",
-    href: "/learning/r-factor-engine",
-    icon: <Activity className="w-4 h-4" />,
-    badge: "LIVE",
-  },
-];
-
-const backtestingItems: NavItem[] = [
-  {
-    label: "Backtesting",
-    href: "/backtesting",
-    icon: <FlaskConical className="w-4 h-4" />,
-    badge: "LAB",
-    children: [
-      {
-        label: "Strategy Backtest",
-        href: "/backtesting/playground",
-        icon: <LineChart className="w-3.5 h-3.5" />,
-      },
-      {
-        label: "Live Scanner",
-        href: "/trading-lab/scanner",
-        icon: <Cpu className="w-3.5 h-3.5" />,
-      },
-      {
-        label: "Algo Execute",
-        href: "/trading-lab/execute",
-        icon: <Play className="w-3.5 h-3.5" />,
-      },
-    ],
-  },
-];
-
-const v1Items: NavItem[] = [
-  {
-    label: "v1.0 (Current)",
-    href: "/v1",
-    icon: <Zap className="w-4 h-4" />,
-    children: [
-      {
-        label: "Market Intelligence",
-        href: "/trading-lab/intelligence",
-        icon: <Brain className="w-4 h-4" />,
-        badge: "NEW",
-      },
-      {
-        label: "Trade Journal",
-        href: "/trading-lab/tradefinder",
-        icon: <LineChart className="w-4 h-4" />,
-        badge: "ANALYTICS",
-      },
-      {
-        label: "F&O Universe",
-        href: "/trading-lab/fno-universe",
-        icon: <Layers className="w-4 h-4" />,
-        badge: "NEW",
-      },
-    ],
-  },
-];
-
-const historifyItems: NavItem[] = [
-  {
-    label: "Historify",
-    href: "/historify",
-    icon: <Database className="w-4 h-4" />,
-    badge: "DATA",
-    children: [
-      {
-        label: "Dashboard",
-        href: "/historify",
-        icon: <Activity className="w-4 h-4" />,
-      },
-      {
-        label: "Watchlist",
-        href: "/historify/watchlist",
-        icon: <List className="w-4 h-4" />,
-      },
-      {
-        label: "Charts",
-        href: "/historify/charts",
-        icon: <BarChart2 className="w-4 h-4" />,
-      },
-      {
-        label: "Day Chart",
-        href: "/historify/day-chart",
-        icon: <CalendarDays className="w-4 h-4" />,
-        badge: "NEW",
-      },
-      {
-        label: "Download",
-        href: "/historify/download",
-        icon: <Download className="w-4 h-4" />,
-      },
-      {
-        label: "Import",
-        href: "/historify/import",
-        icon: <Upload className="w-4 h-4" />,
-      },
-      {
-        label: "Export",
-        href: "/historify/export",
-        icon: <HardDrive className="w-4 h-4" />,
-      },
-      {
-        label: "Scheduler",
-        href: "/historify/scheduler",
-        icon: <Clock className="w-4 h-4" />,
-      },
-      {
-        label: "Settings",
-        href: "/historify/settings",
-        icon: <Settings className="w-4 h-4" />,
-      },
-    ],
-  },
-];
-
-const v01Items: NavItem[] = [
-  {
-    label: "v0.1 (Legacy)",
-    href: "/v0.1",
-    icon: <Layers className="w-4 h-4" />,
-    children: [
-      {
-        label: "Learning Modules",
-        href: "/learning-group",
-        icon: <GraduationCap className="w-4 h-4" />,
-        children: learningItems,
-      },
-      {
-        label: "Live Intelligence",
-        href: "/live-group",
-        icon: <Activity className="w-4 h-4" />,
-        children: liveTools,
-      },
-      {
-        label: "Lab Environments",
-        href: "/lab-group",
-        icon: <FlaskConical className="w-4 h-4" />,
-        children: backtestingItems,
-      },
-    ],
-  },
-];
+import { v1Items, historifyItems, quantLabItems, v01Items } from "./_sidebar/nav-data";
+import { NavItem } from "./_sidebar/NavItem";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -280,68 +32,11 @@ export default function Sidebar() {
     );
   };
 
-  const renderNavItem = (item: NavItem, depth = 0) => {
-    const hasChildren = item.children && item.children.length > 0;
-    const isExpanded = expandedItems.includes(item.href);
-    const active = isActive(item.href);
-
-    return (
-      <div key={item.href}>
-        <div className="flex items-center">
-          <Link
-            href={hasChildren ? "#" : item.href}
-            onClick={(e) => {
-              if (hasChildren) {
-                e.preventDefault();
-                toggleExpand(item.href);
-              }
-              setIsMobileMenuOpen(false);
-            }}
-            className={`group flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 ease-in-out flex-1 ${active
-              ? "bg-slate-800/80 text-slate-100 shadow-sm"
-              : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
-              } ${depth > 0 ? `ml-${depth * 4} text-sm` : "text-sm font-medium"}`}
-          >
-            <div className={`flex-shrink-0 transition-colors ${active ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-300'}`}>
-              {item.icon}
-            </div>
-            <span className="flex-1 tracking-tight">{item.label}</span>
-            {item.badge && (
-              <span
-                className={`px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-sm ${item.badge === "LIVE"
-                  ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
-                  : item.badge === "NEW"
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                    : item.badge === "PRO"
-                      ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
-                      : item.badge === "ANALYTICS"
-                        ? "bg-violet-500/10 text-violet-400 border border-violet-500/20"
-                        : item.badge === "DATA"
-                          ? "bg-teal-500/10 text-teal-400 border border-teal-500/20"
-                          : "bg-slate-800 text-slate-400 border border-slate-700"
-                  }`}
-              >
-                {item.badge}
-              </span>
-            )}
-            {hasChildren && (
-              <span className="p-0.5 text-slate-500 group-hover:text-slate-300 transition-colors">
-                {isExpanded ? (
-                  <ChevronDown className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5" />
-                )}
-              </span>
-            )}
-          </Link>
-        </div>
-        {hasChildren && isExpanded && (
-          <div className="mt-1 mb-2 space-y-0.5 border-l border-slate-800 ml-5 pl-2">
-            {item.children!.map((child) => renderNavItem(child, depth + 1))}
-          </div>
-        )}
-      </div>
-    );
+  const commonProps = {
+    isActive,
+    expandedItems,
+    toggleExpand,
+    onMobileClick: () => setIsMobileMenuOpen(false),
   };
 
   return (
@@ -405,7 +100,9 @@ export default function Sidebar() {
               <span>Current System</span>
               <div className="h-px bg-slate-800/60 flex-1"></div>
             </div>
-            {v1Items.map((item) => renderNavItem(item))}
+            {v1Items.map((item) => (
+              <NavItem key={item.href} item={item} {...commonProps} />
+            ))}
           </div>
 
           <div className="space-y-1.5">
@@ -413,7 +110,19 @@ export default function Sidebar() {
               <span>Data Platform</span>
               <div className="h-px bg-teal-800/40 flex-1"></div>
             </div>
-            {historifyItems.map((item) => renderNavItem(item))}
+            {historifyItems.map((item) => (
+              <NavItem key={item.href} item={item} {...commonProps} />
+            ))}
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="px-2 text-[10px] font-bold text-violet-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <span>Quant Lab</span>
+              <div className="h-px bg-violet-800/40 flex-1"></div>
+            </div>
+            {quantLabItems.map((item) => (
+              <NavItem key={item.href} item={item} {...commonProps} />
+            ))}
           </div>
 
           <div className="space-y-1.5">
@@ -421,7 +130,9 @@ export default function Sidebar() {
               <span>Legacy Features</span>
               <div className="h-px bg-slate-800/60 flex-1"></div>
             </div>
-            {v01Items.map((item) => renderNavItem(item))}
+            {v01Items.map((item) => (
+              <NavItem key={item.href} item={item} {...commonProps} />
+            ))}
           </div>
 
         </nav>

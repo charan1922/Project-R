@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import {
     createChart, IChartApi, ISeriesApi, Time,
     ColorType, HistogramSeries, CandlestickSeries, LineSeries,
@@ -83,8 +83,28 @@ export default function DayChartPage() {
     const [tradedOnly, setTradedOnly] = useState(true);
     const symbols = tradedOnly ? TRADED_FNO : ALL_FNO;
     const [symbol, setSymbol] = useState(TRADED_FNO[0] ?? ALL_FNO[0] ?? "");
-    const [interval, setInterval_] = useState<IntervalValue>("Daily");
+    const [interval, setInterval_] = useState<IntervalValue>("5min");
     const [date, setDate] = useState(lastTradingDay());
+
+    // Searchable symbol dropdown
+    const [symbolOpen, setSymbolOpen] = useState(false);
+    const [symbolSearch, setSymbolSearch] = useState("");
+    const symbolDropdownRef = useRef<HTMLDivElement>(null);
+    const filteredSymbols = useMemo(() => {
+        const q = symbolSearch.toUpperCase().trim();
+        return q ? symbols.filter(s => s.includes(q)) : symbols;
+    }, [symbols, symbolSearch]);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (symbolDropdownRef.current && !symbolDropdownRef.current.contains(e.target as Node)) {
+                setSymbolOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
 
     // Data states
     const [loading, setLoading] = useState(false);
@@ -157,6 +177,12 @@ export default function DayChartPage() {
                         minute: '2-digit',
                         hour12: false
                     }).format(date);
+                },
+                priceFormatter: (price: number) => {
+                    return new Intl.NumberFormat('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                    }).format(price);
                 }
             }
         };
@@ -216,14 +242,18 @@ export default function DayChartPage() {
         volChart.priceScale("rsi").applyOptions({
             autoScale: false,
             scaleMargins: { top: 0.1, bottom: 0.1 },
-            minValue: 0,
-            maxValue: 100,
         });
 
         // Sync time scales
         chart.timeScale().subscribeVisibleTimeRangeChange(() => {
-            const r = chart.timeScale().getVisibleRange();
-            if (r) volChart.timeScale().setVisibleRange(r);
+            try {
+                const r = chart.timeScale().getVisibleRange();
+                if (r !== null) {
+                    volChart.timeScale().setVisibleRange(r);
+                }
+            } catch (e) {
+                // Ignore "Value is null" when volume chart has no data yet
+            }
         });
 
         const onResize = () => {
@@ -324,6 +354,11 @@ export default function DayChartPage() {
         }
     }, [symbol, date, interval]);
 
+    // Auto-load on dependency change
+    useEffect(() => {
+        loadChart();
+    }, [loadChart]);
+
     // ── Render ───────────────────────────────────────────────────────────────
     return (
         <div className="min-h-screen bg-[#070d1a] text-slate-100 flex flex-col">
@@ -385,23 +420,38 @@ export default function DayChartPage() {
 
                 <div className="h-4 w-px bg-slate-700" />
 
-                {/* Symbol */}
-                <div className="flex items-center gap-2">
+                {/* Symbol — Searchable */}
+                <div className="flex items-center gap-2 relative" ref={symbolDropdownRef}>
                     <label className="text-[10px] text-slate-500 uppercase tracking-widest shrink-0">Symbol</label>
-                    <select
-                        value={symbol}
-                        onChange={e => setSymbol(e.target.value)}
-                        className="px-2.5 py-1.5 text-sm bg-slate-800 border border-slate-700 rounded-md text-white font-mono focus:outline-none focus:border-rose-500 w-36"
-                    >
-                        {symbols.map(s => {
-                            const isTf = TRADEFINDER_MAP.has(s);
-                            return (
-                                <option key={s} value={s}>
-                                    {s}{!tradedOnly && isTf ? " ✓" : ""}
-                                </option>
-                            );
-                        })}
-                    </select>
+                    <div className="relative w-44">
+                        <input
+                            type="text"
+                            value={symbolOpen ? symbolSearch : symbol}
+                            onFocus={() => { setSymbolOpen(true); setSymbolSearch(""); }}
+                            onChange={e => setSymbolSearch(e.target.value)}
+                            placeholder="Search..."
+                            className="w-full px-2.5 py-1.5 text-sm bg-slate-800 border border-slate-700 rounded-md text-white font-mono focus:outline-none focus:border-rose-500"
+                        />
+                        {symbolOpen && (
+                            <div className="absolute z-50 top-full left-0 mt-1 w-full max-h-64 overflow-y-auto bg-slate-800 border border-slate-700 rounded-md shadow-xl">
+                                {filteredSymbols.length === 0 && (
+                                    <div className="px-3 py-2 text-xs text-slate-500">No matches</div>
+                                )}
+                                {filteredSymbols.map((s: string) => {
+                                    const isTf = TRADEFINDER_MAP.has(s);
+                                    return (
+                                        <button
+                                            key={s}
+                                            onClick={() => { setSymbol(s); setSymbolOpen(false); }}
+                                            className={`w-full text-left px-3 py-1.5 text-sm font-mono hover:bg-slate-700 transition-colors ${s === symbol ? "bg-rose-500/20 text-rose-300" : "text-white"}`}
+                                        >
+                                            {s}{!tradedOnly && isTf ? " ✓" : ""}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Interval segmented */}

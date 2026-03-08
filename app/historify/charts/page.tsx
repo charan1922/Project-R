@@ -104,8 +104,14 @@ export default function ChartsPage() {
 
         // Sync time scales
         chart.timeScale().subscribeVisibleTimeRangeChange(() => {
-            const range = chart.timeScale().getVisibleRange();
-            if (range) rsiChart.timeScale().setVisibleRange(range);
+            try {
+                const range = chart.timeScale().getVisibleRange();
+                if (range !== null) {
+                    rsiChart.timeScale().setVisibleRange(range);
+                }
+            } catch (e) {
+                // Ignore "Value is null" when secondary chart has no data yet
+            }
         });
 
         // Resize handler

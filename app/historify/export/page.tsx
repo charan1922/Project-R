@@ -1,21 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Download, FileArchive, FileText, Calendar, Clock, CheckCircle2, Loader2, Inbox } from "lucide-react";
+import { Download, FileArchive, FileText, Calendar, Clock, CheckCircle2, Loader2, Inbox, AlertCircle } from "lucide-react";
 
-// In-memory export queue — starts empty, grows as user triggers exports
 type ExportJob = {
     id: string; symbols: string[]; format: string; interval: string;
-    dateRange: string; status: "queued" | "processing" | "complete"; rows: number; size: string;
+    dateRange: string; status: "queued" | "processing" | "complete" | "error"; rows: number; size: string;
+    downloadUrl?: string; error?: string;
 };
 
 const INTERVALS = ["1min", "5min", "15min", "30min", "1hour", "Daily"];
-const FORMATS = ["Individual CSV", "Combined CSV", "ZIP Archive"];
+const FORMATS = ["Individual CSV", "Combined CSV"];
 const PRESETS = ["Last 7 Days", "Last 30 Days", "Last 90 Days", "Year to Date", "Last 1 Year", "All Time"];
 
 export default function ExportPage() {
     const [interval, setIntervalVal] = useState("Daily");
-    const [format, setFormat] = useState("ZIP Archive");
+    const [format, setFormat] = useState("Combined CSV");
     const [preset, setPreset] = useState("Last 1 Year");
     const [queue, setQueue] = useState<ExportJob[]>([]);
     const [watchlist, setWatchlist] = useState<{ symbol: string }[]>([]);
@@ -26,29 +26,95 @@ export default function ExportPage() {
         fetch("/api/historify/watchlist").then(r => r.json()).then(d => setWatchlist(Array.isArray(d) ? d : [])).catch(() => { });
     }, []);
 
-    const startExport = () => {
+    const startExport = async () => {
         if (watchlist.length === 0) return;
         setSubmitting(true);
+
+        const jobId = `exp-${Date.now()}`;
+        const symbols = watchlist.map(w => w.symbol);
         const job: ExportJob = {
-            id: `exp-${Date.now()}`,
-            symbols: watchlist.map(w => w.symbol),
-            format,
-            interval,
-            dateRange: preset,
-            status: "queued",
-            rows: 0,
-            size: "—",
+            id: jobId, symbols, format, interval, dateRange: preset,
+            status: "processing", rows: 0, size: "—",
         };
         setQueue(prev => [job, ...prev]);
 
-        // Simulate processing progression (real implementation would call a backend job)
-        setTimeout(() => {
-            setQueue(prev => prev.map(j => j.id === job.id ? { ...j, status: "processing" } : j));
+        try {
+            if (format === "Individual CSV") {
+                // Download one file per symbol
+                for (const sym of symbols) {
+                    const params = new URLSearchParams({
+                        symbols: sym,
+                        interval,
+                        preset,
+                        format: "csv",
+                    });
+                    const res = await fetch(`/api/historify/export?${params}`);
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({ error: "Download failed" }));
+                        throw new Error(err.error || `Failed for ${sym}`);
+                    }
+                    const blob = await res.blob();
+                    const rowCount = parseInt(res.headers.get("X-Row-Count") || "0", 10);
+                    triggerDownload(blob, `${sym}_${interval}_${new Date().toISOString().slice(0, 10)}.csv`);
+                    // Update job progress
+                    setQueue(prev => prev.map(j => j.id === jobId ? { ...j, rows: j.rows + rowCount } : j));
+                }
+                setQueue(prev => prev.map(j => j.id === jobId ? {
+                    ...j, status: "complete",
+                    size: `${symbols.length} file${symbols.length !== 1 ? "s" : ""}`,
+                } : j));
+            } else {
+                // Combined CSV: all symbols in one file
+                const params = new URLSearchParams({
+                    symbols: symbols.join(","),
+                    interval,
+                    preset,
+                    format: "csv",
+                });
+                const res = await fetch(`/api/historify/export?${params}`);
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({ error: "Download failed" }));
+                    throw new Error(err.error || "Export failed");
+                }
+                const blob = await res.blob();
+                const rowCount = parseInt(res.headers.get("X-Row-Count") || "0", 10);
+                const filename = symbols.length === 1
+                    ? `${symbols[0]}_${interval}_${new Date().toISOString().slice(0, 10)}.csv`
+                    : `historify_export_${symbols.length}symbols_${interval}_${new Date().toISOString().slice(0, 10)}.csv`;
+
+                // Store blob for re-download
+                const blobUrl = URL.createObjectURL(blob);
+                setQueue(prev => prev.map(j => j.id === jobId ? {
+                    ...j, status: "complete", rows: rowCount,
+                    size: formatBytes(blob.size), downloadUrl: blobUrl,
+                } : j));
+                triggerDownload(blob, filename);
+            }
+        } catch (err: any) {
+            setQueue(prev => prev.map(j => j.id === jobId ? {
+                ...j, status: "error", error: err.message || "Export failed",
+            } : j));
+        } finally {
             setSubmitting(false);
-        }, 800);
-        setTimeout(() => {
-            setQueue(prev => prev.map(j => j.id === job.id ? { ...j, status: "complete", rows: Math.floor(Math.random() * 50000) + 5000, size: `${(Math.random() * 5 + 0.5).toFixed(1)} MB` } : j));
-        }, 3500);
+        }
+    };
+
+    const triggerDownload = (blob: Blob, filename: string) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        // The URL is revoked after a small delay to ensure the download starts
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+    };
+
+    const formatBytes = (bytes: number): string => {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     };
 
     return (
@@ -60,7 +126,7 @@ export default function ExportPage() {
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-white tracking-tight">Export Data</h1>
-                        <p className="text-sm text-slate-500">Export locally stored OHLCV data in CSV or ZIP format</p>
+                        <p className="text-sm text-slate-500">Export locally stored OHLCV data as downloadable CSV files</p>
                     </div>
                 </div>
             </div>
@@ -113,7 +179,7 @@ export default function ExportPage() {
 
                 {/* Export Queue */}
                 <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
-                    <div className="p-4 border-b border-slate-800 text-sm font-bold text-slate-300 uppercase tracking-wider">Export Queue</div>
+                    <div className="p-4 border-b border-slate-800 text-sm font-bold text-slate-300 uppercase tracking-wider">Export History</div>
                     {queue.length === 0 ? (
                         <div className="p-10 text-center">
                             <Inbox className="w-8 h-8 text-slate-700 mx-auto mb-2" />
@@ -125,14 +191,35 @@ export default function ExportPage() {
                                 <div key={item.id} className="p-4 hover:bg-slate-800/30 transition-colors">
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-3">
-                                            {item.format.includes("ZIP") ? <FileArchive className="w-4 h-4 text-violet-400" /> : <FileText className="w-4 h-4 text-sky-400" />}
+                                            <FileText className="w-4 h-4 text-sky-400" />
                                             <span className="text-sm font-semibold text-white">{item.symbols.length} symbol{item.symbols.length !== 1 ? "s" : ""}</span>
                                             <span className="text-xs text-slate-500">{item.format}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            {item.status === "complete" ? <><CheckCircle2 className="w-4 h-4 text-emerald-400" /><button className="px-3 py-1 text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-500/30">Download</button></> :
-                                                item.status === "processing" ? <><Loader2 className="w-4 h-4 text-sky-400 animate-spin" /><span className="text-xs text-sky-400">Processing…</span></> :
-                                                    <><Clock className="w-4 h-4 text-slate-500" /><span className="text-xs text-slate-500">Queued</span></>}
+                                            {item.status === "complete" ? <>
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                                                {item.downloadUrl && (
+                                                    <button
+                                                        onClick={() => {
+                                                            const a = document.createElement("a");
+                                                            a.href = item.downloadUrl!;
+                                                            a.download = `historify_export.csv`;
+                                                            document.body.appendChild(a);
+                                                            a.click();
+                                                            document.body.removeChild(a);
+                                                        }}
+                                                        className="px-3 py-1 text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-500/30"
+                                                    >
+                                                        Download Again
+                                                    </button>
+                                                )}
+                                            </> :
+                                                item.status === "error" ? <>
+                                                    <AlertCircle className="w-4 h-4 text-red-400" />
+                                                    <span className="text-xs text-red-400">{item.error || "Failed"}</span>
+                                                </> :
+                                                    item.status === "processing" ? <><Loader2 className="w-4 h-4 text-sky-400 animate-spin" /><span className="text-xs text-sky-400">Exporting…</span></> :
+                                                        <><Clock className="w-4 h-4 text-slate-500" /><span className="text-xs text-slate-500">Queued</span></>}
                                         </div>
                                     </div>
                                     <div className="flex gap-4 text-xs text-slate-500">
