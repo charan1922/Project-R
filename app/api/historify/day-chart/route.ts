@@ -59,22 +59,20 @@ export async function GET(request: NextRequest) {
     if (!date) return NextResponse.json({ error: "date required" }, { status: 400 });
 
     try {
-        const fs = await import("fs");
-        const { getDuckDb, getParquetPath } = await import("@/lib/historify/duckdb");
+        const { getDuckDb, resolveParquetSource, ensureHttpfs } = await import("@/lib/historify/duckdb");
 
-        const parquetPath = getParquetPath(symbol);
-        if (!fs.existsSync(parquetPath)) {
-            return NextResponse.json({ candles: [], indicators: { vwap: [], ema20: [], ema50: [], rsi: [] } });
-        }
+        const { source, isCloud } = resolveParquetSource(symbol);
 
         const duckDb = await getDuckDb();
         const conn = await duckDb.connect();
 
+        if (isCloud) await ensureHttpfs(conn);
+
         // DuckDB SQL to fetch candles for a specific local date
         // 'epoch' timestamp needs timezone adjustment since Dhan is IST
         const query = `
-            SELECT timestamp as ts, open, high, low, close, volume 
-            FROM read_parquet('${parquetPath}')
+            SELECT timestamp as ts, open, high, low, close, volume
+            FROM read_parquet('${source}')
             WHERE interval = '${interval}'
               AND strftime(epoch_ms(timestamp * 1000) AT TIME ZONE 'Asia/Kolkata', '%Y-%m-%d') = '${date}'
             ORDER BY timestamp ASC

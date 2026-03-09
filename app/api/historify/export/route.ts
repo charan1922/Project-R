@@ -3,8 +3,7 @@
  * GET /api/historify/export?symbols=SBIN,RELIANCE&interval=Daily&preset=Last+1+Year&format=csv
  */
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import { getDuckDb, getParquetPath } from "@/lib/historify/duckdb";
+import { getDuckDb, resolveParquetSource, ensureHttpfs } from "@/lib/historify/duckdb";
 
 function getDateRange(preset: string): { startTs: number; endTs: number } {
     const now = Math.floor(Date.now() / 1000);
@@ -50,15 +49,19 @@ export async function GET(req: NextRequest) {
         let csvBody = "";
         let totalRows = 0;
 
+        let needsHttpfs = false;
         // Since Parquet files are heavily split by symbol, we generate a UNION query
         // or loop through each symbol to read its specific file.
         for (const symbol of symbols) {
-            const parquetPath = getParquetPath(symbol);
-            if (!fs.existsSync(parquetPath)) continue;
+            const { source, isCloud } = resolveParquetSource(symbol);
+            if (isCloud && !needsHttpfs) {
+                await ensureHttpfs(conn);
+                needsHttpfs = true;
+            }
 
             const query = `
                 SELECT symbol, exchange, interval, timestamp, open, high, low, close, volume
-                FROM read_parquet('${parquetPath}')
+                FROM read_parquet('${source}')
                 WHERE interval = '${interval}'
                   AND timestamp >= ${startTs} AND timestamp <= ${endTs}
                 ORDER BY timestamp ASC

@@ -3,7 +3,16 @@ import path from 'path';
 import fs from 'fs';
 
 let _db: DuckDBInstance | null = null;
+let _httpfsLoaded = false;
 const parquetDir = path.join(process.cwd(), 'data', 'parquet', 'historify');
+
+// Hugging Face dataset base URLs
+const HF_DATASETS = {
+    /** 5-minute F&O candles — files at root: {SYMBOL}.parquet */
+    fno5min: 'https://huggingface.co/datasets/charan1922/fno-5min/resolve/main',
+    /** 18-month historify data — files under historify/: {SYMBOL}.parquet */
+    fno18m: 'https://huggingface.co/datasets/charan1922/fno-data-18months/resolve/main/historify',
+} as const;
 
 export async function getDuckDb(): Promise<DuckDBInstance> {
     if (_db) return _db;
@@ -14,11 +23,41 @@ export async function getDuckDb(): Promise<DuckDBInstance> {
     }
 
     // Connect to an in-memory DuckDB instance since we are only querying/writing files
-    _db = await DuckDBInstance.create(':memory:');
+    // allow_unsigned_extensions required for httpfs to install via Node API
+    _db = await DuckDBInstance.create(':memory:', { allow_unsigned_extensions: 'true' });
 
-    // We can also run an initialization query if necessary (e.g. installing extensions)
-    // N-API DuckDB instance has parquet extension built-in by default
     return _db;
+}
+
+/**
+ * Ensure httpfs extension is installed and loaded on the given connection.
+ * Safe to call multiple times — only runs once per process.
+ */
+export async function ensureHttpfs(conn: DuckDBConnection): Promise<void> {
+    if (_httpfsLoaded) return;
+    await conn.run("INSTALL httpfs; LOAD httpfs;");
+    _httpfsLoaded = true;
+}
+
+/**
+ * Build the remote Hugging Face URL for a symbol's parquet file.
+ * @param symbol  e.g. "RELIANCE"
+ * @param dataset Which HF dataset to use (default: fno18m which has daily+intraday)
+ */
+export function getCloudParquetUrl(symbol: string, dataset: keyof typeof HF_DATASETS = 'fno18m'): string {
+    return `${HF_DATASETS[dataset]}/${symbol}.parquet`;
+}
+
+/**
+ * Resolve the parquet source for a symbol — local path if available, otherwise cloud URL.
+ * Returns { source: string; isCloud: boolean }
+ */
+export function resolveParquetSource(symbol: string, customFolder?: string): { source: string; isCloud: boolean } {
+    const localPath = getParquetPath(symbol, customFolder);
+    if (fs.existsSync(localPath)) {
+        return { source: localPath, isCloud: false };
+    }
+    return { source: getCloudParquetUrl(symbol, 'fno18m'), isCloud: true };
 }
 
 /**

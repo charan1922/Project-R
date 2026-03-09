@@ -49,21 +49,19 @@ export async function GET(request: NextRequest) {
     if (!symbol) return NextResponse.json({ error: "symbol required" }, { status: 400 });
 
     try {
-        const fs = await import("fs");
-        const { getDuckDb, getParquetPath } = await import("@/lib/historify/duckdb");
+        const { getDuckDb, resolveParquetSource, ensureHttpfs } = await import("@/lib/historify/duckdb");
 
-        const parquetPath = getParquetPath(symbol);
-        if (!fs.existsSync(parquetPath)) {
-            return NextResponse.json({ candles: [], indicators: { ema20: [], ema50: [], rsi: [] } });
-        }
+        const { source, isCloud } = resolveParquetSource(symbol);
 
         const duckDb = await getDuckDb();
         const conn = await duckDb.connect();
 
+        if (isCloud) await ensureHttpfs(conn);
+
         // DuckDB SQL to fetch latest candles for the chart
         const query = `
-            SELECT timestamp as ts, open, high, low, close, volume 
-            FROM read_parquet('${parquetPath}')
+            SELECT timestamp as ts, open, high, low, close, volume
+            FROM read_parquet('${source}')
             WHERE interval = '${interval}'
             ORDER BY timestamp DESC
             LIMIT 500

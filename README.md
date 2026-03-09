@@ -46,7 +46,7 @@ A specialized "Lab" for mastering market microstructure:
 Professional-grade infrastructure for high-performance data management:
 - **DuckDB Columnar Storage**: Ultra-fast storage for millions of rows of OHLCV and OI data using local `.parquet` generation.
 - **Automated Sync Pipelines**: Node architectures (`sync_all_fno`, `sync_5min_fno`) to scrape extensive 90-day chunks from Dhan V2.
-- **Serverless Cloud Backtesting**: Automated streaming of data to **Hugging Face Datasets**. The AI engines utilize DuckDB's `httpfs` extension to read the remote `charan1922/fno-5min` Parquet arrays natively over the internet without using local RAM or disk storage.
+- **Cloud Data Lake Integration**: Query 18+ months of F&O data directly from **Hugging Face** datasets ([fno-5min](https://huggingface.co/datasets/charan1922/fno-5min) & [fno-data-18months](https://huggingface.co/datasets/charan1922/fno-data-18months)) using DuckDB's `httpfs` extension—streaming only the required bytes without local downloads.
 
 ### 4. Sensibull Performance Extraction
 Reverse-engineering winning streaks via verified data (Target: [Sensibull Verified P&L](https://web.sensibull.com/verified-pnl/fanged-okra/uQmeTrztNOWqFt)):

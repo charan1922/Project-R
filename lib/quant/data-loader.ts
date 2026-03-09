@@ -40,13 +40,59 @@ export async function getDailyPrices(
     // Try SQLite first
     let rows = await fetchFromSQLite(symbol, exchange, "Daily", startDate, endDate);
 
-    // Fallback to Dhan API for index symbols or if SQLite is empty
+    // Try DuckDB (local parquet or Hugging Face cloud) if SQLite is empty
+    if (rows.length === 0) {
+        rows = await fetchFromParquet(symbol, startDate, endDate);
+    }
+
+    // Fallback to Dhan API for index symbols or if still empty
     if (rows.length === 0) {
         rows = await fetchFromDhanAPI(symbol, exchange, startDate, endDate);
     }
 
     _cache.set(key, { data: rows, ts: Date.now() });
     return rows;
+}
+
+async function fetchFromParquet(
+    symbol: string,
+    startDate: string,
+    endDate: string
+): Promise<OHLCVRow[]> {
+    try {
+        const { getDuckDb, resolveParquetSource, ensureHttpfs } = await import("@/lib/historify/duckdb");
+
+        const { source, isCloud } = resolveParquetSource(symbol);
+
+        const duckDb = await getDuckDb();
+        const conn = await duckDb.connect();
+
+        if (isCloud) await ensureHttpfs(conn);
+
+        const startTs = Math.floor(new Date(startDate).getTime() / 1000);
+        const endTs = Math.floor(new Date(endDate + "T23:59:59").getTime() / 1000);
+
+        const res = await conn.run(`
+            SELECT timestamp, open, high, low, close, volume
+            FROM read_parquet('${source}')
+            WHERE interval = 'Daily'
+              AND timestamp >= ${startTs} AND timestamp <= ${endTs}
+            ORDER BY timestamp ASC
+        `);
+        const rows = await res.getRows();
+
+        return rows.map((r: any) => ({
+            timestamp: Number(r[0]),
+            date: new Date(Number(r[0]) * 1000).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }),
+            open: Number(r[1]),
+            high: Number(r[2]),
+            low: Number(r[3]),
+            close: Number(r[4]),
+            volume: Number(r[5]) || 0,
+        }));
+    } catch {
+        return [];
+    }
 }
 
 async function fetchFromSQLite(
