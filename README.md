@@ -1,146 +1,103 @@
-# Sensibull Trade Extractor
+# Project-R (DeepQuant)
 
-Complete solution for extracting and visualizing Sensibull Verified P&L data.
+## 💡 Simple Explanation of Use Case
+**What are we trying to achieve with AI?** 
+We are building a trading robot that thinks exactly like a highly profitable human trader. Instead of writing rigid rules for the robot to follow, we are feeding the AI 271 days of the trader's actual [winning trades from Sensibull](https://web.sensibull.com/verified-pnl/fanged-okra/uQmeTrztNOWqFt). By analyzing those trades against 4 key market indicators, the AI will learn the hidden patterns—the "Smart Money Footprints"—and execute trades automatically with the exact same discretion and intuition as the professional trader.
 
-## 📁 Project Structure (Root Level)
+The 4 indicators the AI tracks (detailed in the [Trade Finder Strategy](https://www.youtube.com/watch?v=rdcV5u5cKmg&t=12s)):
+- **Volume** (Total shares traded)
+- **Open Interest** (Buildup/decline of outstanding option contracts)
+- **Bid-Ask Spread** (Urgency and liquidity)
+- **Turnover** (Total value of the transactions)
 
-```
-.
-├── app/                      # Next.js 16 App Router
-│   ├── layout.tsx
-│   ├── page.tsx             # Dashboard page
-│   ├── globals.css
-│   └── favicon.ico
-├── components/              # shadcn/ui components
-│   └── ui/
-│       ├── badge.tsx
-│       ├── button.tsx
-│       ├── card.tsx
-│       ├── input.tsx
-│       ├── separator.tsx
-│       ├── table.tsx
-│       └── tabs.tsx
-├── lib/
-│   └── utils.ts             # Utility functions
-├── src/                     # Extractor scripts
-│   ├── extract.ts           # Main Playwright extractor
-│   ├── mcp-server.ts        # MCP server for AI queries
-│   └── tsconfig.json        # TypeScript config for scripts
-├── data/
-│   ├── .gitkeep
-│   └── data.json            # Extracted data (symlinked to public)
-├── public/
-│   └── data.json -> ../data/data.json
-├── components.json          # shadcn config
-├── next.config.ts           # Next.js config
-├── package.json             # All dependencies
-├── pnpm-lock.yaml           # pnpm lock file
-├── tsconfig.json            # TypeScript config (Next.js)
-├── .gitignore
-└── README.md
-```
+## 🚀 The Mission: AI-Automated "Smart Money" Execution
 
-## 🚀 Quick Start
+**Project-R (DeepQuant)** is a sovereign AI-driven algorithmic trading ecosystem designed to reverse-engineer and automate the "Smart Money" execution patterns of high-performance institutional traders.
 
-### 1. Install Dependencies
-```bash
-pnpm install
-pnpm install:browsers
-```
+By synthesizing 271+ days of [verified Sensibull P&L data](https://web.sensibull.com/verified-pnl/fanged-okra/uQmeTrztNOWqFt) with a proprietary 4-factor Z-score engine (Volume, OI, Spread, Turnover), Project-R builds a deterministic AI agent that thinks, scans, and executes like a professional market maker.
 
-### 2. Extract Data
-```bash
-pnpm extract
-```
+### 🤖 The AI Execution Pipeline
+To fully automate the discretion of the "Smart Money" strategy (originally sourced from the [Trade Finder YouTube Deep Dive](https://www.youtube.com/watch?v=rdcV5u5cKmg&t=12s)), the hard-coded logic is superseded by a 4-phase Machine Learning pipeline:
 
-This will:
-- Extract all 271 days of trades from Sensibull
-- Save to `data/data.json`
-- Save CSV to `data/sensibull_trades.csv`
+1. **Mindset Cloning (Supervised Learning)**: Training XGBoost models on Sensibull PnL data alongside Historify tick data to dynamically predict setup probability instead of relying on static thresholds.
+2. **Smart-Money Detection (Unsupervised)**: Using Isolation Forests on a rolling 20-day window of the 4 R-factors to identify mathematical anomalies in capital flow:
+    - **Open Interest**: The buildup or decline of outstanding contracts (Directional Compass).
+    - **Volumes**: The total number of shares traded (Participation Gate).
+    - **Bid-Ask Spread**: The difference between the highest price a buyer is willing to pay and the lowest price a seller is willing to accept (Urgency Metric).
+    - **Turnover**: The total value of the transactions (Quality Filter).
+3. **Adaptive Execution (Reinforcement Learning)**: PPO agents adapting execution routing (Limits vs. Market Order) dynamically based on the current regime (Elephant vs. Cheetah).
+4. **Trader Intuition (LLM Integration)**: Fine-tuned local LLM for post-trade journaling, translating the Z-Scores and OI data into human-readable rationale.
 
-### 3. View Dashboard
-```bash
-pnpm dev
-```
-Open http://localhost:6000
+## 🎯 Use Cases & Applications
 
-Or serve built version:
-```bash
-pnpm build
-pnpm serve
-```
+### 1. AI-Automated Trading Algo (Primary Goal)
+An autonomous engine that translates institutional thinking into code (Strategy sourced from [Trade Finder YouTube Deep Dive](https://www.youtube.com/watch?v=rdcV5u5cKmg&t=12s)):
+- **R-Factor Triggering**: Detects when large investors are aggressively building positions relative to their normal 20-day activity.
+- **AI Filtering**: Uses fine-tuned models to validate setups based on the "Blast Protocol" and seller-side option bias.
+- **Low-Latency Execution**: Seamless integration with Dhan V2 for automated market entry and exit.
 
-## 📊 Available Scripts
+### 2. Deep Quant Lab (Research & Training)
+A specialized "Lab" for mastering market microstructure:
+- **Regime Classification**: Dynamically identifies **Elephant** (stable) vs. **Cheetah** (volatile) stocks to optimize execution.
+- **Statistical Standardization**: Filters out retail noise by standardizing Volume, OI, and Spread anomalies ($Z > 3.0$).
+- **Smart Money Footprinting**: Deep-dive analysis of Cumulative Turnover Integrals to find accelerating flow.
 
-| Command | Description |
-|---------|-------------|
-| `pnpm extract` | Run Playwright extractor |
-| `pnpm mcp` | Start MCP server for AI queries |
-| `pnpm dev` | Start dashboard dev server (port 6000) |
-| `pnpm build` | Build dashboard for production |
-| `pnpm serve` | Serve built dashboard (port 6000) |
-| `pnpm install:browsers` | Install Playwright browsers |
-| `pnpm clean` | Clean all dependencies and builds |
+### 3. Historify (Data Lake & Archiving)
+Professional-grade infrastructure for high-performance data management:
+- **DuckDB Columnar Storage**: Ultra-fast storage for millions of rows of OHLCV and OI data.
+- **Automated Sync**: Scheduled 90-day chunked ingestion from Dhan V2 to build a robust local backtesting environment.
 
-## 🎨 Dashboard Features
+### 4. Sensibull Performance Extraction
+Reverse-engineering winning streaks via verified data (Target: [Sensibull Verified P&L](https://web.sensibull.com/verified-pnl/fanged-okra/uQmeTrztNOWqFt)):
+- **Playwright Extractor**: Scrapes and normalizes 271+ days of verified trades from Sensibull.
+- **AI-Powered Analysis**: An **MCP Server** that enables natural language querying of trade history to extract tactical insights for model training.
 
-- **Stats Overview**: Total P&L, Win Rate, Trade Count, Trading Days
-- **Trade History**: Searchable table with all trades
-- **Daily Summary**: Day-by-day performance with verification timestamps
-- **Top Symbols**: Most traded symbols analysis
+## 📈 Deep Quant Strategy: The AI-Enhanced R-Factor Model
 
-## 🤖 MCP Server Tools
+The core engine transitions from static statistical rules to dynamic machine learning models to capture the "Smart Money" footprints modeled after verified sensible trades:
 
-Start MCP server: `pnpm mcp`
+- **AI Phase 1: Mindset Cloning**: Supervised learning (XGBoost/LightGBM) trained on Playwright-extracted Sensibull PnL data integrated with Historify tick data, directly predicting the probability of the trader's setup.
+- **AI Phase 2: Dynamic Smart-Money Detection**: Unsupervised learning (Isolation Forests/Autoencoders) on a rolling 20-day window of the 4 R-Factors to identify true market anomalies without hard-coded limits.
+    - **Open Interest ($Z_{OI}$)**: Tracking institutional put-selling vs. call-selling (e.g., Rising Put OI + Price > ORB).
+    - **Volumes ($Z_{Vol}$)**: Measuring total shares traded to confirm participation.
+    - **Bid-Ask Spread ($Z_{Spread}$)**: Calculating urgency and liquidity consumption.
+    - **Turnover ($Z_{Turn}$)**: Evaluating total capital commitment.
+- **AI Phase 3: The "Blast" Protocol Execution Engine**: Reinforcement Learning (PPO) agent adapting execution logic between "Elephant" (limit orders) and "Cheetah" (market orders) regimes to minimize slippage.
+- **AI Phase 4: Trader's Intuition**: Fine-tuned local LLM (e.g., Llama 3) for trade journaling and post-trade natural language analysis, mimicking the trader's thought process.
 
-Available tools for AI queries:
-- `get_total_trades` - Total trade count
-- `get_trades_by_symbol` - Trades for specific symbol
-- `get_trades_by_date` - Trades on specific date
-- `get_trades_by_option_type` - Filter by CE/PE/STOCK
-- `get_top_profitable_trades` - Best performing trades
-- `get_symbol_statistics` - Symbol analysis
-- `get_overall_statistics` - Complete stats
+**Project-R (DeepQuant)** is a sovereign AI-driven algorithmic trading ecosystem designed to reverse-engineer and automate the "Smart Money" execution patterns of high-performance institutional traders.
 
-## 📝 Data Format
+By synthesizing 271+ days of verified Sensibull P&L data with a proprietary 4-factor Z-score engine, Project-R builds a deterministic AI agent that thinks, scans, and executes like a professional market maker.
 
-### Trade Object
-```typescript
-{
-  Date: string;                    // YYYY-MM-DD
-  Symbol: string;                  // Stock/Index symbol
-  Option_Type: 'CE' | 'PE' | 'STOCK';
-  Strike: string;                  // Option strike price
-  Expiry: string;                  // YYYY-MM-DD
-  Qty: string;                     // Quantity
-  Avg_Price: string;               // Average price
-  LTP: string;                     // Last traded price
-  P_L: string;                     // Profit/Loss
-  Daily_Total_PnL: string;         // Day's total P&L
-  Verification_Timestamp: string;  // Sensibull verification time
-  Page: number;                    // Source page number
-}
-```
+## 🚀 The Mission: AI-Automated "Smart Money" Execution
+
+The ultimate goal of Project-R is to "crack" and automate an institutional-grade trading mindset by combining:
+1. **Mindset Automation**: Training and fine-tuning AI models on specific historical "Trade Finder" datasets to replicate the logic of elite traders.
+2. **The Put OI Compass**: Moving beyond simple volume to track **Put Option Open Interest** as the true indicator of "Smart Money" bias (Put writing = Bullish conviction).
+3. **Relative Intelligence (R-Factor)**: Benchmarking every market variable against its **20-day historical mean** to identify high-conviction institutional participation.
+
+## 🏗️ Architecture (OpenClaw Paradigm)
+
+Sovereign, layered architecture inspired by the **OpenClaw topology**:
+
+- **Layer 1: Surfaces**: Next.js 16 Web Dashboard & CLI.
+- **Layer 2: Channels**: Dhan WebSocket & Filesystem adapters.
+- **Layer 3: Sessions**: State isolation via Zustand.
+- **Layer 4: Gateway**: Central control plane for secure ingress/egress.
+- **Layer 5: Runtime**: The deterministic R-Factor logic substrate.
+- **Layer 6: Tools**: SQLite/DuckDB persistence and technical modules.
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 16 + React 19 + TypeScript
-- **Styling**: Tailwind CSS 4 + shadcn/ui
-- **Extraction**: Playwright 1.58.2
-- **MCP**: Model Context Protocol SDK
-- **Package Manager**: pnpm 10.29.2
+- **Framework**: Next.js 16 (App Router) + React 19
+- **Language**: TypeScript 5.7+ (Node.js 22+)
+- **Database**: SQLite (better-sqlite3) + DuckDB (Parquet)
+- **AI Tools**: MCP Server + Playwright (Extraction)
+- **Charting**: Lightweight Charts v5 (Real-time)
+- **Package Manager**: pnpm 10.x
 
-## 🔧 Adding New Features
+## 📚 Resources & References
 
-The project is organized for easy extension:
-
-- **New UI Components**: Add to `components/ui/`
-- **New Dashboard Pages**: Add to `app/`
-- **New Data Processing**: Modify `src/extract.ts`
-- **New MCP Tools**: Add to `src/mcp-server.ts`
-
-## ⚠️ Notes
-
-- Dashboard reads from `data/data.json` (symlinked to `public/`)
-- Run `pnpm extract` before viewing dashboard for latest data
-- Browser runs in non-headless mode by default for debugging
+- **Verified Performance**: [Sensibull Verified P&L (fanged-okra)](https://web.sensibull.com/verified-pnl/fanged-okra/uQmeTrztNOWqFt)
+- **Strategy Insights**: [Smart Money & R-Factor Deep Dive (YouTube)](https://www.youtube.com/watch?v=rdcV5u5cKmg&t=12s)
+- **Design Docs**: See the `/strategy/` and `/openspec/` directories for detailed architectural and algorithmic specifications.

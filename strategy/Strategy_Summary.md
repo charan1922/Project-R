@@ -48,3 +48,11 @@ Automates the trade entry based on the "Breakout Beacon" + "Intraday Boost".
 3.  **Action**:
     *   **Long**: Price > ORB + Put OI Rising + $Z_{Vol} > 3$.
     *   **Short**: Price < ORB + Call OI Rising + $Z_{Vol} > 3$.
+
+## 🤖 The AI Execution Pipeline
+To fully automate the discretion of the "Smart Money" strategy (originally sourced from the [Trade Finder YouTube Deep Dive](https://www.youtube.com/watch?v=rdcV5u5cKmg&t=12s)), the hard-coded R-Factor logic is superseded by a 4-phase Machine Learning pipeline:
+
+1. **Mindset Cloning (Supervised Learning)**: Training XGBoost models on Sensibull PnL data alongside Historify tick data to dynamically predict setup probability instead of relying on static thresholds.
+2. **Smart-Money Detection (Unsupervised)**: Using Isolation Forests on a rolling 20-day window of the 4 factors to identify mathematical anomalies in capital flow.
+3. **Adaptive Execution (Reinforcement Learning)**: PPO agents adapting execution routing (Limits vs. Market Order) dynamically based on the current regime (Elephant vs. Cheetah).
+4. **Trader Intuition (LLM Integration)**: Fine-tuned local LLM for post-trade journaling, translating the Z-Scores and OI data into human-readable rationale.
