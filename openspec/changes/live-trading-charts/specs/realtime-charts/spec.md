@@ -14,6 +14,13 @@ The charting component SHALL update the active candlestick series with new price
 - **WHEN** 10 new price ticks arrive within 1 second from the WebSocket
 - **THEN** the chart instantly redraws the active candle's High, Low, and Close without causing the surrounding React UI to stutter.
 
+### Requirement: Historical Context Seeding
+The charting component SHALL fetch and display recent historical 1-minute bars (via the `live-history` API) immediately upon symbol selection to provide technical context.
+
+#### Scenario: Switching to a new symbol
+- **WHEN** the user selects `ADANIENSOL`
+- **THEN** the system fetches the last 24 hours of 1-minute data and calls `series.setData()` before appending the first live tick.
+
 ### Requirement: Dynamic Watermarks & Event Markers
 The charting component SHALL display the active Symbol as a semi-transparent watermark and plot Up/Down arrows via the v5 custom Marker Plugins for algorithmic signals.
 
