@@ -1,30 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { liveManager } from '../../../../lib/historify/live-manager';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-    let controllerRef: ReadableStreamDefaultController | null = null;
+    console.log(`[LiveStreamRoute] Incoming request from ${req.ip || 'unknown'}`);
 
-    const stream = new ReadableStream({
-        start(controller) {
-            controllerRef = controller;
-            liveManager.addClient(controller);
-        },
-        cancel() {
-            if (controllerRef) {
-                liveManager.removeClient(controllerRef);
-            }
-        }
-    });
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
 
-    req.signal.addEventListener('abort', () => {
-        if (controllerRef) {
-            liveManager.removeClient(controllerRef);
-        }
-    });
+    // Standard controller interface for LiveManager
+    const controller = {
+        enqueue: (data: Uint8Array) => writer.write(data),
+        close: () => writer.close(),
+        error: (err: any) => writer.abort(err),
+    } as unknown as ReadableStreamDefaultController;
 
-    return new Response(stream, {
+    liveManager.addClient(controller);
+
+    req.signal.onabort = () => {
+        console.log("[LiveStreamRoute] Client aborted connection");
+        liveManager.removeClient(controller);
+        writer.close().catch(() => {});
+    };
+
+    return new Response(readable, {
         headers: {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache, no-transform',

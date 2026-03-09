@@ -1,5 +1,5 @@
 import { MarketFeedSocket } from '../../dhanv2/src/websockets/MarketFeedSocket';
-import { FeedInstrument, FeedRequestCode, TickerData, QuoteData, ExchangeSegmentCode } from '../../dhanv2/src/types';
+import { FeedInstrument, FeedRequestCode, TickerData, QuoteData, ExchangeSegment } from '../../dhanv2/src/types';
 import { resolveSymbol } from './master-contracts';
 import path from 'path';
 import fs from 'fs';
@@ -20,9 +20,7 @@ function loadEnvLocal() {
                     }
                 }
             });
-            console.log(`[LiveManager] .env.local loaded. ClientID: ${process.env.DHAN_CLIENT_ID ? 'OK' : 'MISSING'}, Token: ${process.env.DHAN_ACCESS_TOKEN ? 'OK (' + process.env.DHAN_ACCESS_TOKEN.length + ' chars)' : 'MISSING'}`);
-        } else {
-            console.warn("[LiveManager] .env.local not found at " + envLocalPath);
+            console.log(`[LiveManager] .env.local loaded. ClientID: ${process.env.DHAN_CLIENT_ID ? 'OK' : 'MISSING'}`);
         }
     } catch (e) {
         console.error("[LiveManager] Manual env load failed", e);
@@ -37,6 +35,7 @@ class LiveManager {
     private socket: MarketFeedSocket | null = null;
     private clients: Set<ReadableStreamDefaultController> = new Set();
     private activeSymbols: Map<string, FeedInstrument> = new Map();
+    private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 
     public connect() {
         if (this.socket) return;
@@ -45,19 +44,18 @@ class LiveManager {
         const accessToken = process.env.DHAN_ACCESS_TOKEN;
 
         if (!clientId || !accessToken) {
-            console.error("[LiveManager] CRITICAL: Missing Dhan API credentials for WebSocket.");
-            this.broadcast('error', { message: 'Missing credentials' });
+            console.error("[LiveManager] CRITICAL: Missing Dhan API credentials.");
             return;
         }
 
-        console.log(`[LiveManager] Connecting to Dhan WebSocket (ClientID: ${clientId})...`);
+        console.log(`[LiveManager] Establishing Dhan WebSocket connection...`);
         this.socket = new MarketFeedSocket(clientId, accessToken);
 
         this.socket.on('connect', () => {
-            console.log('[LiveManager] Connected to Dhan Market Feed WebSockets');
+            console.log('[LiveManager] WebSocket Connected');
             const instruments = Array.from(this.activeSymbols.values());
             if (instruments.length > 0) {
-                console.log(`[LiveManager] Resubscribing to ${instruments.length} instruments`);
+                console.log(`[LiveManager] Resubscribing to: ${Array.from(this.activeSymbols.keys()).join(', ')}`);
                 this.socket?.subscribe(instruments, FeedRequestCode.SUBSCRIBE_QUOTE);
             }
         });
@@ -76,7 +74,7 @@ class LiveManager {
         });
 
         this.socket.on('close', () => {
-            console.log('[LiveManager] WebSocket connection closed');
+            console.log('[LiveManager] WebSocket Closed');
             this.socket = null;
         });
 
@@ -99,21 +97,14 @@ class LiveManager {
 
     public addClient(controller: ReadableStreamDefaultController) {
         this.clients.add(controller);
-        console.log(`[LiveManager] Client added. Total active clients: ${this.clients.size}`);
+        console.log(`[LiveManager] Client connected. Total: ${this.clients.size}`);
         
-        try {
-            // 1. Send an immediate padding comment to force browser buffers to flush
-            // Some browsers/proxies won't trigger 'onopen' until ~2KB of data is received
-            const padding = `: ${' '.repeat(2048)}\n\n`;
-            controller.enqueue(new TextEncoder().encode(padding));
+        const padding = `: ${' '.repeat(2048)}\n\n`;
+        const welcome = `data: ${JSON.stringify({ event: 'info', data: { status: 'connected', time: Date.now() } })}\n\n`;
+        controller.enqueue(new TextEncoder().encode(padding + welcome));
 
-            // 2. Send the explicit "connected" message
-            const welcome = `data: ${JSON.stringify({ event: 'info', data: { status: 'connected' } })}\n\n`;
-            controller.enqueue(new TextEncoder().encode(welcome));
-            
-            console.log("[LiveManager] Sent welcome and padding to new client");
-        } catch (e) {
-            console.error("[LiveManager] Failed to send initial chunks", e);
+        if (this.clients.size === 1) {
+            this.startHeartbeat();
         }
 
         if (!this.socket) {
@@ -123,35 +114,43 @@ class LiveManager {
 
     public removeClient(controller: ReadableStreamDefaultController) {
         this.clients.delete(controller);
-        console.log(`[LiveManager] Client removed. Remaining: ${this.clients.size}`);
-        if (this.clients.size === 0 && this.socket) {
-            console.log("[LiveManager] No clients remaining. Closing Dhan socket.");
-            this.socket.close();
-            this.socket = null;
-            this.activeSymbols.clear();
+        if (this.clients.size === 0) {
+            this.stopHeartbeat();
+            if (this.socket) {
+                this.socket.close();
+                this.socket = null;
+                this.activeSymbols.clear();
+            }
+        }
+    }
+
+    private startHeartbeat() {
+        this.stopHeartbeat();
+        this.heartbeatInterval = setInterval(() => {
+            this.broadcast('heartbeat', { ts: Date.now() });
+        }, 10000);
+    }
+
+    private stopHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
         }
     }
 
     public async subscribeSymbol(symbol: string) {
         const resolved = await resolveSymbol(symbol, 'NSE');
         if (!resolved) {
-            console.error(`[LiveManager] Could not resolve symbol: ${symbol}`);
-            return;
-        }
-
-        const segmentName = resolved.segment as keyof typeof ExchangeSegmentCode;
-        const segmentCode = ExchangeSegmentCode[segmentName];
-        if (segmentCode === undefined) {
-            console.error(`[LiveManager] No numeric segment code for ${resolved.segment}`);
+            console.error(`[LiveManager] Could not resolve ${symbol}`);
             return;
         }
 
         const instrument: FeedInstrument = {
-            exchangeSegment: segmentCode as any,
+            exchangeSegment: resolved.segment as ExchangeSegment, // Use string name (e.g. NSE_EQ)
             securityId: resolved.securityId,
         };
 
-        console.log(`[LiveManager] Subscribing to ${symbol} (ID: ${resolved.securityId})`);
+        console.log(`[LiveManager] Subscribing: ${symbol} (${instrument.exchangeSegment}:${instrument.securityId})`);
         this.activeSymbols.set(symbol, instrument);
         if (this.socket) {
             this.socket.subscribe([instrument], FeedRequestCode.SUBSCRIBE_QUOTE);
@@ -161,7 +160,6 @@ class LiveManager {
     public async unsubscribeSymbol(symbol: string) {
         const instrument = this.activeSymbols.get(symbol);
         if (instrument && this.socket) {
-            console.log(`[LiveManager] Unsubscribing from ${symbol}`);
             this.socket.unsubscribe([instrument], FeedRequestCode.UNSUBSCRIBE_QUOTE);
         }
         this.activeSymbols.delete(symbol);

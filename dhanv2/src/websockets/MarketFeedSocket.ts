@@ -1,23 +1,5 @@
 /**
  * MarketFeedSocket — High-frequency binary market data WebSocket.
- * Endpoint: wss://api-feed.dhan.co?version=2&token=JWT&clientId=ID&authType=2
- *
- * ## Key Protocol Details:
- * - Server pings every 10 seconds; client must pong within 40 seconds.
- * - Max 5 simultaneous connections, 1,000 instruments per connection.
- * - Max 100 instruments per single subscription payload.
- * - All responses are binary Little Endian packets (parsed by BinaryParser).
- *
- * @example
- * ```typescript
- * import { MarketFeedSocket, ExchangeSegment, FeedRequestCode } from 'dhanhq-ts';
- * const feed = new MarketFeedSocket('CLIENT_ID', 'ACCESS_TOKEN');
- * feed.on('ticker', (tick) => console.log(tick));
- * feed.connect();
- * feed.on('connect', () => {
- *   feed.subscribe([{ exchangeSegment: ExchangeSegment.NSE_EQ, securityId: '1333' }], FeedRequestCode.SUBSCRIBE_TICKER);
- * });
- * ```
  */
 
 import { EventEmitter } from 'events';
@@ -27,7 +9,7 @@ import { BinaryParser, ParsedFeedPacket } from './BinaryParser';
 
 const FEED_BASE_URL = 'wss://api-feed.dhan.co';
 const MAX_INSTRUMENTS_PER_PAYLOAD = 100;
-const PING_INTERVAL_MS = 25_000; // Server pings every 10s; we reping every 25s for safety
+const PING_INTERVAL_MS = 25_000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_BASE_DELAY_MS = 1_000;
 
@@ -54,19 +36,11 @@ export class MarketFeedSocket extends EventEmitter {
         super();
     }
 
-    /**
-     * Connect to the market feed WebSocket.
-     * The 'connect' event fires after the TCP connection is opened.
-     * Subscribe to instruments in the 'connect' handler.
-     */
     public connect(): void {
         this._shouldReconnect = true;
         this._establish();
     }
 
-    /**
-     * Gracefully close the connection and stop reconnection attempts.
-     */
     public close(): void {
         this._shouldReconnect = false;
         this._clearPing();
@@ -74,29 +48,30 @@ export class MarketFeedSocket extends EventEmitter {
         this.ws = null;
     }
 
-    /**
-     * Subscribe to a list of instruments.
-     * Automatically batches into payloads of 100 instruments (exchange limit).
-     * @param requestCode - Use FeedRequestCode.SUBSCRIBE_TICKER (15), SUBSCRIBE_QUOTE (17), or SUBSCRIBE_DEPTH (19).
-     */
     public subscribe(instruments: FeedInstrument[], requestCode: FeedRequestCode = FeedRequestCode.SUBSCRIBE_QUOTE): void {
+        if (this.ws?.readyState !== WebSocket.OPEN) {
+            console.log(`[MarketFeedSocket] Queueing subscription for ${instruments.length} instruments`);
+            this._pendingSubscriptions.push({ instruments, requestCode });
+            return;
+        }
+
         for (let i = 0; i < instruments.length; i += MAX_INSTRUMENTS_PER_PAYLOAD) {
             const batch = instruments.slice(i, i + MAX_INSTRUMENTS_PER_PAYLOAD);
-            this._send({
+            const payload = {
                 RequestCode: requestCode,
                 InstrumentCount: batch.length,
                 InstrumentList: batch.map((inst) => ({
                     ExchangeSegment: inst.exchangeSegment,
                     SecurityId: inst.securityId,
                 })),
-            });
+            };
+            this._send(payload);
         }
     }
 
-    /**
-     * Unsubscribe from a list of instruments.
-     */
     public unsubscribe(instruments: FeedInstrument[], requestCode: FeedRequestCode = FeedRequestCode.UNSUBSCRIBE_QUOTE): void {
+        if (this.ws?.readyState !== WebSocket.OPEN) return;
+
         for (let i = 0; i < instruments.length; i += MAX_INSTRUMENTS_PER_PAYLOAD) {
             const batch = instruments.slice(i, i + MAX_INSTRUMENTS_PER_PAYLOAD);
             this._send({
@@ -116,13 +91,22 @@ export class MarketFeedSocket extends EventEmitter {
         this.ws.binaryType = 'nodebuffer';
 
         this.ws.on('open', () => {
+            console.log('[MarketFeedSocket] WebSocket Open');
             this.reconnectAttempt = 0;
             this._startPing();
+            
+            // Process queued subscriptions
+            if (this._pendingSubscriptions.length > 0) {
+                console.log(`[MarketFeedSocket] Processing ${this._pendingSubscriptions.length} queued subscriptions`);
+                const subscriptions = [...this._pendingSubscriptions];
+                this._pendingSubscriptions = [];
+                subscriptions.forEach(sub => this.subscribe(sub.instruments, sub.requestCode));
+            }
+
             this.emit('connect');
         });
 
         this.ws.on('ping', () => {
-            // Automatically reply with pong to keep the connection alive (40s server timeout)
             this.ws?.pong();
         });
 
@@ -142,10 +126,12 @@ export class MarketFeedSocket extends EventEmitter {
         });
 
         this.ws.on('error', (err: Error) => {
+            console.error('[MarketFeedSocket] Error:', err.message);
             this.emit('error', err);
         });
 
-        this.ws.on('close', () => {
+        this.ws.on('close', (code, reason) => {
+            console.log(`[MarketFeedSocket] Closed. Code: ${code}`);
             this._clearPing();
             if (this._shouldReconnect && this.reconnectAttempt < MAX_RECONNECT_ATTEMPTS) {
                 const delay = RECONNECT_BASE_DELAY_MS * Math.pow(2, this.reconnectAttempt);
