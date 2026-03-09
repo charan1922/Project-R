@@ -118,36 +118,41 @@ export default function RealtimeChart() {
     }, [historicalData]);
 
     // Native .update() streaming pipeline
+    // lightweight-charts .update() inserts a new candle if time is new,
+    // or updates the last candle if time matches — perfect for 1-min aggregation.
     useEffect(() => {
-        let prevTickTime = 0;
+        let prevTick: string = '';
 
         const unsub = useLiveTradingStore.subscribe((state) => {
             const tick = state.latestTick;
+            if (!tick || !candleSeriesRef.current || !volumeSeriesRef.current) return;
 
-            if (tick && tick.time !== prevTickTime && candleSeriesRef.current && volumeSeriesRef.current) {
-                prevTickTime = tick.time;
-                const tvTime = tick.time as Time;
+            // Dedupe identical tick updates
+            const key = `${tick.time}:${tick.close}:${tick.high}:${tick.low}`;
+            if (key === prevTick) return;
+            prevTick = key;
 
-                try {
-                    candleSeriesRef.current.update({
+            const tvTime = tick.time as Time;
+
+            try {
+                candleSeriesRef.current.update({
+                    time: tvTime,
+                    open: tick.open,
+                    high: tick.high,
+                    low: tick.low,
+                    close: tick.close,
+                });
+
+                if (tick.volume !== undefined) {
+                    const isUp = tick.close >= tick.open;
+                    volumeSeriesRef.current.update({
                         time: tvTime,
-                        open: tick.open,
-                        high: tick.high,
-                        low: tick.low,
-                        close: tick.close,
+                        value: tick.volume,
+                        color: isUp ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)',
                     });
-
-                    if (tick.volume !== undefined) {
-                        const isUp = tick.close >= tick.open;
-                        volumeSeriesRef.current.update({
-                            time: tvTime,
-                            value: tick.volume,
-                            color: isUp ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)',
-                        });
-                    }
-                } catch (e) {
-                    console.warn("Chart Update collision:", e);
                 }
+            } catch (e) {
+                console.warn("Chart Update collision:", e);
             }
         });
 

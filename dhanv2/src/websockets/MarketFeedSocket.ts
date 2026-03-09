@@ -12,6 +12,7 @@ const MAX_INSTRUMENTS_PER_PAYLOAD = 100;
 const PING_INTERVAL_MS = 25_000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_BASE_DELAY_MS = 1_000;
+const TAG = '[MarketFeedSocket]';
 
 export declare interface MarketFeedSocket {
     on(event: 'connect', listener: () => void): this;
@@ -50,7 +51,6 @@ export class MarketFeedSocket extends EventEmitter {
 
     public subscribe(instruments: FeedInstrument[], requestCode: FeedRequestCode = FeedRequestCode.SUBSCRIBE_QUOTE): void {
         if (this.ws?.readyState !== WebSocket.OPEN) {
-            console.log(`[MarketFeedSocket] Queueing subscription for ${instruments.length} instruments`);
             this._pendingSubscriptions.push({ instruments, requestCode });
             return;
         }
@@ -65,6 +65,7 @@ export class MarketFeedSocket extends EventEmitter {
                     SecurityId: inst.securityId,
                 })),
             };
+            console.log(`${TAG} subscribe payload:`, JSON.stringify(payload));
             this._send(payload);
         }
     }
@@ -91,13 +92,11 @@ export class MarketFeedSocket extends EventEmitter {
         this.ws.binaryType = 'nodebuffer';
 
         this.ws.on('open', () => {
-            console.log('[MarketFeedSocket] WebSocket Open');
+            console.log(`${TAG} WebSocket connected`);
             this.reconnectAttempt = 0;
             this._startPing();
-            
-            // Process queued subscriptions
+
             if (this._pendingSubscriptions.length > 0) {
-                console.log(`[MarketFeedSocket] Processing ${this._pendingSubscriptions.length} queued subscriptions`);
                 const subscriptions = [...this._pendingSubscriptions];
                 this._pendingSubscriptions = [];
                 subscriptions.forEach(sub => this.subscribe(sub.instruments, sub.requestCode));
@@ -126,16 +125,17 @@ export class MarketFeedSocket extends EventEmitter {
         });
 
         this.ws.on('error', (err: Error) => {
-            console.error('[MarketFeedSocket] Error:', err.message);
+            console.error(`${TAG} error:`, err.message);
             this.emit('error', err);
         });
 
-        this.ws.on('close', (code, reason) => {
-            console.log(`[MarketFeedSocket] Closed. Code: ${code}`);
+        this.ws.on('close', (code) => {
+            console.log(`${TAG} closed (code: ${code})`);
             this._clearPing();
             if (this._shouldReconnect && this.reconnectAttempt < MAX_RECONNECT_ATTEMPTS) {
                 const delay = RECONNECT_BASE_DELAY_MS * Math.pow(2, this.reconnectAttempt);
                 this.reconnectAttempt++;
+                console.log(`${TAG} reconnecting in ${delay}ms (attempt ${this.reconnectAttempt})`);
                 setTimeout(() => this._establish(), delay);
             } else {
                 this.emit('close');

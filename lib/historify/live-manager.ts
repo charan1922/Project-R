@@ -1,18 +1,10 @@
 import { MarketFeedSocket } from '../../dhanv2/src/websockets/MarketFeedSocket';
-import { FeedInstrument, FeedRequestCode, TickerData, QuoteData, ExchangeSegment } from '../../dhanv2/src/types';
+import { FeedInstrument, FeedRequestCode, QuoteData, ExchangeSegment } from '../../dhanv2/src/types';
 import { resolveSymbol } from './master-contracts';
 import path from 'path';
 import fs from 'fs';
 
-/**
- * Enterprise LiveManager (The Gateway)
- * 
- * A high-availability bridge between the Dhan Exchange and local SSE clients.
- * Implements: 
- *  - Subscription Registry (Single WS for all UI tabs)
- *  - Diagnostic Heartbeat
- *  - Automated Resource Cleanup
- */
+const TAG = '[LiveManager]';
 
 function loadEnvLocal() {
     try {
@@ -27,66 +19,51 @@ function loadEnvLocal() {
                     if (key && value) process.env[key] = value;
                 }
             });
+            console.log(`${TAG} .env.local loaded`);
         }
-    } catch (e) {}
+    } catch (e: any) {
+        console.error(`${TAG} env load error:`, e.message);
+    }
 }
 
 if (process.env.NODE_ENV !== 'production') loadEnvLocal();
-
-interface SessionDiagnostics {
-    packetsReceived: number;
-    lastTickAt: number;
-    activeClients: number;
-    uptimeSeconds: number;
-}
 
 class LiveManager {
     private socket: MarketFeedSocket | null = null;
     private clients: Set<ReadableStreamDefaultController> = new Set();
     private activeSymbols: Map<string, FeedInstrument> = new Map();
-    private diagnostics: SessionDiagnostics = {
-        packetsReceived: 0,
-        lastTickAt: 0,
-        activeClients: 0,
-        uptimeSeconds: 0
-    };
-    private systemInterval: ReturnType<typeof setInterval> | null = null;
 
     public connect() {
         if (this.socket) return;
-
         const clientId = process.env.DHAN_CLIENT_ID;
         const accessToken = process.env.DHAN_ACCESS_TOKEN;
-
         if (!clientId || !accessToken) {
-            console.error("[LiveManager] ERROR: DHAN_CLIENT_ID or DHAN_ACCESS_TOKEN not set.");
+            console.error(`${TAG} connect failed: missing DHAN_CLIENT_ID or DHAN_ACCESS_TOKEN`);
             return;
         }
 
-        console.log(`[LiveManager] Initializing Gateway Connection...`);
+        console.log(`${TAG} initializing Dhan WebSocket...`);
         this.socket = new MarketFeedSocket(clientId, accessToken);
 
         this.socket.on('connect', () => {
-            console.log('[LiveManager] Dhan WebSocket Ready');
+            console.log(`${TAG} WebSocket connected to Dhan`);
             const instruments = Array.from(this.activeSymbols.values());
             if (instruments.length > 0) {
+                console.log(`${TAG} re-subscribing ${instruments.length} instruments`);
                 this.socket?.subscribe(instruments, FeedRequestCode.SUBSCRIBE_QUOTE);
             }
         });
 
         this.socket.on('quote', (data: QuoteData) => {
-            this.diagnostics.packetsReceived++;
-            this.diagnostics.lastTickAt = Date.now();
             this.broadcast('quote', data);
         });
 
         this.socket.on('error', (err) => {
-            console.error('[LiveManager] Socket Error:', err.message);
-            this.broadcast('error', { message: err.message });
+            console.error(`${TAG} WebSocket error:`, err.message);
         });
 
         this.socket.on('close', () => {
-            console.log('[LiveManager] Socket Terminated');
+            console.log(`${TAG} WebSocket closed`);
             this.socket = null;
         });
 
@@ -96,71 +73,66 @@ class LiveManager {
     private broadcast(event: string, data: any) {
         const payload = `data: ${JSON.stringify({ event, data })}\n\n`;
         const encoded = new TextEncoder().encode(payload);
+        const dead: ReadableStreamDefaultController[] = [];
         this.clients.forEach(client => {
-            try { client.enqueue(encoded); } catch { this.clients.delete(client); }
+            try { client.enqueue(encoded); } catch { dead.push(client); }
         });
+        dead.forEach(c => this.clients.delete(c));
     }
 
     public addClient(controller: ReadableStreamDefaultController) {
         this.clients.add(controller);
-        this.diagnostics.activeClients = this.clients.size;
-        
-        // SSE Flush Buffer
-        controller.enqueue(new TextEncoder().encode(`: ${' '.repeat(2048)}\n\n`));
-        this.broadcast('info', { status: 'connected', diagnostics: this.diagnostics });
-
-        if (this.clients.size === 1) this.startSystemLoop();
+        console.log(`${TAG} client added (total: ${this.clients.size})`);
         if (!this.socket) this.connect();
     }
 
     public removeClient(controller: ReadableStreamDefaultController) {
         this.clients.delete(controller);
-        this.diagnostics.activeClients = this.clients.size;
-        if (this.clients.size === 0) {
-            this.stopSystemLoop();
-            if (this.socket) {
-                this.socket.close();
-                this.socket = null;
-                this.activeSymbols.clear();
-            }
-        }
-    }
-
-    private startSystemLoop() {
-        this.stopSystemLoop();
-        this.systemInterval = setInterval(() => {
-            this.diagnostics.uptimeSeconds += 10;
-            this.broadcast('diagnostics', this.diagnostics);
-        }, 10000);
-    }
-
-    private stopSystemLoop() {
-        if (this.systemInterval) {
-            clearInterval(this.systemInterval);
-            this.systemInterval = null;
+        console.log(`${TAG} client removed (remaining: ${this.clients.size})`);
+        if (this.clients.size === 0 && this.socket) {
+            console.log(`${TAG} no clients, closing WebSocket`);
+            this.socket.close();
+            this.socket = null;
         }
     }
 
     public async subscribeSymbol(symbol: string) {
         const resolved = await resolveSymbol(symbol);
-        if (!resolved) return;
+        if (!resolved) {
+            console.warn(`${TAG} could not resolve symbol: ${symbol}`);
+            return;
+        }
 
-        const instrument: FeedInstrument = {
-            exchangeSegment: resolved.segment as ExchangeSegment,
-            securityId: resolved.securityId,
-        };
+        // Dhan WebSocket subscription expects string segment (e.g. "NSE_EQ"), not numeric code
+        const segment = resolved.segment as ExchangeSegment;
+        if (!Object.values(ExchangeSegment).includes(segment)) {
+            console.warn(`${TAG} unknown segment: ${resolved.segment}`);
+            return;
+        }
 
+        const instrument: FeedInstrument = { exchangeSegment: segment, securityId: resolved.securityId };
         this.activeSymbols.set(symbol, instrument);
-        if (this.socket) this.socket.subscribe([instrument]);
+        console.log(`${TAG} subscribing to ${symbol} (secId: ${resolved.securityId}, seg: ${segment})`);
+
+        if (this.socket) {
+            this.socket.subscribe([instrument], FeedRequestCode.SUBSCRIBE_QUOTE);
+        }
     }
 
     public async unsubscribeSymbol(symbol: string) {
         const instrument = this.activeSymbols.get(symbol);
-        if (instrument && this.socket) this.socket.unsubscribe([instrument]);
+        if (instrument && this.socket) {
+            this.socket.unsubscribe([instrument], FeedRequestCode.UNSUBSCRIBE_QUOTE);
+        }
         this.activeSymbols.delete(symbol);
+        console.log(`${TAG} unsubscribed ${symbol}`);
     }
 }
 
-const globalForLiveManager = global as unknown as { liveManager: LiveManager };
-export const liveManager = globalForLiveManager.liveManager || new LiveManager();
-if (process.env.NODE_ENV !== 'production') globalForLiveManager.liveManager = liveManager;
+console.log(`${TAG} module loaded`);
+const globalRef = global as any;
+if (!globalRef.__liveManager) {
+    globalRef.__liveManager = new LiveManager();
+    console.log(`${TAG} new singleton created`);
+}
+export const liveManager: LiveManager = globalRef.__liveManager;

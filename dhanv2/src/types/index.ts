@@ -649,6 +649,7 @@ export interface QuoteData {
     exchangeSegment: number;
     securityId: number;
     ltp: number;
+    ltq?: number;
     ltt?: number;
     avgPrice?: number;
     volume?: number;
