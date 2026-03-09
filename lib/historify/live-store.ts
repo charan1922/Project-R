@@ -13,20 +13,25 @@ interface LiveTradingState {
     activeSymbol: string | null;
     connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error';
     latestTick: LiveTick | null;
+    historicalData: LiveTick[];
     setActiveSymbol: (symbol: string) => void;
     setConnectionStatus: (status: 'disconnected' | 'connecting' | 'connected' | 'error') => void;
     setLatestTick: (tick: LiveTick) => void;
+    setHistoricalData: (data: LiveTick[]) => void;
 }
 
 export const useLiveTradingStore = create<LiveTradingState>((set) => ({
     activeSymbol: null,
     connectionStatus: 'disconnected',
     latestTick: null,
+    historicalData: [],
 
     // Changing active symbol resets the latest tick immediately so the UI clears
-    setActiveSymbol: (symbol) => set({ activeSymbol: symbol, latestTick: null }),
+    setActiveSymbol: (symbol) => set({ activeSymbol: symbol, latestTick: null, historicalData: [] }),
 
     setConnectionStatus: (status) => set({ connectionStatus: status }),
 
     setLatestTick: (tick) => set({ latestTick: tick }),
+
+    setHistoricalData: (data) => set({ historicalData: data }),
 }));

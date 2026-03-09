@@ -1,18 +1,15 @@
 /**
- * BinaryParser — Little Endian binary packet parser for DhanHQ Market Feed.
- *
- * All data from wss://api-feed.dhan.co is transmitted as Little Endian binary
- * buffers for maximum bandwidth efficiency.
- *
- * ## Standard Feed Packet Layout (8-byte header + payload):
- * | Offset | Size | Type    | Field            |
- * |--------|------|---------|------------------|
- * | 0      | 1B   | int8    | ResponseCode     |
- * | 1-2    | 2B   | int16LE | MessageLength    |
- * | 3      | 1B   | int8    | ExchangeSegment  |
- * | 4-7    | 4B   | int32LE | SecurityId       |
- *
- * ResponseCode 2 = Ticker, 4 = Quote / Full pack.
+ * BinaryParser — Little Endian binary packet parser for DhanHQ Market Feed v2.
+ * 
+ * Documentation Reference (v2):
+ * - Header Size: 12 Bytes
+ * - Byte 1-2: Message Length (int16)
+ * - Byte 3: Feed Response Code (int8)
+ * - Byte 4: Exchange Segment (int8)
+ * - Byte 5-8: Security ID (int32)
+ * - Byte 9-12: Message Sequence (int32)
+ * 
+ * Payload follows the 12-byte header.
  */
 
 import { TickerData, QuoteData, FeedResponseCode } from '../types';
@@ -22,58 +19,56 @@ export type ParsedFeedPacket = TickerData | QuoteData | null;
 export class BinaryParser {
 
     /**
-     * Parse a single raw WebSocket buffer from the market feed.
-     * Handles multi-instrument stacked packets within one frame by slicing on MessageLength.
+     * Parse a raw WebSocket buffer.
+     * Handles stacked packets within one frame by slicing on Header (12B) + MessageLength.
      */
     static parse(buffer: Buffer): ParsedFeedPacket[] {
         const results: ParsedFeedPacket[] = [];
         let offset = 0;
 
         while (offset < buffer.length) {
-            if (buffer.length - offset < 8) break; // insufficient header bytes
+            // Check for minimum header size (12 bytes)
+            if (buffer.length - offset < 12) break;
 
-            const responseCode = buffer.readInt8(offset);
-            const messageLength = buffer.readInt16LE(offset + 1);
-            const exchangeSegment = buffer.readInt8(offset + 3);
-            const securityId = buffer.readInt32LE(offset + 4);
+            const messageLength = buffer.readInt16LE(offset); // Bytes 1-2
+            const responseCode = buffer.readInt8(offset + 2); // Byte 3
+            const exchangeSegment = buffer.readInt8(offset + 3); // Byte 4
+            const securityId = buffer.readInt32LE(offset + 4); // Bytes 5-8
+            // Bytes 9-12 are Sequence Number (skipped)
 
-            if (messageLength <= 0 || offset + messageLength > buffer.length + 8) break;
+            // The payload starts at offset + 12
+            // Total packet size per Dhan V2 = 12 (header) + messageLength (payload)
+            const totalPacketSize = 12 + messageLength;
+            
+            if (offset + totalPacketSize > buffer.length) break;
 
-            const packet = buffer.subarray(offset, offset + 8 + messageLength);
+            const payload = buffer.subarray(offset + 12, offset + totalPacketSize);
 
             switch (responseCode) {
                 case FeedResponseCode.TICKER:
-                    results.push(BinaryParser._parseTicker(packet, exchangeSegment, securityId));
+                    results.push(BinaryParser._parseTicker(payload, exchangeSegment, securityId));
                     break;
                 case FeedResponseCode.QUOTE:
-                    results.push(BinaryParser._parseQuote(packet, exchangeSegment, securityId));
-                    break;
-                case FeedResponseCode.OI_DATA:
-                case FeedResponseCode.PREV_CLOSE:
-                case FeedResponseCode.MARKET_STATUS:
-                    // Additional packet types — emit as null (consumer can filter)
+                    results.push(BinaryParser._parseQuote(payload, exchangeSegment, securityId));
                     break;
                 default:
-                    // Unrecognized packet type — skip
+                    // Other types like Depth (20/200 level) or OI
                     break;
             }
 
-            // Advance to next packet: 8-byte header + payload
-            offset += 8 + messageLength;
+            offset += totalPacketSize;
         }
 
         return results;
     }
 
     /**
-     * Parse Ticker packet (ResponseCode 2).
-     * Yields: LTP + LTT.
+     * Parse Ticker payload.
      */
-    private static _parseTicker(buf: Buffer, exchangeSegment: number, securityId: number): TickerData {
-        // LTP at offset 8 (float32, 4 bytes)
-        const ltp = buf.readFloatLE(8);
-        // LTT at offset 12 (int32, 4 bytes) — EPOCH seconds
-        const ltt = buf.length >= 16 ? buf.readInt32LE(12) : undefined;
+    private static _parseTicker(payload: Buffer, exchangeSegment: number, securityId: number): TickerData {
+        // Ticker Payload usually: LTP (4B Float) + LTT (4B Int)
+        const ltp = payload.length >= 4 ? payload.readFloatLE(0) : 0;
+        const ltt = payload.length >= 8 ? payload.readInt32LE(4) : undefined;
 
         return {
             type: 'ticker',
@@ -85,46 +80,38 @@ export class BinaryParser {
     }
 
     /**
-     * Parse Quote / Full packet (ResponseCode 4).
-     * Yields: LTP, avg price, volume, bid/ask totals, OHLC.
-     *
-     * Byte map (from offset 8):
-     * 8  - LTP         float32
-     * 12 - LTT         int32
-     * 16 - Avg Price   float32
-     * 20 - Volume      int32
-     * 24 - ?           int32 (reserved)
-     * 27 - Sell Qty    int32  ← Note: 3-byte gap per spec (offset 27)
-     * 31 - Buy Qty     int32
-     * 35 - Open        float32
-     * 39 - Close       float32
-     * 43 - High        float32
-     * 47 - Low         float32
-     * 51 - Net Change  float32
-     * 55 - % Change    float32
+     * Parse Quote / Full payload (ResponseCode 4).
+     * Byte map within Payload (from offset 0):
+     * 0  - LTP         float32
+     * 4  - LTT         int32
+     * 8  - Avg Price   float32
+     * 12 - Volume      int32
+     * 16 - ?           int32 (reserved)
+     * 20 - Sell Qty    int32
+     * 24 - Buy Qty     int32
+     * 28 - Open        float32
+     * 32 - Close       float32
+     * 36 - High        float32
+     * 40 - Low         float32
      */
-    private static _parseQuote(buf: Buffer, exchangeSegment: number, securityId: number): QuoteData {
-        const safeReadFloat = (offset: number): number =>
-            buf.length > offset + 3 ? buf.readFloatLE(offset) : 0;
-        const safeReadInt32 = (offset: number): number =>
-            buf.length > offset + 3 ? buf.readInt32LE(offset) : 0;
+    private static _parseQuote(payload: Buffer, exchangeSegment: number, securityId: number): QuoteData {
+        const readF = (off: number) => payload.length >= off + 4 ? payload.readFloatLE(off) : 0;
+        const readI = (off: number) => payload.length >= off + 4 ? payload.readInt32LE(off) : 0;
 
         return {
             type: 'quote',
             exchangeSegment,
             securityId,
-            ltp: safeReadFloat(8),
-            ltt: safeReadInt32(12),
-            avgPrice: safeReadFloat(16),
-            volume: safeReadInt32(20),
-            totalSellQty: safeReadInt32(27),
-            totalBuyQty: safeReadInt32(31),
-            open: safeReadFloat(35),
-            close: safeReadFloat(39),
-            high: safeReadFloat(43),
-            low: safeReadFloat(47),
-            netChange: safeReadFloat(51),
-            percentChange: safeReadFloat(55),
+            ltp: readF(0),
+            ltt: readI(4),
+            avgPrice: readF(8),
+            volume: readI(12),
+            totalSellQty: readI(20),
+            totalBuyQty: readI(24),
+            open: readF(28),
+            close: readF(32),
+            high: readF(36),
+            low: readF(40),
         };
     }
 }

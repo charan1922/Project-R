@@ -20,6 +20,7 @@ export default function LiveTradingPage() {
     const setActiveSymbol = useLiveTradingStore((state) => state.setActiveSymbol);
     const setConnectionStatus = useLiveTradingStore((state) => state.setConnectionStatus);
     const setLatestTick = useLiveTradingStore((state) => state.setLatestTick);
+    const setHistoricalData = useLiveTradingStore((state) => state.setHistoricalData);
     const connectionStatus = useLiveTradingStore((state) => state.connectionStatus);
     const latestTick = useLiveTradingStore((state) => state.latestTick);
 
@@ -35,22 +36,24 @@ export default function LiveTradingPage() {
 
     // 2. Manage Server-Sent Events (SSE) Stream
     useEffect(() => {
+        console.log("[LivePage] Initializing SSE connection...");
         setConnectionStatus("connecting");
         const eventSource = new EventSource("/api/historify/live-stream");
 
         eventSource.onopen = () => {
+            console.log("[LivePage] SSE Connection opened");
             setConnectionStatus("connected");
         };
 
         eventSource.onmessage = (event) => {
             try {
                 const parsed = JSON.parse(event.data);
+                console.log("[LivePage] SSE Message:", parsed.event);
 
-                // Dhan's Feed Response provides 'quote' packets mapped to OHLCV
                 if (parsed.event === 'quote') {
                     const data = parsed.data;
                     const tick: LiveTick = {
-                        time: Date.now(), // Lightweight Charts expects milliseconds for parsing into its Unix Time format
+                        time: data.ltt || Math.floor(Date.now() / 1000), 
                         open: data.open,
                         high: data.high,
                         low: data.low,
@@ -58,25 +61,22 @@ export default function LiveTradingPage() {
                         volume: data.volume,
                     };
                     setLatestTick(tick);
+                } else if (parsed.event === 'info') {
+                    console.log("[LivePage] Server Info:", parsed.data);
+                    setConnectionStatus("connected");
                 }
-                else if (parsed.event === 'ticker') {
-                    // Ticker is just LTP updates. 
-                    // Usually we rely on Quotes for complete OHLCV candlestick plotting, 
-                    // but we can fast-update the Close price if needed.
-                }
-
             } catch (e) {
-                console.error("SSE Parse Error", e);
+                console.error("[LivePage] SSE Parse Error", e);
             }
         };
 
         eventSource.onerror = (e) => {
-            console.error("SSE Connection Error", e);
+            console.error("[LivePage] SSE Connection Error", e);
             setConnectionStatus("error");
-            // The browser EventSource will auto-reconnect automatically.
         };
 
         return () => {
+            console.log("[LivePage] Closing SSE connection");
             eventSource.close();
             setConnectionStatus("disconnected");
         };
@@ -86,16 +86,28 @@ export default function LiveTradingPage() {
     const handleSelectSymbol = async (symbol: string) => {
         if (activeSymbol === symbol) return;
 
+        const oldSymbol = activeSymbol;
+        setActiveSymbol(symbol);
+
+        // Fetch history
+        try {
+            const histRes = await fetch(`/api/historify/live-history?symbol=${encodeURIComponent(symbol)}`);
+            const histData = await histRes.json();
+            if (histData.candles) {
+                setHistoricalData(histData.candles);
+            }
+        } catch (e) {
+            console.error("Failed to fetch historical context", e);
+        }
+
         // Unsubscribe old symbol
-        if (activeSymbol) {
+        if (oldSymbol) {
             await fetch('/api/historify/live-feed', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'unsubscribe', symbol: activeSymbol })
+                body: JSON.stringify({ action: 'unsubscribe', symbol: oldSymbol })
             });
         }
-
-        setActiveSymbol(symbol);
 
         // Subscribe new symbol
         await fetch('/api/historify/live-feed', {
@@ -112,19 +124,17 @@ export default function LiveTradingPage() {
                 fetch('/api/historify/live-feed', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    keepalive: true, // Fire and forget during unmount
+                    keepalive: true,
                     body: JSON.stringify({ action: 'unsubscribe', symbol: activeSymbol })
                 }).catch(console.error);
             }
         };
     }, [activeSymbol]);
 
-    // Derived F&O search
     const filteredFno = fnoData.stocks.filter(s => s.toLowerCase().includes(fnoSearch.toLowerCase())).slice(0, 50);
 
     return (
         <div className="flex flex-col h-screen bg-slate-950 text-slate-200 overflow-hidden">
-            {/* Header */}
             <header className="flex-none p-4 flex items-center justify-between border-b border-white/5 bg-slate-900/50 backdrop-blur-xl">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-rose-500/20 text-rose-400 rounded-lg">
@@ -162,10 +172,7 @@ export default function LiveTradingPage() {
                 )}
             </header>
 
-            {/* Main Content Layout */}
             <main className="flex-1 flex overflow-hidden">
-
-                {/* Watchlist Sidebar */}
                 <aside className="w-64 flex-none border-r border-white/5 bg-slate-900/30 overflow-y-auto">
                     <div className="p-4 border-b border-white/5 flex items-center gap-2">
                         <Shield className="w-4 h-4 text-emerald-400" />
@@ -236,13 +243,9 @@ export default function LiveTradingPage() {
                                 </button>
                             </li>
                         ))}
-                        {fnoSearch === "" && fnoData.stocks.length > 50 && (
-                            <li className="text-[10px] text-slate-500 text-center pt-2">Showing top 50. Use search.</li>
-                        )}
                     </ul>
                 </aside>
 
-                {/* Interactive Chart Canvas Area */}
                 <section className="flex-1 relative bg-[#020617] p-1">
                     <RealtimeChart />
                 </section>

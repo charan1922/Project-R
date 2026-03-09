@@ -26,16 +26,16 @@ export default function RealtimeChart() {
     // Global store references 
     const activeSymbol = useLiveTradingStore((state) => state.activeSymbol);
     const connectionStatus = useLiveTradingStore((state) => state.connectionStatus);
+    const historicalData = useLiveTradingStore((state) => state.historicalData);
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
 
         const isDark = resolvedTheme === "dark" || resolvedTheme === "system";
-        const bg = isDark ? "#020617" : "#ffffff"; // slate-950
-        const text = isDark ? "#94a3b8" : "#475569"; // slate-400
-        const grid = isDark ? "#1e293b" : "#e2e8f0"; // slate-800
+        const bg = isDark ? "#020617" : "#ffffff";
+        const text = isDark ? "#94a3b8" : "#475569";
+        const grid = isDark ? "#1e293b" : "#e2e8f0";
 
-        // 1. Initialize Chart
         const chart = createChart(chartContainerRef.current, {
             layout: {
                 background: { type: ColorType.Solid, color: bg },
@@ -50,16 +50,15 @@ export default function RealtimeChart() {
             },
             timeScale: {
                 timeVisible: true,
-                secondsVisible: false,
+                secondsVisible: true,
                 borderColor: grid,
             },
-            autoSize: true, // Native v5 auto-resizing
+            autoSize: true,
         });
 
-        // 2. Configure Multi-Pane (Candlesticks on primary, Volume on secondary scale)
         const candleSeries = chart.addSeries(CandlestickSeries, {
-            upColor: '#10b981', // emerald-500
-            downColor: '#ef4444', // red-500
+            upColor: '#10b981',
+            downColor: '#ef4444',
             borderVisible: false,
             wickUpColor: '#10b981',
             wickDownColor: '#ef4444',
@@ -70,10 +69,9 @@ export default function RealtimeChart() {
             priceFormat: {
                 type: 'volume',
             },
-            priceScaleId: '', // Set as an overlay
+            priceScaleId: '',
         });
 
-        // Apply scale margins to visually separate into "panes" within the same chart
         chart.priceScale('').applyOptions({
             scaleMargins: {
                 top: 0.8,
@@ -93,17 +91,42 @@ export default function RealtimeChart() {
         };
     }, [resolvedTheme]);
 
-    // 3. Native .update() streaming pipeline (Bypasses React DOM)
+    // Handle Historical Data Loading
+    useEffect(() => {
+        if (candleSeriesRef.current && volumeSeriesRef.current && historicalData.length > 0) {
+            const candles = historicalData.map(d => ({
+                time: d.time as Time,
+                open: d.open,
+                high: d.high,
+                low: d.low,
+                close: d.close,
+            }));
+
+            const volumes = historicalData.map(d => ({
+                time: d.time as Time,
+                value: d.volume || 0,
+                color: d.close >= d.open ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)',
+            }));
+
+            candleSeriesRef.current.setData(candles);
+            volumeSeriesRef.current.setData(volumes);
+            
+            if (chartRef.current) {
+                chartRef.current.timeScale().fitContent();
+            }
+        }
+    }, [historicalData]);
+
+    // Native .update() streaming pipeline
     useEffect(() => {
         let prevTickTime = 0;
 
         const unsub = useLiveTradingStore.subscribe((state) => {
             const tick = state.latestTick;
 
-            // Only update if we actually got a new tick object
             if (tick && tick.time !== prevTickTime && candleSeriesRef.current && volumeSeriesRef.current) {
                 prevTickTime = tick.time;
-                const tvTime = (Math.floor(tick.time / 1000) + 19800) as Time; // IST Offset
+                const tvTime = tick.time as Time;
 
                 try {
                     candleSeriesRef.current.update({
@@ -123,8 +146,6 @@ export default function RealtimeChart() {
                         });
                     }
                 } catch (e) {
-                    // Lightweight charts throws if historical time is older than latest tick.
-                    // Normally we append only newer data.
                     console.warn("Chart Update collision:", e);
                 }
             }
@@ -133,7 +154,7 @@ export default function RealtimeChart() {
         return () => unsub();
     }, []);
 
-    // Also clear chart data when symbol changes
+    // Clear chart data when symbol changes
     useEffect(() => {
         if (candleSeriesRef.current && volumeSeriesRef.current) {
             candleSeriesRef.current.setData([]);
@@ -143,7 +164,6 @@ export default function RealtimeChart() {
 
     return (
         <div className="relative w-full h-full flex items-center justify-center">
-            {/* Watermark Overlay (UI Layer, avoids canvas pollution and plugin bundle bloat) */}
             {activeSymbol && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-5 z-10">
                     <span className="text-8xl font-black text-slate-500 tracking-tighter">
@@ -155,14 +175,12 @@ export default function RealtimeChart() {
                 </div>
             )}
 
-            {/* Empty State */}
             {!activeSymbol && (
                 <div className="absolute inset-0 flex items-center justify-center z-20 text-slate-500 opacity-50">
                     <p>Select a symbol from the Watchlist to start streaming.</p>
                 </div>
             )}
 
-            {/* TradingView Canvas Container */}
             <div ref={chartContainerRef} className="w-full h-full" />
         </div>
     );
