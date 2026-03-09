@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
       // Prevent webpack from statically analyzing native modules
       config.module.exprContextCritical = false;
     }
+    config.resolve.extensions = [...(config.resolve.extensions || []), '.json'];
     config.resolve.fallback = {
       ...config.resolve.fallback,
       "fs": false,
