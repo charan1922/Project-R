@@ -178,6 +178,12 @@ export const historifyItems: NavItemType[] = [
     badge: "DATA",
     children: [
       {
+        label: "Live Trading",
+        href: "/historify/live",
+        icon: <Activity className="w-4 h-4" />,
+        badge: "LIVE",
+      },
+      {
         label: "Dashboard",
         href: "/historify",
         icon: <Activity className="w-4 h-4" />,
