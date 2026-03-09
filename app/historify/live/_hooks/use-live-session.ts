@@ -2,7 +2,14 @@
 
 import { useEffect, useCallback } from "react";
 import { useLiveTradingStore, LiveTick } from "@/lib/historify/live-store";
+import { LiveService } from "../_lib/live-service";
 
+/**
+ * useLiveSession
+ * 
+ * Orchestrates the lifecycle of a live trading session.
+ * Handles SSE connection management and symbol synchronization.
+ */
 export function useLiveSession() {
     const activeSymbol = useLiveTradingStore((state) => state.activeSymbol);
     const setActiveSymbol = useLiveTradingStore((state) => state.setActiveSymbol);
@@ -12,97 +19,77 @@ export function useLiveSession() {
     const connectionStatus = useLiveTradingStore((state) => state.connectionStatus);
     const latestTick = useLiveTradingStore((state) => state.latestTick);
 
-    // 1. Manage Server-Sent Events (SSE) Stream
+    // 1. Manage EventSource (SSE) Lifecycle
     useEffect(() => {
-        console.log("[LiveSession] Initializing SSE connection...");
         setConnectionStatus("connecting");
         const eventSource = new EventSource("/api/historify/live-stream");
 
-        eventSource.onopen = () => {
-            console.log("[LiveSession] SSE Connection opened");
-            setConnectionStatus("connected");
-        };
+        eventSource.onopen = () => setConnectionStatus("connected");
 
         eventSource.onmessage = (event) => {
             try {
                 const parsed = JSON.parse(event.data);
-                if (parsed.event === 'quote') {
-                    const data = parsed.data;
-                    const tick: LiveTick = {
-                        time: data.ltt || Math.floor(Date.now() / 1000),
-                        open: data.open,
-                        high: data.high,
-                        low: data.low,
-                        close: data.close,
-                        volume: data.volume,
-                    };
-                    setLatestTick(tick);
-                } else if (parsed.event === 'info') {
-                    console.log("[LiveSession] Server Info:", parsed.data);
-                    setConnectionStatus("connected");
+                
+                switch (parsed.event) {
+                    case 'quote':
+                        setLatestTick({
+                            time: parsed.data.ltt || Math.floor(Date.now() / 1000),
+                            open: parsed.data.open,
+                            high: parsed.data.high,
+                            low: parsed.data.low,
+                            close: parsed.data.close,
+                            volume: parsed.data.volume,
+                        });
+                        break;
+                    
+                    case 'info':
+                        if (parsed.data.status === 'connected') setConnectionStatus("connected");
+                        break;
+                    
+                    case 'error':
+                        console.error("[LiveSession] Server Error:", parsed.data.message);
+                        setConnectionStatus("error");
+                        break;
                 }
             } catch (e) {
-                console.error("[LiveSession] SSE Parse Error", e);
+                console.error("[LiveSession] SSE Parse Exception", e);
             }
         };
 
-        eventSource.onerror = (e) => {
-            console.error("[LiveSession] SSE Connection Error", e);
-            setConnectionStatus("error");
-        };
+        eventSource.onerror = () => setConnectionStatus("error");
 
         return () => {
-            console.log("[LiveSession] Closing SSE connection");
             eventSource.close();
             setConnectionStatus("disconnected");
         };
     }, [setConnectionStatus, setLatestTick]);
 
-    // 2. Handle Symbol Subscription Changes
+    // 2. Select Symbol & Perform Flash Sync
     const selectSymbol = useCallback(async (symbol: string) => {
         if (activeSymbol === symbol) return;
 
         const oldSymbol = activeSymbol;
         setActiveSymbol(symbol);
 
-        // Fetch history for technical context
         try {
-            const histRes = await fetch(`/api/historify/live-history?symbol=${encodeURIComponent(symbol)}`);
-            const histData = await histRes.json();
-            if (histData.candles) {
-                setHistoricalData(histData.candles);
-            }
-        } catch (e) {
-            console.error("[LiveSession] Failed to fetch historical context", e);
-        }
+            // Flash Sync: Load history for immediate context
+            const histData = await LiveService.getHistoricalContext(symbol);
+            if (histData.candles) setHistoricalData(histData.candles);
 
-        // Unsubscribe old symbol on server
-        if (oldSymbol) {
-            await fetch('/api/historify/live-feed', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'unsubscribe', symbol: oldSymbol })
-            });
+            // Synchronize WebSocket Subscriptions
+            if (oldSymbol) await LiveService.updateSubscription(oldSymbol, 'unsubscribe');
+            await LiveService.updateSubscription(symbol, 'subscribe');
+            
+        } catch (e: any) {
+            console.error("[LiveSession] Flash Sync Failure:", e.message);
         }
-
-        // Subscribe new symbol on server
-        await fetch('/api/historify/live-feed', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'subscribe', symbol })
-        });
     }, [activeSymbol, setActiveSymbol, setHistoricalData]);
 
-    // Cleanup on unmount
+    // Automatic cleanup on unmount
     useEffect(() => {
         return () => {
             if (activeSymbol) {
-                fetch('/api/historify/live-feed', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    keepalive: true,
-                    body: JSON.stringify({ action: 'unsubscribe', symbol: activeSymbol })
-                }).catch(console.error);
+                LiveService.updateSubscription(activeSymbol, 'unsubscribe').catch(() => {});
             }
         };
     }, [activeSymbol]);
