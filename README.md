@@ -44,8 +44,9 @@ A specialized "Lab" for mastering market microstructure:
 
 ### 3. Historify (Data Lake & Archiving)
 Professional-grade infrastructure for high-performance data management:
-- **DuckDB Columnar Storage**: Ultra-fast storage for millions of rows of OHLCV and OI data.
-- **Automated Sync**: Scheduled 90-day chunked ingestion from Dhan V2 to build a robust local backtesting environment.
+- **DuckDB Columnar Storage**: Ultra-fast storage for millions of rows of OHLCV and OI data using local `.parquet` generation.
+- **Automated Sync Pipelines**: Node architectures (`sync_all_fno`, `sync_5min_fno`) to scrape extensive 90-day chunks from Dhan V2.
+- **Serverless Cloud Backtesting**: Automated streaming of data to **Hugging Face Datasets**. The AI engines utilize DuckDB's `httpfs` extension to read the remote `charan1922/fno-5min` Parquet arrays natively over the internet without using local RAM or disk storage.
 
 ### 4. Sensibull Performance Extraction
 Reverse-engineering winning streaks via verified data (Target: [Sensibull Verified P&L](https://web.sensibull.com/verified-pnl/fanged-okra/uQmeTrztNOWqFt)):

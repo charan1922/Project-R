@@ -23,7 +23,18 @@ export async function getDuckDb(): Promise<DuckDBInstance> {
 
 /**
  * Helper to get the absolute path for a symbol's parquet file
+ * @param symbol The trading symbol (e.g., RELIANCE)
+ * @param customFolder Optional custom sub-folder (e.g., "parquet-5min")
  */
-export function getParquetPath(symbol: string): string {
-    return path.join(parquetDir, `${symbol}.parquet`);
+export function getParquetPath(symbol: string, customFolder?: string): string {
+    const targetDir = customFolder
+        ? path.join(process.cwd(), 'data', customFolder)
+        : parquetDir;
+
+    // Ensure the specific dynamic target directory exists before returning its path
+    if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    return path.join(targetDir, `${symbol}.parquet`);
 }

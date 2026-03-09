@@ -32,13 +32,13 @@ export async function POST(request: NextRequest) {
         // Accept either a single {symbol, exchange, interval} or a batch {symbols: [...], interval}
         const isBatch = Array.isArray(payload.symbols);
         const targets = isBatch
-            ? payload.symbols.map((s: any) => ({ symbol: s.symbol || s, exchange: s.exchange || payload.exchange || "NSE", interval: payload.interval || "Daily" }))
-            : [{ symbol: payload.symbol, exchange: payload.exchange || "NSE", interval: payload.interval || "Daily" }];
+            ? payload.symbols.map((s: any) => ({ symbol: s.symbol || s, exchange: s.exchange || payload.exchange || "NSE", interval: payload.interval || "Daily", customFolder: payload.customFolder }))
+            : [{ symbol: payload.symbol, exchange: payload.exchange || "NSE", interval: payload.interval || "Daily", customFolder: payload.customFolder }];
 
         const results: { symbol: string; rows: number; status: string; error?: string }[] = [];
 
         for (const target of targets) {
-            const { symbol, exchange, interval } = target;
+            const { symbol, exchange, interval, customFolder } = target;
 
             try {
                 // Resolve securityId from master contracts
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
                 }
 
                 // Check for existing Parquet file to determine lastSyncDate
-                const parquetPath = getParquetPath(symbol);
+                const parquetPath = getParquetPath(symbol, customFolder);
                 const duckDb = await getDuckDb();
                 let lastSyncDate: string | null = null;
 
