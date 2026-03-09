@@ -59,13 +59,44 @@ export async function GET(request: NextRequest) {
     if (!date) return NextResponse.json({ error: "date required" }, { status: 400 });
 
     try {
-        const { getChartDataForDate, initDb } = await import("@/lib/historify/db");
-        await initDb();
-        const candles = await getChartDataForDate(symbol, exchange, interval, date);
+        const fs = await import("fs");
+        const { getDuckDb, getParquetPath } = await import("@/lib/historify/duckdb");
 
-        if (candles.length === 0) {
+        const parquetPath = getParquetPath(symbol);
+        if (!fs.existsSync(parquetPath)) {
             return NextResponse.json({ candles: [], indicators: { vwap: [], ema20: [], ema50: [], rsi: [] } });
         }
+
+        const duckDb = await getDuckDb();
+        const conn = await duckDb.connect();
+
+        // DuckDB SQL to fetch candles for a specific local date
+        // 'epoch' timestamp needs timezone adjustment since Dhan is IST
+        const query = `
+            SELECT timestamp as ts, open, high, low, close, volume 
+            FROM read_parquet('${parquetPath}')
+            WHERE interval = '${interval}'
+              AND strftime(epoch_ms(timestamp * 1000) AT TIME ZONE 'Asia/Kolkata', '%Y-%m-%d') = '${date}'
+            ORDER BY timestamp ASC
+        `;
+
+        const res = await conn.run(query);
+        const rows = await res.getRows();
+
+        if (rows.length === 0) {
+            return NextResponse.json({ candles: [], indicators: { vwap: [], ema20: [], ema50: [], rsi: [] } });
+        }
+
+        // Map DuckDB Row Data
+        const candles = rows.map((r: any) => ({
+            time: new Date(Number(r[0]) * 1000).toISOString(),
+            timestamp: Number(r[0]),
+            open: Number(r[1]),
+            high: Number(r[2]),
+            low: Number(r[3]),
+            close: Number(r[4]),
+            volume: Number(r[5]),
+        }));
 
         const closes = candles.map(c => c.close);
         const vwap = calcVwap(candles);

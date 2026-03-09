@@ -1,10 +1,10 @@
 /**
- * Historify Export API — Streams CSV data from SQLite
+ * Historify Export API — Streams CSV data from Parquet Columnar Storage
  * GET /api/historify/export?symbols=SBIN,RELIANCE&interval=Daily&preset=Last+1+Year&format=csv
  */
 import { NextRequest, NextResponse } from "next/server";
-import Database from "better-sqlite3";
-import path from "path";
+import fs from "fs";
+import { getDuckDb, getParquetPath } from "@/lib/historify/duckdb";
 
 function getDateRange(preset: string): { startTs: number; endTs: number } {
     const now = Math.floor(Date.now() / 1000);
@@ -29,8 +29,6 @@ function toIST(ts: number): string {
 
 export async function GET(req: NextRequest) {
     try {
-        const dbPath = path.join(process.cwd(), "data", "historify.db");
-        const db = new Database(dbPath, { readonly: true });
         const url = new URL(req.url);
 
         const symbolsParam = url.searchParams.get("symbols") || "";
@@ -44,28 +42,38 @@ export async function GET(req: NextRequest) {
         }
 
         const { startTs, endTs } = getDateRange(preset);
+        const duckDb = await getDuckDb();
+        const conn = await duckDb.connect();
 
         // Build CSV content
         const header = "Symbol,Exchange,Interval,Timestamp,DateTime_IST,Open,High,Low,Close,Volume\n";
         let csvBody = "";
+        let totalRows = 0;
 
-        const placeholders = symbols.map(() => "?").join(",");
-        const query = `
-            SELECT symbol, exchange, interval, timestamp, open, high, low, close, volume
-            FROM historical_data
-            WHERE symbol IN (${placeholders}) AND exchange = ? AND interval = ?
-              AND timestamp >= ? AND timestamp <= ?
-            ORDER BY symbol ASC, timestamp ASC
-        `;
+        // Since Parquet files are heavily split by symbol, we generate a UNION query
+        // or loop through each symbol to read its specific file.
+        for (const symbol of symbols) {
+            const parquetPath = getParquetPath(symbol);
+            if (!fs.existsSync(parquetPath)) continue;
 
-        const rows = db.prepare(query).all(...symbols, 'NSE', interval, startTs, endTs) as any[];
-        db.close();
+            const query = `
+                SELECT symbol, exchange, interval, timestamp, open, high, low, close, volume
+                FROM read_parquet('${parquetPath}')
+                WHERE interval = '${interval}'
+                  AND timestamp >= ${startTs} AND timestamp <= ${endTs}
+                ORDER BY timestamp ASC
+            `;
 
-        for (const r of rows) {
-            csvBody += `${r.symbol},${r.exchange},${r.interval},${r.timestamp},"${toIST(r.timestamp)}",${r.open},${r.high},${r.low},${r.close},${r.volume}\n`;
+            const res = await conn.run(query);
+            const rows = await res.getRows();
+            totalRows += rows.length;
+
+            for (const r of rows) {
+                // DuckDB row array mapping based on SELECT order
+                csvBody += `${r[0]},${r[1]},${r[2]},${r[3]},"${toIST(Number(r[3]))}",${r[4]},${r[5]},${r[6]},${r[7]},${r[8]}\n`;
+            }
         }
-
-        if (rows.length === 0) {
+        if (totalRows === 0) {
             return NextResponse.json({
                 error: "No data found for the given symbols, interval, and date range",
                 symbols,
@@ -88,7 +96,7 @@ export async function GET(req: NextRequest) {
             headers: {
                 "Content-Type": "text/csv; charset=utf-8",
                 "Content-Disposition": `attachment; filename="${filename}"`,
-                "X-Row-Count": String(rows.length),
+                "X-Row-Count": String(totalRows),
             },
         });
     } catch (err: any) {

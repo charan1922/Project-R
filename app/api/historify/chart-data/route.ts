@@ -49,13 +49,44 @@ export async function GET(request: NextRequest) {
     if (!symbol) return NextResponse.json({ error: "symbol required" }, { status: 400 });
 
     try {
-        const { getChartData, initDb } = await import("@/lib/historify/db");
-        await initDb();
-        const ohlc = await getChartData(symbol, exchange, interval, 500);
+        const fs = await import("fs");
+        const { getDuckDb, getParquetPath } = await import("@/lib/historify/duckdb");
 
-        if (ohlc.length === 0) {
+        const parquetPath = getParquetPath(symbol);
+        if (!fs.existsSync(parquetPath)) {
             return NextResponse.json({ candles: [], indicators: { ema20: [], ema50: [], rsi: [] } });
         }
+
+        const duckDb = await getDuckDb();
+        const conn = await duckDb.connect();
+
+        // DuckDB SQL to fetch latest candles for the chart
+        const query = `
+            SELECT timestamp as ts, open, high, low, close, volume 
+            FROM read_parquet('${parquetPath}')
+            WHERE interval = '${interval}'
+            ORDER BY timestamp DESC
+            LIMIT 500
+        `;
+
+        const res = await conn.run(query);
+        const rows = await res.getRows();
+
+        if (rows.length === 0) {
+            return NextResponse.json({ candles: [], indicators: { ema20: [], ema50: [], rsi: [] } });
+        }
+
+        // Map DuckDB Row Data (needs to be reversed because chart expects ascending order)
+        const ohlc = rows.map((r: any) => ({
+            time: interval === "Daily"
+                ? new Date(Number(r[0]) * 1000).toISOString().split("T")[0]
+                : new Date(Number(r[0]) * 1000).toISOString(),
+            open: Number(r[1]),
+            high: Number(r[2]),
+            low: Number(r[3]),
+            close: Number(r[4]),
+            volume: Number(r[5]),
+        })).reverse();
 
         const closes = ohlc.map(c => c.close);
         const ema20 = calculateEma(closes, 20);

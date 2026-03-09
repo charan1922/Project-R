@@ -1,7 +1,4 @@
 import schedule from "node-schedule";
-import { dhanAPI } from "./dhan-client";
-import { insertOHLC, getLastSync } from "./db";
-import { ExchangeSegment } from "../../dhanv2/src/types";
 
 // In-memory job store for simple persistence in this iteration
 // A full production deployment might move this to SQLite or DuckDB
@@ -47,29 +44,23 @@ export function createJob(config: JobConfig) {
 
             for (const sym of config.symbols) {
                 try {
-                    const lastSync = await getLastSync(sym, "NSE", config.dataInterval);
-                    const fromDate = lastSync ? new Date(lastSync * 1000).toISOString() : "2020-01-01T00:00:00.000Z";
+                    // Trigger the existing DuckDB Parquet ingestion route
+                    const res = await fetch("http://localhost:5000/api/historify/sync", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            symbols: [sym],
+                            interval: config.dataInterval,
+                            exchange: "NSE"
+                        })
+                    });
 
-                    const req = {
-                        securityId: "UNKNOWN", // In complete implementation, map symbol to securityId from master list
-                        exchangeSegment: ExchangeSegment.NSE_EQ,
-                        instrument: "EQUITY" as any,
-                        fromDate: fromDate.split('T')[0],
-                        toDate: new Date().toISOString().split('T')[0]
-                    };
-
-                    let data;
-                    if (config.dataInterval === "Daily") {
-                        data = await dhanAPI.fetchDaily(req);
-                    } else {
-                        data = await dhanAPI.fetchIntradayChunked({ ...req, interval: 5 as any }); // hardcoded to 5 for now
-                    }
-
-                    if (data && data.timestamp && data.timestamp.length > 0) {
-                        await insertOHLC(sym, "NSE", config.dataInterval, data as any);
+                    if (!res.ok) {
+                        const errText = await res.text();
+                        console.error(`[Scheduler] Sync API failed for ${sym}:`, errText);
                     }
                 } catch (err) {
-                    console.error(`[Scheduler] Failed to sync ${sym}:`, err);
+                    console.error(`[Scheduler] Failed to ping sync route for ${sym}:`, err);
                 }
             }
 

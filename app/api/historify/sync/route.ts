@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 import { dhanAPI } from "@/lib/historify/dhan-client";
-import { insertOHLC, getLastSync, logActivity, initDb } from "@/lib/historify/db";
+import { logActivity, initDb } from "@/lib/historify/db";
+import { getDuckDb, getParquetPath } from "@/lib/historify/duckdb";
 import { resolveSymbol } from "@/lib/historify/master-contracts";
 import { ExchangeSegment } from "../../../../dhanv2/src/types";
 
@@ -38,29 +41,33 @@ export async function POST(request: NextRequest) {
             const { symbol, exchange, interval } = target;
 
             try {
-                // Resolve securityId from master contracts — no hardcoding
+                // Resolve securityId from master contracts
                 const entry = await resolveSymbol(symbol, exchange);
                 if (!entry) {
-                    results.push({ symbol, rows: 0, status: "failed", error: `Symbol not found in Dhan master contracts: ${exchange}:${symbol}` });
                     await logActivity(symbol, exchange, interval, "sync", 0, "failed");
+                    results.push({ symbol, rows: 0, status: "failed", error: "Symbol not found in master contracts" });
                     continue;
                 }
 
-                // Incremental: prefer explicit payload dates, otherwise use lastSync or default
-                const lastSync = await getLastSync(symbol, exchange, interval);
-                const lastSyncDate = lastSync ? new Date((lastSync + 1) * 1000).toISOString().split("T")[0] : null;
+                // Check for existing Parquet file to determine lastSyncDate
+                const parquetPath = getParquetPath(symbol);
+                const duckDb = await getDuckDb();
+                let lastSyncDate: string | null = null;
 
-                // For fromDate: Use payload if provided, else use lastSync (if exists), else use default
-                const fromDate = payload.fromDate
-                    ? payload.fromDate
-                    : (lastSyncDate || "2020-01-01");
+                if (fs.existsSync(parquetPath)) {
+                    // Fast columnar query to find the absolute max timestamp in the file
+                    const c = await duckDb.connect();
+                    const res = await c.run(`SELECT MAX(timestamp) as max_ts FROM read_parquet('${parquetPath}') WHERE interval = '${interval}'`);
+                    const rows = await res.getRows();
+                    if (rows.length > 0 && rows[0][0]) {
+                        // Add 1 second to avoid overlapping candles if necessary
+                        lastSyncDate = new Date((Number(rows[0][0]) + 1) * 1000).toISOString().split("T")[0];
+                    }
+                }
 
-                // For toDate: Use payload if provided, else use today
-                const toDate = payload.toDate
-                    ? payload.toDate
-                    : new Date().toISOString().split("T")[0];
+                const fromDate = payload.fromDate ? payload.fromDate : (lastSyncDate || "2020-01-01");
+                const toDate = payload.toDate ? payload.toDate : new Date().toISOString().split("T")[0];
 
-                // Only skip if we are relying on lastSync and it's already caught up to the requested toDate
                 if (!payload.fromDate && fromDate > toDate) {
                     results.push({ symbol, rows: 0, status: "up_to_date" });
                     continue;
@@ -84,8 +91,35 @@ export async function POST(request: NextRequest) {
 
                 const rows = data?.timestamp?.length ?? 0;
                 if (rows > 0) {
-                    await insertOHLC(symbol, exchange, interval, data as any);
+                    // Structure data for DuckDB JSON ingestion
+                    const insertRows = data!.timestamp.map((ts: number, i: number) => ({
+                        symbol, exchange, interval, timestamp: ts,
+                        open: data!.open[i], high: data!.high[i], low: data!.low[i], close: data!.close[i], volume: data!.volume[i]
+                    }));
+
+                    const conn = await duckDb.connect();
+                    const tempJsonPath = path.join(process.cwd(), 'data', `temp_sync_${symbol}.json`);
+
+                    try {
+                        fs.writeFileSync(tempJsonPath, JSON.stringify(insertRows));
+
+                        if (fs.existsSync(parquetPath)) {
+                            // Append to existing file
+                            await conn.run(`
+                                CREATE TEMP TABLE IF NOT EXISTS temp_sync AS SELECT * FROM read_parquet('${parquetPath}');
+                                INSERT INTO temp_sync SELECT * FROM read_json_auto('${tempJsonPath}');
+                                COPY (SELECT DISTINCT * FROM temp_sync ORDER BY timestamp ASC) TO '${parquetPath}' (FORMAT PARQUET);
+                                DROP TABLE temp_sync;
+                            `);
+                        } else {
+                            // Create brand new Parquet file
+                            await conn.run(`COPY (SELECT * FROM read_json_auto('${tempJsonPath}') ORDER BY timestamp ASC) TO '${parquetPath}' (FORMAT PARQUET)`);
+                        }
+                    } finally {
+                        if (fs.existsSync(tempJsonPath)) fs.unlinkSync(tempJsonPath);
+                    }
                 }
+
                 await logActivity(symbol, exchange, interval, "sync", rows, "success");
                 results.push({ symbol, rows, status: "success" });
 
