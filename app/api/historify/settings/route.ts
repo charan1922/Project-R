@@ -4,7 +4,9 @@ import path from "path";
 
 export const dynamic = "force-dynamic";
 
-const SETTINGS_PATH = path.join(process.cwd(), "data", "historify-settings.json");
+const SETTINGS_PATH = process.env.VERCEL === '1'
+    ? path.join('/tmp', 'historify-settings.json')
+    : path.join(process.cwd(), "data", "historify-settings.json");
 
 const DEFAULTS = {
     dhanClientId: process.env.DHAN_CLIENT_ID || "",

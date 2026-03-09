@@ -5,11 +5,11 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true
   },
-  serverExternalPackages: ['better-sqlite3', 'duckdb', '@duckdb/node-api'],
+  serverExternalPackages: ['duckdb', '@duckdb/node-api'],
   turbopack: {},
   webpack: (config, { isServer }) => {
     if (isServer) {
-      config.externals.push('better-sqlite3', '@duckdb/node-api');
+      config.externals.push('@duckdb/node-api');
       // Prevent webpack from statically analyzing native modules
       config.module.exprContextCritical = false;
     }

@@ -98,7 +98,8 @@ export async function POST(request: NextRequest) {
                     }));
 
                     const conn = await duckDb.connect();
-                    const tempJsonPath = path.join(process.cwd(), 'data', `temp_sync_${symbol}.json`);
+                    const tempDir = process.env.VERCEL === '1' ? '/tmp' : path.join(process.cwd(), 'data');
+                    const tempJsonPath = path.join(tempDir, `temp_sync_${symbol}.json`);
 
                     try {
                         fs.writeFileSync(tempJsonPath, JSON.stringify(insertRows));

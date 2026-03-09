@@ -1,6 +1,6 @@
 /**
  * Quant Data Loader
- * Fetches daily OHLCV from SQLite (historify.db) with Dhan V2 API fallback.
+ * Fetches daily OHLCV from DuckDB Parquet (local or Hugging Face cloud) with Dhan V2 API fallback.
  * Returns data as typed arrays suitable for math engines.
  */
 
@@ -25,7 +25,7 @@ function cacheKey(symbol: string, exchange: string, interval: string, from: stri
 }
 
 /**
- * Get daily prices for a symbol. Tries local SQLite first, falls back to Dhan API.
+ * Get daily prices for a symbol. Tries DuckDB Parquet first, falls back to Dhan API.
  */
 export async function getDailyPrices(
     symbol: string,
@@ -37,13 +37,8 @@ export async function getDailyPrices(
     const cached = _cache.get(key);
     if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data;
 
-    // Try SQLite first
-    let rows = await fetchFromSQLite(symbol, exchange, "Daily", startDate, endDate);
-
-    // Try DuckDB (local parquet or Hugging Face cloud) if SQLite is empty
-    if (rows.length === 0) {
-        rows = await fetchFromParquet(symbol, startDate, endDate);
-    }
+    // Try DuckDB (local parquet or Hugging Face cloud)
+    let rows = await fetchFromParquet(symbol, startDate, endDate);
 
     // Fallback to Dhan API for index symbols or if still empty
     if (rows.length === 0) {
@@ -89,50 +84,6 @@ async function fetchFromParquet(
             low: Number(r[3]),
             close: Number(r[4]),
             volume: Number(r[5]) || 0,
-        }));
-    } catch {
-        return [];
-    }
-}
-
-async function fetchFromSQLite(
-    symbol: string,
-    exchange: string,
-    interval: string,
-    startDate: string,
-    endDate: string
-): Promise<OHLCVRow[]> {
-    try {
-        const { initDb } = await import("@/lib/historify/db");
-        await initDb();
-
-        // Dynamic import to get db access
-        const Database = (await import("better-sqlite3")).default;
-        const path = await import("path");
-        const dbPath = path.join(process.cwd(), "data", "historify.db");
-        const db = new Database(dbPath, { readonly: true });
-
-        const startTs = Math.floor(new Date(startDate).getTime() / 1000);
-        const endTs = Math.floor(new Date(endDate + "T23:59:59").getTime() / 1000);
-
-        const rows = db.prepare(`
-            SELECT timestamp, open, high, low, close, volume
-            FROM historical_data
-            WHERE symbol = ? AND exchange = ? AND interval = ?
-              AND timestamp >= ? AND timestamp <= ?
-            ORDER BY timestamp ASC
-        `).all(symbol, exchange, interval, startTs, endTs) as any[];
-
-        db.close();
-
-        return rows.map(r => ({
-            timestamp: r.timestamp,
-            date: new Date(r.timestamp * 1000).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }),
-            open: r.open,
-            high: r.high,
-            low: r.low,
-            close: r.close,
-            volume: r.volume || 0,
         }));
     } catch {
         return [];

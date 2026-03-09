@@ -4,7 +4,10 @@ import fs from 'fs';
 
 let _db: DuckDBInstance | null = null;
 let _httpfsLoaded = false;
-const parquetDir = path.join(process.cwd(), 'data', 'parquet', 'historify');
+const isVercel = process.env.VERCEL === '1';
+const parquetDir = isVercel
+    ? path.join('/tmp', 'parquet', 'historify')
+    : path.join(process.cwd(), 'data', 'parquet', 'historify');
 
 // Hugging Face dataset base URLs
 const HF_DATASETS = {
@@ -35,6 +38,10 @@ export async function getDuckDb(): Promise<DuckDBInstance> {
  */
 export async function ensureHttpfs(conn: DuckDBConnection): Promise<void> {
     if (_httpfsLoaded) return;
+    // On Vercel, extensions must be installed to /tmp (only writable dir)
+    if (isVercel) {
+        await conn.run("SET extension_directory = '/tmp/duckdb_extensions';");
+    }
     await conn.run("INSTALL httpfs; LOAD httpfs;");
     _httpfsLoaded = true;
 }
