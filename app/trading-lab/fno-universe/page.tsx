@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Search, Filter, CheckCircle2, Circle, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import fnoData from "@/lib/data/fno_stocks_list.json";
+import fnoData from "../../../lib/data/fno_stocks_list.json";
 import tradesRaw from "@/tradefinder_platform_trades.json";
 import type { RawTrade } from "@/app/trading-lab/tradefinder/types";
 import { computeAnalytics } from "@/app/trading-lab/tradefinder/analytics";

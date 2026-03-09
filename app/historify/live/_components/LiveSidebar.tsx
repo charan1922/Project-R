@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Shield, Zap, RefreshCw } from "lucide-react";
-import fnoData from "@/lib/data/fno_stocks_list.json";
+import fnoData from "../../../../lib/data/fno_stocks_list.json";
 
 interface WatchlistItem {
     id: number;
