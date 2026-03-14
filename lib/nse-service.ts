@@ -1,5 +1,5 @@
 import { NseIndia } from "stock-nse-india";
-import { FactorData, HistoricalPoint, SignalOutput, engine } from "./r-factor";
+import { FactorData, SignalOutput, engine } from "./r-factor";
 import { promises as fs } from "fs";
 import path from "path";
 
@@ -47,10 +47,13 @@ export class NseService {
     const allPoints = historical.flatMap((d: any) => d.data || []);
 
     const data = allPoints.map((p: any) => ({
-      volume: p.chTotTradedQty || 0,
-      oi: 0,
-      turnover: p.chTotTradedVal || 0,
-      spread: (p.chTradeHighPrice - p.chTradeLowPrice) / p.chClosingPrice || 0
+      fut_turnover: 0,
+      fut_volume: 0,
+      opt_volume: 0,
+      eq_trade_size: p.chTotTradedQty > 0 ? (p.chTotTradedVal || 0) / p.chTotTradedQty : 0,
+      oi_change: 0,
+      spread: (p.chTradeHighPrice - p.chTradeLowPrice) / p.chClosingPrice || 0,
+      pcr: 0,
     }));
 
     // Save to cache
@@ -71,21 +74,16 @@ export class NseService {
     const details = await nseIndia.getEquityDetails(symbol);
     const p = details.priceInfo;
 
-    let totalOI = 0;
-    try {
-      const oc: any = await nseIndia.getEquityOptionChain(symbol);
-      if (oc && oc.filtered) {
-        totalOI = (oc.filtered.CE?.totOI || 0) + (oc.filtered.PE?.totOI || 0);
-      }
-    } catch (e) {
-      // Ignore OI errors
-    }
-
+    const vol = details.preOpenMarket?.totalTradedVolume || 0;
+    const turnover = (p?.lastPrice || 0) * vol;
     return {
-      volume: details.preOpenMarket?.totalTradedVolume || 0,
-      oi: totalOI,
-      turnover: (p?.lastPrice || 0) * (details.preOpenMarket?.totalTradedVolume || 0),
-      spread: (p?.intraDayHighLow?.max - p?.intraDayHighLow?.min) / p?.lastPrice || 0
+      fut_turnover: 0,
+      fut_volume: 0,
+      opt_volume: 0,
+      eq_trade_size: vol > 0 ? turnover / vol : 0,
+      oi_change: 0,
+      spread: (p?.intraDayHighLow?.max - p?.intraDayHighLow?.min) / p?.lastPrice || 0,
+      pcr: 0,
     };
   }
 

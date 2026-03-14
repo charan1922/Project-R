@@ -1,0 +1,1047 @@
+{
+  "pearson": 0.1923724735256849,
+  "spearman": 0.20679793717768405,
+  "n_stocks": 80,
+  "results": [
+    {
+      "symbol": "BIOCON",
+      "actual_r": 3.485581034233336,
+      "our_composite": 0.16623321262651558,
+      "z_scores": {
+        "fut_turnover": 0.0172722663454948,
+        "fut_volume": -0.010769280093425447,
+        "opt_volume": 0.08461215790633085,
+        "eq_trade_size": 0.5475465987780151,
+        "oi_change": -0.22806683897520894,
+        "spread": 2.1122951273448605
+      }
+    },
+    {
+      "symbol": "LAURUSLABS",
+      "actual_r": 3.444080277273257,
+      "our_composite": 1.3511670149957442,
+      "z_scores": {
+        "fut_turnover": 1.6019643939109693,
+        "fut_volume": 1.6935022075132315,
+        "opt_volume": 1.9478672830237542,
+        "eq_trade_size": -0.4020772621493967,
+        "oi_change": -0.2825999896133213,
+        "spread": 3.461906088382589
+      }
+    },
+    {
+      "symbol": "JINDALSTEL",
+      "actual_r": 3.3590890034909253,
+      "our_composite": 1.6455767155935521,
+      "z_scores": {
+        "fut_turnover": 1.596995431101985,
+        "fut_volume": 1.6825311852918712,
+        "opt_volume": 3.955535442893568,
+        "eq_trade_size": -1.0412147357639727,
+        "oi_change": -0.5149974799576899,
+        "spread": 4.205888530131848
+      }
+    },
+    {
+      "symbol": "DIVISLAB",
+      "actual_r": 3.274097729708594,
+      "our_composite": -0.3994034737284101,
+      "z_scores": {
+        "fut_turnover": -0.47991516995419414,
+        "fut_volume": -0.46458198408282897,
+        "opt_volume": -0.3521814019742932,
+        "eq_trade_size": -0.8665979203624381,
+        "oi_change": -0.24501718259725455,
+        "spread": 1.0520538867429239
+      }
+    },
+    {
+      "symbol": "LT",
+      "actual_r": 3.1490828505208586,
+      "our_composite": 1.877343093855064,
+      "z_scores": {
+        "fut_turnover": 2.025431181313059,
+        "fut_volume": 2.6258237544493843,
+        "opt_volume": 2.861885972590143,
+        "eq_trade_size": -3.25709608278483,
+        "oi_change": 2.474027738467,
+        "spread": 4.831341637401079
+      }
+    },
+    {
+      "symbol": "PIDILITIND",
+      "actual_r": 3.10929442311469,
+      "our_composite": -0.8445280606888188,
+      "z_scores": {
+        "fut_turnover": -0.9092173135637042,
+        "fut_volume": -0.8614163430769517,
+        "opt_volume": -0.5478930840007934,
+        "eq_trade_size": -3.2499864900822293,
+        "oi_change": -0.4485886442508604,
+        "spread": 3.541384350092533
+      }
+    },
+    {
+      "symbol": "GLENMARK",
+      "actual_r": 2.892274774030636,
+      "our_composite": 0.2508705518876136,
+      "z_scores": {
+        "fut_turnover": 0.11180632401049523,
+        "fut_volume": -0.0034352716921696013,
+        "opt_volume": -0.06339766282892882,
+        "eq_trade_size": 1.5317549548342784,
+        "oi_change": -0.46531901008319554,
+        "spread": 1.8464071668984157
+      }
+    },
+    {
+      "symbol": "DRREDDY",
+      "actual_r": 2.652267628346528,
+      "our_composite": -0.2938063500407247,
+      "z_scores": {
+        "fut_turnover": -0.616582278959885,
+        "fut_volume": -0.6350339346099857,
+        "opt_volume": -0.005609388970481545,
+        "eq_trade_size": 0.5445857594369158,
+        "oi_change": -0.5028043551705197,
+        "spread": 0.7173330339809205
+      }
+    },
+    {
+      "symbol": "CGPOWER",
+      "actual_r": 2.6336891933867554,
+      "our_composite": 0.9279856414847256,
+      "z_scores": {
+        "fut_turnover": 0.8240197186660217,
+        "fut_volume": 0.6950861043937243,
+        "opt_volume": 1.443030408713278,
+        "eq_trade_size": 1.029034721826616,
+        "oi_change": -0.30791614818453666,
+        "spread": 3.091403488347155
+      }
+    },
+    {
+      "symbol": "PGEL",
+      "actual_r": 2.630697533834051,
+      "our_composite": 1.1717889978501215,
+      "z_scores": {
+        "fut_turnover": 1.512922337231829,
+        "fut_volume": 1.8751025928942924,
+        "opt_volume": 3.3520747699601787,
+        "eq_trade_size": -3.0768793751844665,
+        "oi_change": -0.5719527231249679,
+        "spread": 1.4436797439760032
+      }
+    },
+    {
+      "symbol": "SRF",
+      "actual_r": 2.6153573220060538,
+      "our_composite": 0.289663867329689,
+      "z_scores": {
+        "fut_turnover": 0.4274683255210039,
+        "fut_volume": 0.5657399058166155,
+        "opt_volume": 0.6288051581914269,
+        "eq_trade_size": -1.2336684043829809,
+        "oi_change": -0.21632577959177,
+        "spread": 1.5295250245982368
+      }
+    },
+    {
+      "symbol": "SAIL",
+      "actual_r": 2.606297595300133,
+      "our_composite": -0.6483606940986318,
+      "z_scores": {
+        "fut_turnover": -0.7088486213043432,
+        "fut_volume": -0.6991293485758027,
+        "opt_volume": -0.7983186345158507,
+        "eq_trade_size": -1.7990284189718462,
+        "oi_change": -0.3155350988903451,
+        "spread": 2.604210076302618
+      }
+    },
+    {
+      "symbol": "ASTRAL",
+      "actual_r": 2.6015212241029326,
+      "our_composite": -0.14331158275964798,
+      "z_scores": {
+        "fut_turnover": -0.5064873674555977,
+        "fut_volume": -0.5376260403690423,
+        "opt_volume": 0.1543808725589267,
+        "eq_trade_size": 0.4047849788992256,
+        "oi_change": -0.23316192309233522,
+        "spread": 1.799891507000231
+      }
+    },
+    {
+      "symbol": "EXIDEIND",
+      "actual_r": 2.5769017561822323,
+      "our_composite": -0.45245444722198563,
+      "z_scores": {
+        "fut_turnover": -0.41956861120665084,
+        "fut_volume": -0.31088059553793185,
+        "opt_volume": -0.027825689106686567,
+        "eq_trade_size": -2.5076412605708476,
+        "oi_change": -0.5404275021232983,
+        "spread": 2.2220922108905534
+      }
+    },
+    {
+      "symbol": "AMBER",
+      "actual_r": 2.5340325699148702,
+      "our_composite": 0.40215778701386223,
+      "z_scores": {
+        "fut_turnover": 0.4390013067524481,
+        "fut_volume": 0.646529721817035,
+        "opt_volume": 1.0945549850518326,
+        "eq_trade_size": -1.3508934477727441,
+        "oi_change": -0.6218287404829935,
+        "spread": 2.7219031001113563
+      }
+    },
+    {
+      "symbol": "TATACONSUM",
+      "actual_r": 2.519073303719359,
+      "our_composite": 1.7376407607076259,
+      "z_scores": {
+        "fut_turnover": 1.0058413331169962,
+        "fut_volume": 1.1795986378812107,
+        "opt_volume": 7.080058611882244,
+        "eq_trade_size": -1.9761430195702518,
+        "oi_change": -0.4060933405281822,
+        "spread": 2.8864929512933797
+      }
+    },
+    {
+      "symbol": "BLUESTARCO",
+      "actual_r": 2.511707852748666,
+      "our_composite": 1.722791278839398,
+      "z_scores": {
+        "fut_turnover": 2.422013400531996,
+        "fut_volume": 2.6374431054589493,
+        "opt_volume": 2.370129486715096,
+        "eq_trade_size": -1.3361992295390386,
+        "oi_change": -0.5417614159458306,
+        "spread": 2.494464476912245
+      }
+    },
+    {
+      "symbol": "BHARATFORG",
+      "actual_r": 2.4700518051800255,
+      "our_composite": 0.20688700323999082,
+      "z_scores": {
+        "fut_turnover": 0.16874816233233364,
+        "fut_volume": 0.2016301807014168,
+        "opt_volume": 0.02860191282357522,
+        "eq_trade_size": -0.34965617418253836,
+        "oi_change": 0.21582570555450512,
+        "spread": 2.421656708062941
+      }
+    },
+    {
+      "symbol": "SUPREMEIND",
+      "actual_r": 2.4593494394368562,
+      "our_composite": 0.1435329720310094,
+      "z_scores": {
+        "fut_turnover": 0.18063746466354091,
+        "fut_volume": 0.15183512634459023,
+        "opt_volume": -0.16533076713270883,
+        "eq_trade_size": 0.4120473070814718,
+        "oi_change": -0.017736658625114195,
+        "spread": 0.6694095628484393
+      }
+    },
+    {
+      "symbol": "SONACOMS",
+      "actual_r": 2.458566489454683,
+      "our_composite": -0.17362262190660438,
+      "z_scores": {
+        "fut_turnover": -0.0896960796375047,
+        "fut_volume": -0.0010766665336942546,
+        "opt_volume": 0.08001539808529147,
+        "eq_trade_size": -2.2811135522889923,
+        "oi_change": -0.4200866984038912,
+        "spread": 3.097897861555726
+      }
+    },
+    {
+      "symbol": "JSWSTEEL",
+      "actual_r": 2.455850457108067,
+      "our_composite": -0.13318658036835043,
+      "z_scores": {
+        "fut_turnover": -0.012255406051493445,
+        "fut_volume": 0.09777001931610396,
+        "opt_volume": 1.2365263805879878,
+        "eq_trade_size": -4.050346035021367,
+        "oi_change": -0.37631563218067354,
+        "spread": 2.9429175106573044
+      }
+    },
+    {
+      "symbol": "MFSL",
+      "actual_r": 2.385941869823045,
+      "our_composite": -0.31273249935228437,
+      "z_scores": {
+        "fut_turnover": -0.3158836167412234,
+        "fut_volume": -0.2348008327148314,
+        "opt_volume": -0.3561850050384787,
+        "eq_trade_size": -1.764125303044275,
+        "oi_change": -0.11001449742418103,
+        "spread": 2.550851617268955
+      }
+    },
+    {
+      "symbol": "INDUSTOWER",
+      "actual_r": 2.365494495793745,
+      "our_composite": -0.634881380830121,
+      "z_scores": {
+        "fut_turnover": -0.7405861523907914,
+        "fut_volume": -0.6965006732105297,
+        "opt_volume": -0.41070793103614106,
+        "eq_trade_size": -1.8790630194808469,
+        "oi_change": -0.25875973558667725,
+        "spread": 1.7342119334524702
+      }
+    },
+    {
+      "symbol": "GRASIM",
+      "actual_r": 2.351936238926026,
+      "our_composite": -0.5142649498688086,
+      "z_scores": {
+        "fut_turnover": -0.530092368939194,
+        "fut_volume": -0.4634768630334356,
+        "opt_volume": -0.06231289616108096,
+        "eq_trade_size": -2.509359905057784,
+        "oi_change": -0.428806511077011,
+        "spread": 2.3170427518987657
+      }
+    },
+    {
+      "symbol": "APLAPOLLO",
+      "actual_r": 2.3271575400993636,
+      "our_composite": -1.0539872799732017,
+      "z_scores": {
+        "fut_turnover": -1.1383345050089981,
+        "fut_volume": -0.9497065601453222,
+        "opt_volume": -0.4367975362064554,
+        "eq_trade_size": -3.5134573223243417,
+        "oi_change": -0.8181093603428589,
+        "spread": 2.1397816559239407
+      }
+    },
+    {
+      "symbol": "UNITDSPR",
+      "actual_r": 2.300027283411006,
+      "our_composite": -0.2849536299641474,
+      "z_scores": {
+        "fut_turnover": -0.2054897351862612,
+        "fut_volume": -0.18032761926521243,
+        "opt_volume": -0.14606617145804604,
+        "eq_trade_size": -1.5504325306374545,
+        "oi_change": -0.42380864406325214,
+        "spread": 1.5299974870660413
+      }
+    },
+    {
+      "symbol": "HINDALCO",
+      "actual_r": 2.27655376087601,
+      "our_composite": 1.0470417661838132,
+      "z_scores": {
+        "fut_turnover": 1.1250976799979409,
+        "fut_volume": 1.1675816270398947,
+        "opt_volume": 1.9468086835460403,
+        "eq_trade_size": -0.7131307696122019,
+        "oi_change": -0.33244601922927147,
+        "spread": 3.720235733251227
+      }
+    },
+    {
+      "symbol": "LUPIN",
+      "actual_r": 2.236830335341592,
+      "our_composite": -0.45797477640241097,
+      "z_scores": {
+        "fut_turnover": -0.9013513698838438,
+        "fut_volume": -0.9460010677724837,
+        "opt_volume": -0.6774955685154129,
+        "eq_trade_size": 1.209664566747425,
+        "oi_change": -0.5483913672244555,
+        "spread": 1.6111898510278395
+      }
+    },
+    {
+      "symbol": "SIEMENS",
+      "actual_r": 2.229844727658453,
+      "our_composite": -0.16783686017910532,
+      "z_scores": {
+        "fut_turnover": -0.34744459918367526,
+        "fut_volume": -0.3593682743896195,
+        "opt_volume": -0.2955477925138846,
+        "eq_trade_size": 0.39733072665304564,
+        "oi_change": -0.40579532102744775,
+        "spread": 1.4467407146056128
+      }
+    },
+    {
+      "symbol": "HINDUNILVR",
+      "actual_r": 2.2027431698350903,
+      "our_composite": 0.06380832048595889,
+      "z_scores": {
+        "fut_turnover": 0.1296952176156955,
+        "fut_volume": 0.23062466642379567,
+        "opt_volume": 0.9968513813775837,
+        "eq_trade_size": -1.8813674155603697,
+        "oi_change": -0.4268347153182267,
+        "spread": 1.1251580269280657
+      }
+    },
+    {
+      "symbol": "GAIL",
+      "actual_r": 2.201722911766386,
+      "our_composite": -0.7631421016357232,
+      "z_scores": {
+        "fut_turnover": -0.7712401132895048,
+        "fut_volume": -0.6810293670918237,
+        "opt_volume": -0.6801739276517736,
+        "eq_trade_size": -2.0364296730186546,
+        "oi_change": -0.5985371421829928,
+        "spread": 1.3028771216388257
+      }
+    },
+    {
+      "symbol": "TORNTPHARM",
+      "actual_r": 2.1795761266745366,
+      "our_composite": 0.43955137501271774,
+      "z_scores": {
+        "fut_turnover": 0.6535152269865985,
+        "fut_volume": 0.5571353622739992,
+        "opt_volume": -0.08767173468429616,
+        "eq_trade_size": 1.0858414907837692,
+        "oi_change": -0.44014244589166995,
+        "spread": 0.6741428857305276
+      }
+    },
+    {
+      "symbol": "PIIND",
+      "actual_r": 2.1541240313941703,
+      "our_composite": -0.239102958487524,
+      "z_scores": {
+        "fut_turnover": 0.1175580064943271,
+        "fut_volume": 0.21543571049624868,
+        "opt_volume": 0.37341094004837444,
+        "eq_trade_size": -3.1073809898721647,
+        "oi_change": -0.6077786940490215,
+        "spread": 0.764406618419404
+      }
+    },
+    {
+      "symbol": "NATIONALUM",
+      "actual_r": 2.152769033953993,
+      "our_composite": 1.4112512189397486,
+      "z_scores": {
+        "fut_turnover": 1.742621694296325,
+        "fut_volume": 1.654078964889084,
+        "opt_volume": 1.3956179255588477,
+        "eq_trade_size": 1.3267368729270463,
+        "oi_change": -0.4409289932982487,
+        "spread": 2.172364348131337
+      }
+    },
+    {
+      "symbol": "RECLTD",
+      "actual_r": 2.138765612003696,
+      "our_composite": -0.5177130728297206,
+      "z_scores": {
+        "fut_turnover": -0.46702548469953686,
+        "fut_volume": -0.3732568671651704,
+        "opt_volume": -0.7415194344465348,
+        "eq_trade_size": -1.214724789338494,
+        "oi_change": -0.6268689022122598,
+        "spread": 1.152723050273093
+      }
+    },
+    {
+      "symbol": "MANKIND",
+      "actual_r": 2.131846457857657,
+      "our_composite": -0.24915179350353717,
+      "z_scores": {
+        "fut_turnover": -0.46392480956837784,
+        "fut_volume": -0.4857285604166578,
+        "opt_volume": -0.2584860298264889,
+        "eq_trade_size": 0.6005810888467542,
+        "oi_change": -0.4820527178674867,
+        "spread": 0.6824163193009357
+      }
+    },
+    {
+      "symbol": "HEROMOTOCO",
+      "actual_r": 2.1020780877582657,
+      "our_composite": -0.5302445824642523,
+      "z_scores": {
+        "fut_turnover": -0.4108934333273898,
+        "fut_volume": -0.24629255544277934,
+        "opt_volume": 0.12046035198058616,
+        "eq_trade_size": -3.102330285906278,
+        "oi_change": -0.5152688929963885,
+        "spread": 1.1344049329309214
+      }
+    },
+    {
+      "symbol": "MAXHEALTH",
+      "actual_r": 2.0888229713055426,
+      "our_composite": -0.43734206760610833,
+      "z_scores": {
+        "fut_turnover": -0.36895272065126233,
+        "fut_volume": -0.297277864083748,
+        "opt_volume": -0.43512122282996124,
+        "eq_trade_size": -1.560695655650726,
+        "oi_change": -0.39773352504273585,
+        "spread": 1.0608373180392217
+      }
+    },
+    {
+      "symbol": "SUNPHARMA",
+      "actual_r": 2.063284250669786,
+      "our_composite": -0.17063680139545714,
+      "z_scores": {
+        "fut_turnover": -0.5536373928201324,
+        "fut_volume": -0.5877707207111067,
+        "opt_volume": -0.12494245953164462,
+        "eq_trade_size": 1.546469251579562,
+        "oi_change": -0.46746022966992085,
+        "spread": 0.5211290424299984
+      }
+    },
+    {
+      "symbol": "INOXWIND",
+      "actual_r": 2.059365842033296,
+      "our_composite": -0.33800897692148885,
+      "z_scores": {
+        "fut_turnover": -0.29759006453610376,
+        "fut_volume": -0.08094167223383807,
+        "opt_volume": -0.2138624710388485,
+        "eq_trade_size": -1.6931906777768346,
+        "oi_change": -0.4882850182701698,
+        "spread": 1.2402017689006337
+      }
+    },
+    {
+      "symbol": "WIPRO",
+      "actual_r": 2.0511674733057594,
+      "our_composite": -0.7591290235061483,
+      "z_scores": {
+        "fut_turnover": -0.8841584949232721,
+        "fut_volume": -0.8036227053061367,
+        "opt_volume": -0.6494202246629024,
+        "eq_trade_size": -0.9608101112549561,
+        "oi_change": -0.7997826790257617,
+        "spread": 0.38390645979721555
+      }
+    },
+    {
+      "symbol": "CIPLA",
+      "actual_r": 2.040533902671352,
+      "our_composite": -0.1876393952912834,
+      "z_scores": {
+        "fut_turnover": -0.4688031527585665,
+        "fut_volume": -0.4516323390590946,
+        "opt_volume": 1.5807690249469895,
+        "eq_trade_size": -1.6831855224186458,
+        "oi_change": -0.2516058915229997,
+        "spread": 0.17028125306279218
+      }
+    },
+    {
+      "symbol": "AMBUJACEM",
+      "actual_r": 2.0389348690523534,
+      "our_composite": 0.3133266440711836,
+      "z_scores": {
+        "fut_turnover": 0.5599473979705599,
+        "fut_volume": 0.9210729454160813,
+        "opt_volume": 0.6590918072622131,
+        "eq_trade_size": -2.682350626678583,
+        "oi_change": -0.4926698297536185,
+        "spread": 3.3517344239117746
+      }
+    },
+    {
+      "symbol": "CONCOR",
+      "actual_r": 2.038276415691528,
+      "our_composite": -0.7551332474599147,
+      "z_scores": {
+        "fut_turnover": -0.6857860155971253,
+        "fut_volume": -0.6061878649232892,
+        "opt_volume": -0.6902465114522438,
+        "eq_trade_size": -2.32986485520119,
+        "oi_change": -0.43887850868482114,
+        "spread": 0.9973105800814779
+      }
+    },
+    {
+      "symbol": "PFC",
+      "actual_r": 2.0044194691187447,
+      "our_composite": 0.04880578221623881,
+      "z_scores": {
+        "fut_turnover": 0.20652285036334456,
+        "fut_volume": 0.2118376373006072,
+        "opt_volume": -0.5755380034233445,
+        "eq_trade_size": -0.18757608905213297,
+        "oi_change": 0.36773785397646036,
+        "spread": 0.4644340737379111
+      }
+    },
+    {
+      "symbol": "BRITANNIA",
+      "actual_r": 1.9851571210822692,
+      "our_composite": 0.8904800364214657,
+      "z_scores": {
+        "fut_turnover": 1.1120982455953747,
+        "fut_volume": 1.2070827267114923,
+        "opt_volume": 2.0795631904871215,
+        "eq_trade_size": -1.3978283462230017,
+        "oi_change": -0.013345477476630011,
+        "spread": 0.9966491214344302
+      }
+    },
+    {
+      "symbol": "KAYNES",
+      "actual_r": 1.9624929495846664,
+      "our_composite": -0.29377971088378324,
+      "z_scores": {
+        "fut_turnover": -0.13805198012565614,
+        "fut_volume": -0.02074440999108458,
+        "opt_volume": -0.3223464256752754,
+        "eq_trade_size": -1.7537273115596648,
+        "oi_change": -0.3405778978732014,
+        "spread": 1.1069881889542847
+      }
+    },
+    {
+      "symbol": "PNB",
+      "actual_r": 1.9576741140780776,
+      "our_composite": -0.37463879211982465,
+      "z_scores": {
+        "fut_turnover": -0.26210547267494905,
+        "fut_volume": -0.10367432345971128,
+        "opt_volume": -0.2862454680126559,
+        "eq_trade_size": -2.201637665904694,
+        "oi_change": -0.32973529784914507,
+        "spread": 1.5721132896668735
+      }
+    },
+    {
+      "symbol": "BAJAJ-AUTO",
+      "actual_r": 1.9566384638705752,
+      "our_composite": -0.2384090610635947,
+      "z_scores": {
+        "fut_turnover": 0.10095261765933614,
+        "fut_volume": 0.28594403836505494,
+        "opt_volume": 0.5791768020274664,
+        "eq_trade_size": -3.8404915863886453,
+        "oi_change": -0.33527971101343607,
+        "spread": 0.9990856230075562
+      }
+    },
+    {
+      "symbol": "SYNGENE",
+      "actual_r": 1.9411226387480114,
+      "our_composite": 4.631622407243936,
+      "z_scores": {
+        "fut_turnover": 3.6387683514031397,
+        "fut_volume": 3.9376858710803098,
+        "opt_volume": 13.82229799900149,
+        "eq_trade_size": -0.4748615088153568,
+        "oi_change": 0.2235133512498791,
+        "spread": 2.0437768033100587
+      }
+    },
+    {
+      "symbol": "POWERGRID",
+      "actual_r": 1.931897165186047,
+      "our_composite": 0.36638482191553695,
+      "z_scores": {
+        "fut_turnover": 0.39552660566451286,
+        "fut_volume": 0.29841774811654664,
+        "opt_volume": 0.47698451295885297,
+        "eq_trade_size": 0.9018865153369826,
+        "oi_change": -0.5880435681734859,
+        "spread": 0.7568633166272721
+      }
+    },
+    {
+      "symbol": "BHEL",
+      "actual_r": 1.9310115964125627,
+      "our_composite": -0.22887087374341125,
+      "z_scores": {
+        "fut_turnover": -0.41943734111633646,
+        "fut_volume": -0.42308838320026215,
+        "opt_volume": -0.37944346970777165,
+        "eq_trade_size": 0.08707305165988061,
+        "oi_change": -0.40648045191826004,
+        "spread": 2.024630558631889
+      }
+    },
+    {
+      "symbol": "VOLTAS",
+      "actual_r": 1.9240374667695,
+      "our_composite": 0.72939564601942,
+      "z_scores": {
+        "fut_turnover": 0.9623645732770543,
+        "fut_volume": 1.2238585765149397,
+        "opt_volume": 1.1212813917698399,
+        "eq_trade_size": -1.1971544163863095,
+        "oi_change": 0.08390255183181886,
+        "spread": 1.363185083443459
+      }
+    },
+    {
+      "symbol": "MAZDOCK",
+      "actual_r": 1.9219929768627324,
+      "our_composite": -0.0072509968602043175,
+      "z_scores": {
+        "fut_turnover": 0.02339171387894604,
+        "fut_volume": 0.03549394439515088,
+        "opt_volume": -0.05731218231894952,
+        "eq_trade_size": -0.04779797182479894,
+        "oi_change": -0.45736207949121765,
+        "spread": 0.772923205256654
+      }
+    },
+    {
+      "symbol": "UNIONBANK",
+      "actual_r": 1.909503712618032,
+      "our_composite": -0.33844911876613587,
+      "z_scores": {
+        "fut_turnover": -0.28645556967143143,
+        "fut_volume": -0.1364731429848778,
+        "opt_volume": -0.5150524369761734,
+        "eq_trade_size": -1.0450645014989415,
+        "oi_change": -0.7679058011502795,
+        "spread": 1.530271936642503
+      }
+    },
+    {
+      "symbol": "TMPV",
+      "actual_r": 1.9076553202299509,
+      "our_composite": -0.31064220472401843,
+      "z_scores": {
+        "fut_turnover": -0.515745234173601,
+        "fut_volume": -0.23384925212019678,
+        "opt_volume": 1.4005034388909234,
+        "eq_trade_size": -3.1449334686115153,
+        "oi_change": -0.39207817360924324,
+        "spread": 1.3410578630410195
+      }
+    },
+    {
+      "symbol": "HAVELLS",
+      "actual_r": 1.8976294555809416,
+      "our_composite": 0.34934152172702365,
+      "z_scores": {
+        "fut_turnover": 0.5848018327716026,
+        "fut_volume": 0.7283618769507505,
+        "opt_volume": 0.42496601090744096,
+        "eq_trade_size": -1.504624948128186,
+        "oi_change": -0.11727579385362992,
+        "spread": 2.1519838771052235
+      }
+    },
+    {
+      "symbol": "UNOMINDA",
+      "actual_r": 1.869743871148043,
+      "our_composite": -0.0854398983384711,
+      "z_scores": {
+        "fut_turnover": 0.17477135492917262,
+        "fut_volume": 0.4708991281166291,
+        "opt_volume": 0.43104744444073256,
+        "eq_trade_size": -2.8970023995862877,
+        "oi_change": -0.4728619502030674,
+        "spread": 1.2348371224989847
+      }
+    },
+    {
+      "symbol": "BEL",
+      "actual_r": 1.862251877147355,
+      "our_composite": -0.2465137723603425,
+      "z_scores": {
+        "fut_turnover": -0.32182753104119477,
+        "fut_volume": -0.30544136926837917,
+        "opt_volume": -0.23960816653249764,
+        "eq_trade_size": -0.4535128568765163,
+        "oi_change": -0.43753971031289096,
+        "spread": 1.3539962620286266
+      }
+    },
+    {
+      "symbol": "GMRAIRPORT",
+      "actual_r": 1.8580873660320811,
+      "our_composite": -0.5451382528038219,
+      "z_scores": {
+        "fut_turnover": -0.38473106299654747,
+        "fut_volume": -0.2873354208856571,
+        "opt_volume": -0.397972602320966,
+        "eq_trade_size": -2.5339065127800082,
+        "oi_change": -0.4827315713968323,
+        "spread": 1.321838568152293
+      }
+    },
+    {
+      "symbol": "MOTHERSON",
+      "actual_r": 1.853107731031172,
+      "our_composite": -0.44112781498154413,
+      "z_scores": {
+        "fut_turnover": -0.41714476410811296,
+        "fut_volume": -0.3092080162713089,
+        "opt_volume": -0.35930184132663445,
+        "eq_trade_size": -1.673422418971341,
+        "oi_change": -0.5311691483940316,
+        "spread": 1.5983910974695041
+      }
+    },
+    {
+      "symbol": "IREDA",
+      "actual_r": 1.8225662478428213,
+      "our_composite": -0.3789702301160153,
+      "z_scores": {
+        "fut_turnover": -0.34575970065088407,
+        "fut_volume": -0.2211197460411145,
+        "opt_volume": -0.40641133891357945,
+        "eq_trade_size": -1.299970821446687,
+        "oi_change": -0.5163742887988634,
+        "spread": 1.2165117009492317
+      }
+    },
+    {
+      "symbol": "NHPC",
+      "actual_r": 1.820873027021327,
+      "our_composite": 0.6162157296673526,
+      "z_scores": {
+        "fut_turnover": 0.8145441598194136,
+        "fut_volume": 0.8324305770095848,
+        "opt_volume": 1.3084948909653191,
+        "eq_trade_size": -0.2602418740277379,
+        "oi_change": -0.5281661261652575,
+        "spread": 0.2452278919045825
+      }
+    },
+    {
+      "symbol": "LICI",
+      "actual_r": 1.8095330131908833,
+      "our_composite": -0.5025846755819259,
+      "z_scores": {
+        "fut_turnover": -0.3582230918684667,
+        "fut_volume": -0.2889181734556722,
+        "opt_volume": -0.327539436877858,
+        "eq_trade_size": -2.311576947494224,
+        "oi_change": -0.5300023122242217,
+        "spread": 1.3291671780455134
+      }
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "actual_r": 1.7780803955800937,
+      "our_composite": -0.8260913532712632,
+      "z_scores": {
+        "fut_turnover": -0.868427906937697,
+        "fut_volume": -0.7262593168942971,
+        "opt_volume": 0.01105878054446009,
+        "eq_trade_size": -2.9041467997791184,
+        "oi_change": -0.569829776999082,
+        "spread": 0.389837224180397
+      }
+    },
+    {
+      "symbol": "NYKAA",
+      "actual_r": 1.7268738248888171,
+      "our_composite": -0.5925478923097549,
+      "z_scores": {
+        "fut_turnover": -0.5549945910127306,
+        "fut_volume": -0.5034638818310283,
+        "opt_volume": -0.3254428454892387,
+        "eq_trade_size": -2.094839321558482,
+        "oi_change": -0.5914718018691645,
+        "spread": 1.3784813282763728
+      }
+    },
+    {
+      "symbol": "PPLPHARMA",
+      "actual_r": 1.7267358415488907,
+      "our_composite": -0.27394386667909093,
+      "z_scores": {
+        "fut_turnover": -0.23336477801681316,
+        "fut_volume": -0.017252014469112297,
+        "opt_volume": 1.0394479121573945,
+        "eq_trade_size": -3.257689549403467,
+        "oi_change": -0.5168502698938164,
+        "spread": 1.1177143814539552
+      }
+    },
+    {
+      "symbol": "SBIN",
+      "actual_r": 1.7150745432580927,
+      "our_composite": -0.3774184575404749,
+      "z_scores": {
+        "fut_turnover": -0.32922478902982283,
+        "fut_volume": -0.1306832775170925,
+        "opt_volume": -0.5158636969279164,
+        "eq_trade_size": -1.5429713389720188,
+        "oi_change": -0.33681040073307816,
+        "spread": 1.314257294894401
+      }
+    },
+    {
+      "symbol": "DMART",
+      "actual_r": 1.6899812040896047,
+      "our_composite": 2.684572554308722,
+      "z_scores": {
+        "fut_turnover": 2.3496751408805356,
+        "fut_volume": 2.271624267841052,
+        "opt_volume": 5.956420658155621,
+        "eq_trade_size": 0.9999017431702255,
+        "oi_change": -0.3056529482679598,
+        "spread": 5.0037062452531105
+      }
+    },
+    {
+      "symbol": "DIXON",
+      "actual_r": 1.6885511142823317,
+      "our_composite": -0.10638879700986704,
+      "z_scores": {
+        "fut_turnover": -0.06645061155921826,
+        "fut_volume": 0.02894338182583404,
+        "opt_volume": -0.08014552405442316,
+        "eq_trade_size": -0.672090269333638,
+        "oi_change": -0.4515272139947358,
+        "spread": 0.9308057810149245
+      }
+    },
+    {
+      "symbol": "AXISBANK",
+      "actual_r": 1.6729366553811456,
+      "our_composite": -0.5730934693893255,
+      "z_scores": {
+        "fut_turnover": -0.4962070020397714,
+        "fut_volume": -0.3419750232012738,
+        "opt_volume": 0.3962750032943327,
+        "eq_trade_size": -3.7099806995384736,
+        "oi_change": -0.21252944868665696,
+        "spread": 1.1276703048645407
+      }
+    },
+    {
+      "symbol": "TORNTPOWER",
+      "actual_r": 1.6646773624280011,
+      "our_composite": -0.5602225237961789,
+      "z_scores": {
+        "fut_turnover": -0.8166780491199374,
+        "fut_volume": -0.8124455013297124,
+        "opt_volume": -0.5579201263318354,
+        "eq_trade_size": 0.11918776852811179,
+        "oi_change": -0.6739157813124604,
+        "spread": 0.8281386983966675
+      }
+    },
+    {
+      "symbol": "BAJAJFINSV",
+      "actual_r": 1.6518434592157607,
+      "our_composite": -0.14500247337827013,
+      "z_scores": {
+        "fut_turnover": -0.1934283227693212,
+        "fut_volume": -0.00029003094513245845,
+        "opt_volume": 0.9449199792538177,
+        "eq_trade_size": -2.6703485963695104,
+        "oi_change": 0.005597396885812455,
+        "spread": 1.2579005359776436
+      }
+    },
+    {
+      "symbol": "TATASTEEL",
+      "actual_r": 1.6490770279663474,
+      "our_composite": 0.102360137586028,
+      "z_scores": {
+        "fut_turnover": 0.41102201196626625,
+        "fut_volume": 0.6927484285823787,
+        "opt_volume": -0.054364490323226364,
+        "eq_trade_size": -2.15927905221125,
+        "oi_change": -0.4099119738450132,
+        "spread": 2.3151343751717106
+      }
+    },
+    {
+      "symbol": "NTPC",
+      "actual_r": 1.6338572433081666,
+      "our_composite": 1.13120844781909,
+      "z_scores": {
+        "fut_turnover": 0.8805425492624673,
+        "fut_volume": 0.7764340607946288,
+        "opt_volume": 2.396696508720368,
+        "eq_trade_size": 1.8735094377636554,
+        "oi_change": -0.17518273050463457,
+        "spread": 0.6845787358170239
+      }
+    },
+    {
+      "symbol": "ULTRACEMCO",
+      "actual_r": 1.6279276930313518,
+      "our_composite": 0.6514026632337117,
+      "z_scores": {
+        "fut_turnover": 1.0344439919160122,
+        "fut_volume": 1.4768161543992313,
+        "opt_volume": 1.4638380485423301,
+        "eq_trade_size": -3.3887145619035746,
+        "oi_change": 0.21345457572494997,
+        "spread": 1.873497363548293
+      }
+    },
+    {
+      "symbol": "ABCAPITAL",
+      "actual_r": 1.6253695362642717,
+      "our_composite": -0.819794430619736,
+      "z_scores": {
+        "fut_turnover": -0.5959900727942368,
+        "fut_volume": -0.5382083517670019,
+        "opt_volume": -0.8334163686917602,
+        "eq_trade_size": -2.53022395119362,
+        "oi_change": -0.5337197332933203,
+        "spread": 0.011369459947374547
+      }
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "actual_r": 1.609665788543887,
+      "our_composite": -0.7162809065024346,
+      "z_scores": {
+        "fut_turnover": -0.6061240614771017,
+        "fut_volume": -0.4519945465675773,
+        "opt_volume": -0.7483326507331187,
+        "eq_trade_size": -2.6697643130004582,
+        "oi_change": -0.22774191343585012,
+        "spread": 1.128014692363833
+      }
+    },
+    {
+      "symbol": "NESTLEIND",
+      "actual_r": 1.5864836004554834,
+      "our_composite": -0.2741541735894844,
+      "z_scores": {
+        "fut_turnover": -0.3696016326431678,
+        "fut_volume": -0.31089834968181923,
+        "opt_volume": 0.7423378589848901,
+        "eq_trade_size": -2.246163621695636,
+        "oi_change": -0.44639496742747353,
+        "spread": 1.900184407057283
+      }
+    },
+    {
+      "symbol": "INDIANB",
+      "actual_r": 1.578396175596205,
+      "our_composite": -0.362828627932491,
+      "z_scores": {
+        "fut_turnover": -0.3755867697865221,
+        "fut_volume": -0.28982789949698595,
+        "opt_volume": -0.5005326508863708,
+        "eq_trade_size": -0.9634434114886234,
+        "oi_change": -0.5946048659278268,
+        "spread": 1.7494790201735273
+      }
+    }
+  ]
+}

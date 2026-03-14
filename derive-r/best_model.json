@@ -1,0 +1,560 @@
+{
+  "winner": {
+    "name": "5-feature",
+    "loo_pearson": 0.5988768275274552,
+    "features": [
+      "spread_r",
+      "pcr_z",
+      "spread_x_fut_turn",
+      "fut_turn_z",
+      "fut_vol_z"
+    ],
+    "intercept": 1.10861448209386,
+    "coefficients": {
+      "spread_r": 0.6245703646994251,
+      "pcr_z": 0.07668221974153636,
+      "spread_x_fut_turn": 0.2260813367054037,
+      "fut_turn_z": 1.4149035470134241,
+      "fut_vol_z": -1.733389804820819
+    }
+  },
+  "all_models": [
+    {
+      "name": "5-feature",
+      "loo_pearson": 0.5988768275274552,
+      "features": [
+        "spread_r",
+        "pcr_z",
+        "spread_x_fut_turn",
+        "fut_turn_z",
+        "fut_vol_z"
+      ],
+      "intercept": 1.10861448209386,
+      "coefficients": {
+        "spread_r": 0.6245703646994251,
+        "pcr_z": 0.07668221974153636,
+        "spread_x_fut_turn": 0.2260813367054037,
+        "fut_turn_z": 1.4149035470134241,
+        "fut_vol_z": -1.733389804820819
+      }
+    },
+    {
+      "name": "3-feature",
+      "loo_pearson": 0.5703028174425743,
+      "features": [
+        "spread_x_pcr",
+        "pcr_z",
+        "pcr"
+      ],
+      "intercept": 2.4490754360467544,
+      "coefficients": {
+        "spread_x_pcr": 0.9145853484959036,
+        "pcr_z": 0.161231238531057,
+        "pcr": -2.2171694691195696
+      }
+    },
+    {
+      "name": "4-feature",
+      "loo_pearson": 0.5662206639937536,
+      "features": [
+        "spread_x_pcr",
+        "pcr_z",
+        "pcr",
+        "pcr_log"
+      ],
+      "intercept": 2.0469161496631014,
+      "coefficients": {
+        "spread_x_pcr": 0.9543929377776945,
+        "pcr_z": 0.15540430448474568,
+        "pcr": -4.346258002298602,
+        "pcr_log": 3.5614132111119976
+      }
+    }
+  ],
+  "individual_correlations": [
+    [
+      "spread_r",
+      0.5365433095096173
+    ],
+    [
+      "spread_r_sq",
+      0.5340883338355533
+    ],
+    [
+      "spread_r_log",
+      0.5301681877849279
+    ],
+    [
+      "spread_x_pcr",
+      0.48592495794496604
+    ],
+    [
+      "spread_z",
+      0.4809421109482096
+    ],
+    [
+      "pcr_z",
+      0.3209869432505564
+    ],
+    [
+      "pcr",
+      0.3074645024472403
+    ],
+    [
+      "pcr_log",
+      0.3070613516701881
+    ],
+    [
+      "spread_x_fut_turn",
+      0.20884535430045706
+    ],
+    [
+      "fut_turn_z",
+      0.17149481802025537
+    ],
+    [
+      "oi_change_z",
+      0.1693127678977082
+    ],
+    [
+      "oi_change_r",
+      0.1648950869387786
+    ],
+    [
+      "fut_vol_z",
+      0.16050640574228928
+    ],
+    [
+      "fut_turn_r",
+      0.15298330854598813
+    ],
+    [
+      "fut_vol_r",
+      0.14677798269194414
+    ],
+    [
+      "eq_trade_size_z",
+      0.1285979507605599
+    ],
+    [
+      "fut_turn_z_abs",
+      0.12692700888360683
+    ],
+    [
+      "eq_trade_size_r",
+      0.1187715824364855
+    ],
+    [
+      "opt_vol_z",
+      0.09077758196202151
+    ],
+    [
+      "opt_vol_r",
+      0.04975080769294856
+    ]
+  ],
+  "top20_overlap": 13,
+  "top10_overlap": 7,
+  "predictions": [
+    {
+      "symbol": "BIOCON",
+      "actual": 3.485581034233336,
+      "predicted": 2.315093482907075
+    },
+    {
+      "symbol": "LAURUSLABS",
+      "actual": 3.444080277273257,
+      "predicted": 3.294823185015372
+    },
+    {
+      "symbol": "JINDALSTEL",
+      "actual": 3.3590890034909253,
+      "predicted": 2.8529325414765907
+    },
+    {
+      "symbol": "DIVISLAB",
+      "actual": 3.274097729708594,
+      "predicted": 2.527882543108642
+    },
+    {
+      "symbol": "LT",
+      "actual": 3.1490828505208586,
+      "predicted": 3.0581584539597966
+    },
+    {
+      "symbol": "PIDILITIND",
+      "actual": 3.10929442311469,
+      "predicted": 2.3563148088286496
+    },
+    {
+      "symbol": "GLENMARK",
+      "actual": 2.892274774030636,
+      "predicted": 2.5601006982007695
+    },
+    {
+      "symbol": "DRREDDY",
+      "actual": 2.652267628346528,
+      "predicted": 2.025644688631822
+    },
+    {
+      "symbol": "CGPOWER",
+      "actual": 2.6336891933867554,
+      "predicted": 2.67570786167477
+    },
+    {
+      "symbol": "PGEL",
+      "actual": 2.630697533834051,
+      "predicted": 2.5087534485856082
+    },
+    {
+      "symbol": "SRF",
+      "actual": 2.6153573220060538,
+      "predicted": 2.1361414536388716
+    },
+    {
+      "symbol": "SAIL",
+      "actual": 2.606297595300133,
+      "predicted": 2.2277664709475467
+    },
+    {
+      "symbol": "ASTRAL",
+      "actual": 2.6015212241029326,
+      "predicted": 2.1607887582261505
+    },
+    {
+      "symbol": "EXIDEIND",
+      "actual": 2.5769017561822323,
+      "predicted": 2.4505111840910256
+    },
+    {
+      "symbol": "AMBER",
+      "actual": 2.5340325699148702,
+      "predicted": 2.826655245309828
+    },
+    {
+      "symbol": "TATACONSUM",
+      "actual": 2.519073303719359,
+      "predicted": 2.277747461694659
+    },
+    {
+      "symbol": "BLUESTARCO",
+      "actual": 2.511707852748666,
+      "predicted": 2.4372752308088073
+    },
+    {
+      "symbol": "BHARATFORG",
+      "actual": 2.4700518051800255,
+      "predicted": 2.2757764550184283
+    },
+    {
+      "symbol": "SUPREMEIND",
+      "actual": 2.4593494394368562,
+      "predicted": 1.9884694225011281
+    },
+    {
+      "symbol": "SONACOMS",
+      "actual": 2.458566489454683,
+      "predicted": 2.6433948510358523
+    },
+    {
+      "symbol": "JSWSTEEL",
+      "actual": 2.455850457108067,
+      "predicted": 2.5045207545017045
+    },
+    {
+      "symbol": "MFSL",
+      "actual": 2.385941869823045,
+      "predicted": 2.1911892099584858
+    },
+    {
+      "symbol": "INDUSTOWER",
+      "actual": 2.365494495793745,
+      "predicted": 2.086357785055345
+    },
+    {
+      "symbol": "GRASIM",
+      "actual": 2.351936238926026,
+      "predicted": 2.3666164459613235
+    },
+    {
+      "symbol": "APLAPOLLO",
+      "actual": 2.3271575400993636,
+      "predicted": 2.1131590596655467
+    },
+    {
+      "symbol": "UNITDSPR",
+      "actual": 2.300027283411006,
+      "predicted": 2.1818735258504787
+    },
+    {
+      "symbol": "HINDALCO",
+      "actual": 2.27655376087601,
+      "predicted": 2.6991670070354643
+    },
+    {
+      "symbol": "LUPIN",
+      "actual": 2.236830335341592,
+      "predicted": 1.9762343922239671
+    },
+    {
+      "symbol": "SIEMENS",
+      "actual": 2.229844727658453,
+      "predicted": 2.0056813334571038
+    },
+    {
+      "symbol": "HINDUNILVR",
+      "actual": 2.2027431698350903,
+      "predicted": 1.7877862907417807
+    },
+    {
+      "symbol": "GAIL",
+      "actual": 2.201722911766386,
+      "predicted": 1.9490459008452963
+    },
+    {
+      "symbol": "TORNTPHARM",
+      "actual": 2.1795761266745366,
+      "predicted": 2.038450918922675
+    },
+    {
+      "symbol": "PIIND",
+      "actual": 2.1541240313941703,
+      "predicted": 2.235579012838615
+    },
+    {
+      "symbol": "NATIONALUM",
+      "actual": 2.152769033953993,
+      "predicted": 2.507168798159755
+    },
+    {
+      "symbol": "RECLTD",
+      "actual": 2.138765612003696,
+      "predicted": 1.9458561659456248
+    },
+    {
+      "symbol": "MANKIND",
+      "actual": 2.131846457857657,
+      "predicted": 2.0482722759491936
+    },
+    {
+      "symbol": "HEROMOTOCO",
+      "actual": 2.1020780877582657,
+      "predicted": 2.236244813083635
+    },
+    {
+      "symbol": "MAXHEALTH",
+      "actual": 2.0888229713055426,
+      "predicted": 1.9226631148461468
+    },
+    {
+      "symbol": "SUNPHARMA",
+      "actual": 2.063284250669786,
+      "predicted": 2.089487723968645
+    },
+    {
+      "symbol": "INOXWIND",
+      "actual": 2.059365842033296,
+      "predicted": 2.033521686557911
+    },
+    {
+      "symbol": "WIPRO",
+      "actual": 2.0511674733057594,
+      "predicted": 1.68539681390466
+    },
+    {
+      "symbol": "CIPLA",
+      "actual": 2.040533902671352,
+      "predicted": 1.9712240139827784
+    },
+    {
+      "symbol": "AMBUJACEM",
+      "actual": 2.0389348690523534,
+      "predicted": 2.122388866695897
+    },
+    {
+      "symbol": "CONCOR",
+      "actual": 2.038276415691528,
+      "predicted": 1.9369042942529728
+    },
+    {
+      "symbol": "PFC",
+      "actual": 2.0044194691187447,
+      "predicted": 1.99775057782505
+    },
+    {
+      "symbol": "BRITANNIA",
+      "actual": 1.9851571210822692,
+      "predicted": 2.0378163551746926
+    },
+    {
+      "symbol": "KAYNES",
+      "actual": 1.9624929495846664,
+      "predicted": 2.1437073893513117
+    },
+    {
+      "symbol": "PNB",
+      "actual": 1.9576741140780776,
+      "predicted": 2.0370978410769327
+    },
+    {
+      "symbol": "BAJAJ-AUTO",
+      "actual": 1.9566384638705752,
+      "predicted": 2.0987767362512924
+    },
+    {
+      "symbol": "SYNGENE",
+      "actual": 1.9411226387480114,
+      "predicted": 2.3834224222004865
+    },
+    {
+      "symbol": "POWERGRID",
+      "actual": 1.931897165186047,
+      "predicted": 1.942747396837277
+    },
+    {
+      "symbol": "BHEL",
+      "actual": 1.9310115964125627,
+      "predicted": 2.1368415649744343
+    },
+    {
+      "symbol": "VOLTAS",
+      "actual": 1.9240374667695,
+      "predicted": 2.1469936066149393
+    },
+    {
+      "symbol": "MAZDOCK",
+      "actual": 1.9219929768627324,
+      "predicted": 2.062338768083878
+    },
+    {
+      "symbol": "UNIONBANK",
+      "actual": 1.909503712618032,
+      "predicted": 1.964679468594975
+    },
+    {
+      "symbol": "TMPV",
+      "actual": 1.9076553202299509,
+      "predicted": 1.7429234679310381
+    },
+    {
+      "symbol": "HAVELLS",
+      "actual": 1.8976294555809416,
+      "predicted": 2.158575404249574
+    },
+    {
+      "symbol": "UNOMINDA",
+      "actual": 1.869743871148043,
+      "predicted": 1.719118224617355
+    },
+    {
+      "symbol": "BEL",
+      "actual": 1.862251877147355,
+      "predicted": 2.2372800715173575
+    },
+    {
+      "symbol": "GMRAIRPORT",
+      "actual": 1.8580873660320811,
+      "predicted": 2.0534211951234265
+    },
+    {
+      "symbol": "MOTHERSON",
+      "actual": 1.853107731031172,
+      "predicted": 2.08083125503081
+    },
+    {
+      "symbol": "IREDA",
+      "actual": 1.8225662478428213,
+      "predicted": 1.9793467977753125
+    },
+    {
+      "symbol": "NHPC",
+      "actual": 1.820873027021327,
+      "predicted": 1.8025977345742117
+    },
+    {
+      "symbol": "LICI",
+      "actual": 1.8095330131908833,
+      "predicted": 2.053266755450589
+    },
+    {
+      "symbol": "FEDERALBNK",
+      "actual": 1.7780803955800937,
+      "predicted": 1.6905435097289678
+    },
+    {
+      "symbol": "NYKAA",
+      "actual": 1.7268738248888171,
+      "predicted": 1.855288595452027
+    },
+    {
+      "symbol": "PPLPHARMA",
+      "actual": 1.7267358415488907,
+      "predicted": 2.1289465132111154
+    },
+    {
+      "symbol": "SBIN",
+      "actual": 1.7150745432580927,
+      "predicted": 2.145457830900729
+    },
+    {
+      "symbol": "DMART",
+      "actual": 1.6899812040896047,
+      "predicted": 2.4777995740325895
+    },
+    {
+      "symbol": "DIXON",
+      "actual": 1.6885511142823317,
+      "predicted": 1.9813194360147277
+    },
+    {
+      "symbol": "AXISBANK",
+      "actual": 1.6729366553811456,
+      "predicted": 1.9721025889976065
+    },
+    {
+      "symbol": "TORNTPOWER",
+      "actual": 1.6646773624280011,
+      "predicted": 1.893539344453004
+    },
+    {
+      "symbol": "BAJAJFINSV",
+      "actual": 1.6518434592157607,
+      "predicted": 2.022669933548103
+    },
+    {
+      "symbol": "TATASTEEL",
+      "actual": 1.6490770279663474,
+      "predicted": 2.347004585800993
+    },
+    {
+      "symbol": "NTPC",
+      "actual": 1.6338572433081666,
+      "predicted": 1.9959898944529133
+    },
+    {
+      "symbol": "ULTRACEMCO",
+      "actual": 1.6279276930313518,
+      "predicted": 1.706538052455218
+    },
+    {
+      "symbol": "ABCAPITAL",
+      "actual": 1.6253695362642717,
+      "predicted": 1.8072908055649775
+    },
+    {
+      "symbol": "BOSCHLTD",
+      "actual": 1.609665788543887,
+      "predicted": 1.9872857682381495
+    },
+    {
+      "symbol": "NESTLEIND",
+      "actual": 1.5864836004554834,
+      "predicted": 2.0921143768219865
+    },
+    {
+      "symbol": "INDIANB",
+      "actual": 1.578396175596205,
+      "predicted": 2.1914364273959883
+    }
+  ]
+}

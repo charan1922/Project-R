@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
-import { nseService } from "@/lib/nse-service";
+import { rFactorService } from "@/lib/r-factor/data-service";
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
     if (symbol) {
       console.log(`Calculating R-Factor for ${symbol}...`);
-      const signal = await nseService.getRFactorSignal(symbol);
+      const signal = await rFactorService.getRFactorSignal(symbol);
       return NextResponse.json({
         success: true,
         data: signal,
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     // If no symbol, run a bulk scan
     console.log("Running bulk R-Factor scan...");
     const limit = parseInt(searchParams.get("limit") || "15");
-    const signals = await nseService.scanAllSymbols(limit);
+    const signals = await rFactorService.scanAllSymbols(limit);
 
     return NextResponse.json({
       success: true,

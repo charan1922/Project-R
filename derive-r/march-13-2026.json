@@ -1,0 +1,2758 @@
+{
+    "payload": {
+        "data": {
+            "breakout_beacon": [
+                {
+                    "Symbol": "MANAPPURAM",
+                    "param_0": 0.53,
+                    "param_1": 1.44,
+                    "param_2": "BULL",
+                    "param_3": 1773374700
+                },
+                {
+                    "Symbol": "TITAN",
+                    "param_0": -1.31,
+                    "param_1": 0,
+                    "param_2": "BEAR",
+                    "param_3": 1773390600
+                },
+                {
+                    "Symbol": "MAXHEALTH",
+                    "param_0": -2.69,
+                    "param_1": -2.39,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "CANBK",
+                    "param_0": -4.1,
+                    "param_1": -2.59,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "LT",
+                    "param_0": -7.51,
+                    "param_1": -5.39,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "NESTLEIND",
+                    "param_0": -1.54,
+                    "param_1": 0.76,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "DRREDDY",
+                    "param_0": -2.05,
+                    "param_1": -1.2,
+                    "param_2": "BEAR",
+                    "param_3": 1773377100
+                },
+                {
+                    "Symbol": "BAJAJFINSV",
+                    "param_0": -1.72,
+                    "param_1": -1.65,
+                    "param_2": "BEAR",
+                    "param_3": 1773384600
+                },
+                {
+                    "Symbol": "VBL",
+                    "param_0": -2.36,
+                    "param_1": -1.87,
+                    "param_2": "BEAR",
+                    "param_3": 1773377100
+                },
+                {
+                    "Symbol": "ABCAPITAL",
+                    "param_0": -2.86,
+                    "param_1": -2.32,
+                    "param_2": "BEAR",
+                    "param_3": 1773375900
+                },
+                {
+                    "Symbol": "VEDL",
+                    "param_0": -4.44,
+                    "param_1": -2.8,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "ALKEM",
+                    "param_0": -1.59,
+                    "param_1": -0.45,
+                    "param_2": "BEAR",
+                    "param_3": 1773393300
+                },
+                {
+                    "Symbol": "AMBUJACEM",
+                    "param_0": -4.85,
+                    "param_1": -1.38,
+                    "param_2": "BEAR",
+                    "param_3": 1773384900
+                },
+                {
+                    "Symbol": "TITAN",
+                    "param_0": -1.31,
+                    "param_1": 1.28,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "UNITDSPR",
+                    "param_0": -3.78,
+                    "param_1": 0.34,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "ABCAPITAL",
+                    "param_0": -2.86,
+                    "param_1": 0.17,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "PRESTIGE",
+                    "param_0": -0.2,
+                    "param_1": 0,
+                    "param_2": "BULL",
+                    "param_3": 1773395100
+                },
+                {
+                    "Symbol": "SONACOMS",
+                    "param_0": -4.9,
+                    "param_1": -1.51,
+                    "param_2": "BEAR",
+                    "param_3": 1773386700
+                },
+                {
+                    "Symbol": "FEDERALBNK",
+                    "param_0": -2.81,
+                    "param_1": -1.76,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "APLAPOLLO",
+                    "param_0": -3.87,
+                    "param_1": -2.65,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "KAYNES",
+                    "param_0": -5.59,
+                    "param_1": -3.18,
+                    "param_2": "BEAR",
+                    "param_3": 1773375300
+                },
+                {
+                    "Symbol": "MARICO",
+                    "param_0": -0.8,
+                    "param_1": 0.4,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "RELIANCE",
+                    "param_0": -0.8,
+                    "param_1": 0.16,
+                    "param_2": "BULL",
+                    "param_3": 1773375600
+                },
+                {
+                    "Symbol": "NTPC",
+                    "param_0": -1.6,
+                    "param_1": 0,
+                    "param_2": "BULL",
+                    "param_3": 1773382500
+                },
+                {
+                    "Symbol": "TATATECH",
+                    "param_0": -1.98,
+                    "param_1": -1.55,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "DIXON",
+                    "param_0": -4.47,
+                    "param_1": -2.41,
+                    "param_2": "BEAR",
+                    "param_3": 1773375300
+                },
+                {
+                    "Symbol": "PHOENIXLTD",
+                    "param_0": -0.24,
+                    "param_1": 0.25,
+                    "param_2": "BULL",
+                    "param_3": 1773395100
+                },
+                {
+                    "Symbol": "BAJAJHLDNG",
+                    "param_0": -2.95,
+                    "param_1": 0.19,
+                    "param_2": "BULL",
+                    "param_3": 1773382200
+                },
+                {
+                    "Symbol": "AUBANK",
+                    "param_0": -2.03,
+                    "param_1": -0.59,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "PHOENIXLTD",
+                    "param_0": -0.24,
+                    "param_1": -0.59,
+                    "param_2": "BEAR",
+                    "param_3": 1773376800
+                },
+                {
+                    "Symbol": "ABB",
+                    "param_0": -0.31,
+                    "param_1": -0.6,
+                    "param_2": "BEAR",
+                    "param_3": 1773385800
+                },
+                {
+                    "Symbol": "ETERNAL",
+                    "param_0": -1.96,
+                    "param_1": -1.72,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "ADANIGREEN",
+                    "param_0": -0.41,
+                    "param_1": -2.1,
+                    "param_2": "BEAR",
+                    "param_3": 1773375300
+                },
+                {
+                    "Symbol": "SRF",
+                    "param_0": -4.93,
+                    "param_1": -2.79,
+                    "param_2": "BEAR",
+                    "param_3": 1773376500
+                },
+                {
+                    "Symbol": "VBL",
+                    "param_0": -2.36,
+                    "param_1": 1.16,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "PREMIERENE",
+                    "param_0": -1.46,
+                    "param_1": 1.3,
+                    "param_2": "BULL",
+                    "param_3": 1773379200
+                },
+                {
+                    "Symbol": "JSWSTEEL",
+                    "param_0": -4.26,
+                    "param_1": -3,
+                    "param_2": "BEAR",
+                    "param_3": 1773374700
+                },
+                {
+                    "Symbol": "AMBER",
+                    "param_0": -7.1,
+                    "param_1": -5.04,
+                    "param_2": "BEAR",
+                    "param_3": 1773375000
+                },
+                {
+                    "Symbol": "PGEL",
+                    "param_0": -5.79,
+                    "param_1": -5.26,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "BRITANNIA",
+                    "param_0": 0.48,
+                    "param_1": 1.07,
+                    "param_2": "BULL",
+                    "param_3": 1773374700
+                },
+                {
+                    "Symbol": "NHPC",
+                    "param_0": 0.41,
+                    "param_1": -1.04,
+                    "param_2": "BEAR",
+                    "param_3": 1773375600
+                },
+                {
+                    "Symbol": "HEROMOTOCO",
+                    "param_0": -3.7,
+                    "param_1": -2.64,
+                    "param_2": "BEAR",
+                    "param_3": 1773375000
+                },
+                {
+                    "Symbol": "MARUTI",
+                    "param_0": -3.09,
+                    "param_1": -2.8,
+                    "param_2": "BEAR",
+                    "param_3": 1773375300
+                },
+                {
+                    "Symbol": "ADANIPORTS",
+                    "param_0": -1.65,
+                    "param_1": -0.46,
+                    "param_2": "BEAR",
+                    "param_3": 1773376200
+                },
+                {
+                    "Symbol": "PNBHOUSING",
+                    "param_0": -1.88,
+                    "param_1": -1.14,
+                    "param_2": "BEAR",
+                    "param_3": 1773375600
+                },
+                {
+                    "Symbol": "POLYCAB",
+                    "param_0": -3.42,
+                    "param_1": -1.52,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "HUDCO",
+                    "param_0": -1.99,
+                    "param_1": -1.75,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "LICI",
+                    "param_0": -2.86,
+                    "param_1": -2.27,
+                    "param_2": "BEAR",
+                    "param_3": 1773375900
+                },
+                {
+                    "Symbol": "PNB",
+                    "param_0": -4.26,
+                    "param_1": -2.86,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "MANKIND",
+                    "param_0": -3.3,
+                    "param_1": -1.4,
+                    "param_2": "BEAR",
+                    "param_3": 1773377700
+                },
+                {
+                    "Symbol": "NMDC",
+                    "param_0": -2.87,
+                    "param_1": -1.81,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "TMPV",
+                    "param_0": -3.17,
+                    "param_1": -2.89,
+                    "param_2": "BEAR",
+                    "param_3": 1773375000
+                },
+                {
+                    "Symbol": "SYNGENE",
+                    "param_0": 4.43,
+                    "param_1": 2.78,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "PATANJALI",
+                    "param_0": -1.67,
+                    "param_1": 0.34,
+                    "param_2": "BULL",
+                    "param_3": 1773374700
+                },
+                {
+                    "Symbol": "BHARATFORG",
+                    "param_0": -5.99,
+                    "param_1": -3.32,
+                    "param_2": "BEAR",
+                    "param_3": 1773376800
+                },
+                {
+                    "Symbol": "HINDALCO",
+                    "param_0": -6.16,
+                    "param_1": -4.2,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "HINDUNILVR",
+                    "param_0": 1.18,
+                    "param_1": 2.18,
+                    "param_2": "BULL",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "IEX",
+                    "param_0": -1.95,
+                    "param_1": 0.17,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "SAIL",
+                    "param_0": -2.88,
+                    "param_1": 0.07,
+                    "param_2": "BULL",
+                    "param_3": 1773395400
+                },
+                {
+                    "Symbol": "LODHA",
+                    "param_0": -0.2,
+                    "param_1": 0,
+                    "param_2": "BULL",
+                    "param_3": 1773381900
+                },
+                {
+                    "Symbol": "LTF",
+                    "param_0": -2.88,
+                    "param_1": -1.61,
+                    "param_2": "BEAR",
+                    "param_3": 1773374700
+                },
+                {
+                    "Symbol": "DMART",
+                    "param_0": -3.19,
+                    "param_1": -1.81,
+                    "param_2": "BEAR",
+                    "param_3": 1773386100
+                },
+                {
+                    "Symbol": "HDFCAMC",
+                    "param_0": -1.81,
+                    "param_1": -0.03,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "CHOLAFIN",
+                    "param_0": -0.81,
+                    "param_1": -0.38,
+                    "param_2": "BEAR",
+                    "param_3": 1773375600
+                },
+                {
+                    "Symbol": "APOLLOHOSP",
+                    "param_0": -0.39,
+                    "param_1": 0.24,
+                    "param_2": "BULL",
+                    "param_3": 1773382200
+                },
+                {
+                    "Symbol": "IRFC",
+                    "param_0": -2.66,
+                    "param_1": -1,
+                    "param_2": "BEAR",
+                    "param_3": 1773375900
+                },
+                {
+                    "Symbol": "ADANIENT",
+                    "param_0": -2.04,
+                    "param_1": -1.53,
+                    "param_2": "BEAR",
+                    "param_3": 1773375900
+                },
+                {
+                    "Symbol": "SBILIFE",
+                    "param_0": -1.77,
+                    "param_1": -0.33,
+                    "param_2": "BEAR",
+                    "param_3": 1773375900
+                },
+                {
+                    "Symbol": "GODREJCP",
+                    "param_0": -2.42,
+                    "param_1": 0.41,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "AUROPHARMA",
+                    "param_0": -1.18,
+                    "param_1": -0.1,
+                    "param_2": "BEAR",
+                    "param_3": 1773388200
+                },
+                {
+                    "Symbol": "SHRIRAMFIN",
+                    "param_0": -2.58,
+                    "param_1": -0.63,
+                    "param_2": "BEAR",
+                    "param_3": 1773377700
+                },
+                {
+                    "Symbol": "BAJAJHLDNG",
+                    "param_0": -2.95,
+                    "param_1": -0.67,
+                    "param_2": "BEAR",
+                    "param_3": 1773390600
+                },
+                {
+                    "Symbol": "DELHIVERY",
+                    "param_0": -0.96,
+                    "param_1": -1.66,
+                    "param_2": "BEAR",
+                    "param_3": 1773375300
+                },
+                {
+                    "Symbol": "VOLTAS",
+                    "param_0": -3.16,
+                    "param_1": -2.59,
+                    "param_2": "BEAR",
+                    "param_3": 1773375000
+                },
+                {
+                    "Symbol": "EXIDEIND",
+                    "param_0": -4.65,
+                    "param_1": -2.7,
+                    "param_2": "BEAR",
+                    "param_3": 1773375900
+                },
+                {
+                    "Symbol": "SAMMAANCAP",
+                    "param_0": -1.79,
+                    "param_1": -1.27,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "BSE",
+                    "param_0": -1.66,
+                    "param_1": -1.37,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "NESTLEIND",
+                    "param_0": -1.54,
+                    "param_1": -0.02,
+                    "param_2": "BEAR",
+                    "param_3": 1773394500
+                },
+                {
+                    "Symbol": "HAL",
+                    "param_0": -2.55,
+                    "param_1": -0.15,
+                    "param_2": "BEAR",
+                    "param_3": 1773377100
+                },
+                {
+                    "Symbol": "BANKINDIA",
+                    "param_0": -3.09,
+                    "param_1": -1.22,
+                    "param_2": "BEAR",
+                    "param_3": 1773377400
+                },
+                {
+                    "Symbol": "SHREECEM",
+                    "param_0": -1.91,
+                    "param_1": -1.49,
+                    "param_2": "BEAR",
+                    "param_3": 1773375000
+                },
+                {
+                    "Symbol": "SBIN",
+                    "param_0": -3.75,
+                    "param_1": -2.27,
+                    "param_2": "BEAR",
+                    "param_3": 1773375600
+                },
+                {
+                    "Symbol": "WAAREEENER",
+                    "param_0": -0.54,
+                    "param_1": 2.07,
+                    "param_2": "BULL",
+                    "param_3": 1773380700
+                },
+                {
+                    "Symbol": "WIPRO",
+                    "param_0": -2.33,
+                    "param_1": -0.84,
+                    "param_2": "BEAR",
+                    "param_3": 1773384900
+                },
+                {
+                    "Symbol": "DIVISLAB",
+                    "param_0": -3.35,
+                    "param_1": -3.26,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "SAIL",
+                    "param_0": -2.88,
+                    "param_1": -3.83,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "NATIONALUM",
+                    "param_0": -5.68,
+                    "param_1": -4.78,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "LICHSGFIN",
+                    "param_0": -0.4,
+                    "param_1": 1.14,
+                    "param_2": "BULL",
+                    "param_3": 1773379500
+                },
+                {
+                    "Symbol": "NAUKRI",
+                    "param_0": -0.4,
+                    "param_1": 0.92,
+                    "param_2": "BULL",
+                    "param_3": 1773379500
+                },
+                {
+                    "Symbol": "INFY",
+                    "param_0": -1.09,
+                    "param_1": 0.28,
+                    "param_2": "BULL",
+                    "param_3": 1773378000
+                },
+                {
+                    "Symbol": "BAJAJFINSV",
+                    "param_0": -1.72,
+                    "param_1": 0,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "CDSL",
+                    "param_0": -2.76,
+                    "param_1": -1.65,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "BANKBARODA",
+                    "param_0": -2.84,
+                    "param_1": -2.01,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "CROMPTON",
+                    "param_0": -0.26,
+                    "param_1": 0.2,
+                    "param_2": "BULL",
+                    "param_3": 1773382200
+                },
+                {
+                    "Symbol": "PIIND",
+                    "param_0": -2.27,
+                    "param_1": -0.82,
+                    "param_2": "BEAR",
+                    "param_3": 1773382200
+                },
+                {
+                    "Symbol": "HAVELLS",
+                    "param_0": -2.93,
+                    "param_1": -1.67,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "IDFCFIRSTB",
+                    "param_0": -3.43,
+                    "param_1": -2.33,
+                    "param_2": "BEAR",
+                    "param_3": 1773376200
+                },
+                {
+                    "Symbol": "UPL",
+                    "param_0": -3.24,
+                    "param_1": -3.02,
+                    "param_2": "BEAR",
+                    "param_3": 1773375000
+                },
+                {
+                    "Symbol": "MAZDOCK",
+                    "param_0": -4.85,
+                    "param_1": -3.39,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "JINDALSTEL",
+                    "param_0": -6.42,
+                    "param_1": -4.96,
+                    "param_2": "BEAR",
+                    "param_3": 1773374700
+                },
+                {
+                    "Symbol": "M\u0026M",
+                    "param_0": -2.99,
+                    "param_1": 0,
+                    "param_2": "BULL",
+                    "param_3": 1773374700
+                },
+                {
+                    "Symbol": "MFSL",
+                    "param_0": -4.05,
+                    "param_1": -2.14,
+                    "param_2": "BEAR",
+                    "param_3": 1773381300
+                },
+                {
+                    "Symbol": "TVSMOTOR",
+                    "param_0": -2.91,
+                    "param_1": -2.47,
+                    "param_2": "BEAR",
+                    "param_3": 1773375600
+                },
+                {
+                    "Symbol": "MUTHOOTFIN",
+                    "param_0": 2.77,
+                    "param_1": 2.72,
+                    "param_2": "BULL",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "ANGELONE",
+                    "param_0": 1.91,
+                    "param_1": 2.13,
+                    "param_2": "BULL",
+                    "param_3": 1773379500
+                },
+                {
+                    "Symbol": "TORNTPHARM",
+                    "param_0": -1.32,
+                    "param_1": 0,
+                    "param_2": "BEAR",
+                    "param_3": 1773387600
+                },
+                {
+                    "Symbol": "ZYDUSLIFE",
+                    "param_0": -1.39,
+                    "param_1": -1.11,
+                    "param_2": "BEAR",
+                    "param_3": 1773375000
+                },
+                {
+                    "Symbol": "NYKAA",
+                    "param_0": -2.84,
+                    "param_1": -2.57,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "OFSS",
+                    "param_0": -2.53,
+                    "param_1": -0.26,
+                    "param_2": "BEAR",
+                    "param_3": 1773390300
+                },
+                {
+                    "Symbol": "DMART",
+                    "param_0": -3.19,
+                    "param_1": 0.5,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "ICICIPRULI",
+                    "param_0": -1.41,
+                    "param_1": -0.09,
+                    "param_2": "BEAR",
+                    "param_3": 1773390600
+                },
+                {
+                    "Symbol": "FORTIS",
+                    "param_0": -2.3,
+                    "param_1": -1.81,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "ADANIENSOL",
+                    "param_0": -1.14,
+                    "param_1": -2.56,
+                    "param_2": "BEAR",
+                    "param_3": 1773375600
+                },
+                {
+                    "Symbol": "BLUESTARCO",
+                    "param_0": -5.84,
+                    "param_1": -3.75,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "INDUSINDBK",
+                    "param_0": -1.69,
+                    "param_1": -1.49,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "TORNTPOWER",
+                    "param_0": -2.86,
+                    "param_1": -2.56,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "GMRAIRPORT",
+                    "param_0": -3.96,
+                    "param_1": -2.89,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "POLICYBZR",
+                    "param_0": -1.1,
+                    "param_1": -0.05,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "GRASIM",
+                    "param_0": -3.86,
+                    "param_1": -0.31,
+                    "param_2": "BEAR",
+                    "param_3": 1773394500
+                },
+                {
+                    "Symbol": "COALINDIA",
+                    "param_0": -0.8,
+                    "param_1": -0.46,
+                    "param_2": "BEAR",
+                    "param_3": 1773375900
+                },
+                {
+                    "Symbol": "POWERGRID",
+                    "param_0": -0.79,
+                    "param_1": -1.95,
+                    "param_2": "BEAR",
+                    "param_3": 1773375300
+                },
+                {
+                    "Symbol": "UNITDSPR",
+                    "param_0": -3.78,
+                    "param_1": -2.22,
+                    "param_2": "BEAR",
+                    "param_3": 1773383400
+                },
+                {
+                    "Symbol": "TATACONSUM",
+                    "param_0": 2.19,
+                    "param_1": 3.47,
+                    "param_2": "BULL",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "MCX",
+                    "param_0": -1.13,
+                    "param_1": -0.25,
+                    "param_2": "BEAR",
+                    "param_3": 1773377700
+                },
+                {
+                    "Symbol": "SOLARINDS",
+                    "param_0": -1.85,
+                    "param_1": -1.52,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "PETRONET",
+                    "param_0": -3.37,
+                    "param_1": -2.31,
+                    "param_2": "BEAR",
+                    "param_3": 1773375000
+                },
+                {
+                    "Symbol": "PATANJALI",
+                    "param_0": -1.67,
+                    "param_1": -0.11,
+                    "param_2": "BEAR",
+                    "param_3": 1773394500
+                },
+                {
+                    "Symbol": "INDIGO",
+                    "param_0": -2.06,
+                    "param_1": -0.89,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "TATAPOWER",
+                    "param_0": -1.86,
+                    "param_1": -1.66,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "CAMS",
+                    "param_0": -2.89,
+                    "param_1": -1.73,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "GLENMARK",
+                    "param_0": -4.01,
+                    "param_1": -1.9,
+                    "param_2": "BEAR",
+                    "param_3": 1773375900
+                },
+                {
+                    "Symbol": "BHEL",
+                    "param_0": -3.45,
+                    "param_1": -3.19,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "LAURUSLABS",
+                    "param_0": -4.14,
+                    "param_1": -4.44,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "SIEMENS",
+                    "param_0": -3.43,
+                    "param_1": -1.73,
+                    "param_2": "BEAR",
+                    "param_3": 1773380400
+                },
+                {
+                    "Symbol": "AUBANK",
+                    "param_0": -2.03,
+                    "param_1": 0.5,
+                    "param_2": "BULL",
+                    "param_3": 1773379500
+                },
+                {
+                    "Symbol": "DABUR",
+                    "param_0": -1.16,
+                    "param_1": 0,
+                    "param_2": "BEAR",
+                    "param_3": 1773394500
+                },
+                {
+                    "Symbol": "OBEROIRLTY",
+                    "param_0": -1.2,
+                    "param_1": -0.7,
+                    "param_2": "BEAR",
+                    "param_3": 1773375600
+                },
+                {
+                    "Symbol": "360ONE",
+                    "param_0": -1.68,
+                    "param_1": -0.73,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "UNIONBANK",
+                    "param_0": -4.5,
+                    "param_1": -2.89,
+                    "param_2": "BEAR",
+                    "param_3": 1773375300
+                },
+                {
+                    "Symbol": "PFC",
+                    "param_0": -2.67,
+                    "param_1": -2,
+                    "param_2": "BEAR",
+                    "param_3": 1773375900
+                },
+                {
+                    "Symbol": "BAJFINANCE",
+                    "param_0": -0.82,
+                    "param_1": 0.22,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "JIOFIN",
+                    "param_0": -2.62,
+                    "param_1": -0.76,
+                    "param_2": "BEAR",
+                    "param_3": 1773385800
+                },
+                {
+                    "Symbol": "BEL",
+                    "param_0": -3.2,
+                    "param_1": -2.66,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "AMBUJACEM",
+                    "param_0": -4.85,
+                    "param_1": 0.43,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "UNOMINDA",
+                    "param_0": -5.3,
+                    "param_1": 0.02,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "BIOCON",
+                    "param_0": -2,
+                    "param_1": -2.36,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "CGPOWER",
+                    "param_0": -3.85,
+                    "param_1": -3.58,
+                    "param_2": "BEAR",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "CUMMINSIND",
+                    "param_0": -1.55,
+                    "param_1": -1.38,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "TRENT",
+                    "param_0": -1.06,
+                    "param_1": 1.46,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "SUNPHARMA",
+                    "param_0": -1.22,
+                    "param_1": 0.07,
+                    "param_2": "BULL",
+                    "param_3": 1773374700
+                },
+                {
+                    "Symbol": "PAYTM",
+                    "param_0": -3,
+                    "param_1": 0,
+                    "param_2": "BEAR",
+                    "param_3": 1773390600
+                },
+                {
+                    "Symbol": "TRENT",
+                    "param_0": -1.06,
+                    "param_1": -0.6,
+                    "param_2": "BEAR",
+                    "param_3": 1773388500
+                },
+                {
+                    "Symbol": "IOC",
+                    "param_0": -2.25,
+                    "param_1": -1.01,
+                    "param_2": "BEAR",
+                    "param_3": 1773375900
+                },
+                {
+                    "Symbol": "NTPC",
+                    "param_0": -1.6,
+                    "param_1": -1.35,
+                    "param_2": "BEAR",
+                    "param_3": 1773375900
+                },
+                {
+                    "Symbol": "PIDILITIND",
+                    "param_0": -3.27,
+                    "param_1": -2.37,
+                    "param_2": "BEAR",
+                    "param_3": 1773375900
+                },
+                {
+                    "Symbol": "COLPAL",
+                    "param_0": -1.2,
+                    "param_1": 0.52,
+                    "param_2": "BULL",
+                    "param_3": 1773374400
+                },
+                {
+                    "Symbol": "LUPIN",
+                    "param_0": -1.92,
+                    "param_1": -1.56,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                },
+                {
+                    "Symbol": "BAJAJ-AUTO",
+                    "param_0": -3.12,
+                    "param_1": -1.78,
+                    "param_2": "BEAR",
+                    "param_3": 1773375600
+                },
+                {
+                    "Symbol": "BOSCHLTD",
+                    "param_0": -3.59,
+                    "param_1": -1.92,
+                    "param_2": "BEAR",
+                    "param_3": 1773377100
+                },
+                {
+                    "Symbol": "INDIANB",
+                    "param_0": -4.24,
+                    "param_1": -2.51,
+                    "param_2": "BEAR",
+                    "param_3": 1773375600
+                },
+                {
+                    "Symbol": "TATASTEEL",
+                    "param_0": -5.28,
+                    "param_1": -3.07,
+                    "param_2": "BEAR",
+                    "param_3": 1773374100
+                }
+            ],
+            "high_powered_stocks": [
+                {
+                    "Symbol": "HDFCBANK",
+                    "param_0": 816.5,
+                    "param_1": 832.75,
+                    "param_2": -1.95,
+                    "param_3": 3515.6702171583656
+                },
+                {
+                    "Symbol": "ICICIBANK",
+                    "param_0": 1253,
+                    "param_1": 1266.5,
+                    "param_2": -1.07,
+                    "param_3": 2261.4092671856497
+                },
+                {
+                    "Symbol": "ETERNAL",
+                    "param_0": 216.84,
+                    "param_1": 221.17,
+                    "param_2": -1.96,
+                    "param_3": 1482.8519545385454
+                },
+                {
+                    "Symbol": "HAL",
+                    "param_0": 3911,
+                    "param_1": 4013.5,
+                    "param_2": -2.55,
+                    "param_3": 831.5962440389383
+                },
+                {
+                    "Symbol": "ADANIGREEN",
+                    "param_0": 863,
+                    "param_1": 866.55,
+                    "param_2": -0.41,
+                    "param_3": 582.6565335005888
+                },
+                {
+                    "Symbol": "TVSMOTOR",
+                    "param_0": 3323,
+                    "param_1": 3422.6,
+                    "param_2": -2.91,
+                    "param_3": 499.5840242574832
+                },
+                {
+                    "Symbol": "PFC",
+                    "param_0": 404.8,
+                    "param_1": 415.9,
+                    "param_2": -2.67,
+                    "param_3": 452.68029915313434
+                },
+                {
+                    "Symbol": "AXISBANK",
+                    "param_0": 1198.2,
+                    "param_1": 1234.5,
+                    "param_2": -2.94,
+                    "param_3": 1167.2492102092244
+                },
+                {
+                    "Symbol": "INFY",
+                    "param_0": 1252,
+                    "param_1": 1265.8,
+                    "param_2": -1.09,
+                    "param_3": 949.8009939971301
+                },
+                {
+                    "Symbol": "COALINDIA",
+                    "param_0": 466.35,
+                    "param_1": 470.1,
+                    "param_2": -0.8,
+                    "param_3": 911.7699135382023
+                },
+                {
+                    "Symbol": "POWERGRID",
+                    "param_0": 301.2,
+                    "param_1": 303.6,
+                    "param_2": -0.79,
+                    "param_3": 701.1715333805045
+                },
+                {
+                    "Symbol": "ASHOKLEY",
+                    "param_0": 170.84,
+                    "param_1": 178.47,
+                    "param_2": -4.28,
+                    "param_3": 509.2788121642659
+                },
+                {
+                    "Symbol": "MUTHOOTFIN",
+                    "param_0": 3333.8,
+                    "param_1": 3244,
+                    "param_2": 2.77,
+                    "param_3": 462.61843997788947
+                },
+                {
+                    "Symbol": "TRENT",
+                    "param_0": 3496.3,
+                    "param_1": 3533.6,
+                    "param_2": -1.06,
+                    "param_3": 442.14636081262944
+                },
+                {
+                    "Symbol": "RELIANCE",
+                    "param_0": 1381,
+                    "param_1": 1392.2,
+                    "param_2": -0.8,
+                    "param_3": 2391.7073033080437
+                },
+                {
+                    "Symbol": "M\u0026M",
+                    "param_0": 2940.5,
+                    "param_1": 3031.2,
+                    "param_2": -2.99,
+                    "param_3": 2264.794638944728
+                },
+                {
+                    "Symbol": "MARUTI",
+                    "param_0": 12609,
+                    "param_1": 13011,
+                    "param_2": -3.09,
+                    "param_3": 1265.2366548138075
+                },
+                {
+                    "Symbol": "TCS",
+                    "param_0": 2413.6,
+                    "param_1": 2442.4,
+                    "param_2": -1.18,
+                    "param_3": 620.2221883610646
+                },
+                {
+                    "Symbol": "EICHERMOT",
+                    "param_0": 6752.5,
+                    "param_1": 6975.5,
+                    "param_2": -3.2,
+                    "param_3": 593.8755243081939
+                },
+                {
+                    "Symbol": "HINDUNILVR",
+                    "param_0": 2162.1,
+                    "param_1": 2136.9,
+                    "param_2": 1.18,
+                    "param_3": 506.12324248641875
+                },
+                {
+                    "Symbol": "BHARTIARTL",
+                    "param_0": 1805.5,
+                    "param_1": 1801.3,
+                    "param_2": 0.23,
+                    "param_3": 1659.9226335978974
+                },
+                {
+                    "Symbol": "TATASTEEL",
+                    "param_0": 183.25,
+                    "param_1": 193.47,
+                    "param_2": -5.28,
+                    "param_3": 826.0147467159275
+                },
+                {
+                    "Symbol": "ULTRACEMCO",
+                    "param_0": 10710,
+                    "param_1": 11089,
+                    "param_2": -3.42,
+                    "param_3": 824.6817592858883
+                },
+                {
+                    "Symbol": "MCX",
+                    "param_0": 2497.5,
+                    "param_1": 2526.1,
+                    "param_2": -1.13,
+                    "param_3": 613.7136687361441
+                },
+                {
+                    "Symbol": "TMPV",
+                    "param_0": 314.25,
+                    "param_1": 324.55,
+                    "param_2": -3.17,
+                    "param_3": 574.9012614207512
+                },
+                {
+                    "Symbol": "BRITANNIA",
+                    "param_0": 5815,
+                    "param_1": 5787,
+                    "param_2": 0.48,
+                    "param_3": 431.77580901870687
+                },
+                {
+                    "Symbol": "KOTAKBANK",
+                    "param_0": 366.8,
+                    "param_1": 375.3,
+                    "param_2": -2.26,
+                    "param_3": 1245.2333565615515
+                },
+                {
+                    "Symbol": "NTPC",
+                    "param_0": 384.3,
+                    "param_1": 390.55,
+                    "param_2": -1.6,
+                    "param_3": 1032.8914395001764
+                },
+                {
+                    "Symbol": "SHRIRAMFIN",
+                    "param_0": 1005.1,
+                    "param_1": 1031.7,
+                    "param_2": -2.58,
+                    "param_3": 668.1789219723853
+                },
+                {
+                    "Symbol": "ABB",
+                    "param_0": 6389,
+                    "param_1": 6409,
+                    "param_2": -0.31,
+                    "param_3": 665.2850547364001
+                },
+                {
+                    "Symbol": "CUMMINSIND",
+                    "param_0": 4679.7,
+                    "param_1": 4753.6,
+                    "param_2": -1.55,
+                    "param_3": 612.3770779564001
+                },
+                {
+                    "Symbol": "POLYCAB",
+                    "param_0": 7200,
+                    "param_1": 7455,
+                    "param_2": -3.42,
+                    "param_3": 491.7424620260706
+                },
+                {
+                    "Symbol": "INDUSINDBK",
+                    "param_0": 817.3,
+                    "param_1": 831.35,
+                    "param_2": -1.69,
+                    "param_3": 486.9749336951972
+                },
+                {
+                    "Symbol": "SBIN",
+                    "param_0": 1044.5,
+                    "param_1": 1085.2,
+                    "param_2": -3.75,
+                    "param_3": 1779.7691254721565
+                },
+                {
+                    "Symbol": "DIXON",
+                    "param_0": 10320,
+                    "param_1": 10803,
+                    "param_2": -4.47,
+                    "param_3": 879.375631953042
+                },
+                {
+                    "Symbol": "KAYNES",
+                    "param_0": 3493.4,
+                    "param_1": 3700.3,
+                    "param_2": -5.59,
+                    "param_3": 717.1143391887347
+                },
+                {
+                    "Symbol": "BAJFINANCE",
+                    "param_0": 856,
+                    "param_1": 863.1,
+                    "param_2": -0.82,
+                    "param_3": 608.2348319764591
+                },
+                {
+                    "Symbol": "NATIONALUM",
+                    "param_0": 385.9,
+                    "param_1": 409.15,
+                    "param_2": -5.68,
+                    "param_3": 1109.630641388212
+                },
+                {
+                    "Symbol": "VEDL",
+                    "param_0": 687.65,
+                    "param_1": 719.6,
+                    "param_2": -4.44,
+                    "param_3": 1097.4274293540666
+                },
+                {
+                    "Symbol": "BSE",
+                    "param_0": 2803.3,
+                    "param_1": 2850.6,
+                    "param_2": -1.66,
+                    "param_3": 910.3257988275825
+                },
+                {
+                    "Symbol": "BEL",
+                    "param_0": 439.05,
+                    "param_1": 453.55,
+                    "param_2": -3.2,
+                    "param_3": 887.9985027771
+                },
+                {
+                    "Symbol": "INDIGO",
+                    "param_0": 4164.2,
+                    "param_1": 4251.7,
+                    "param_2": -2.06,
+                    "param_3": 794.8406779045218
+                },
+                {
+                    "Symbol": "ITC",
+                    "param_0": 301.5,
+                    "param_1": 304.1,
+                    "param_2": -0.85,
+                    "param_3": 787.6947401240897
+                },
+                {
+                    "Symbol": "PGEL",
+                    "param_0": 501.4,
+                    "param_1": 532.2,
+                    "param_2": -5.79,
+                    "param_3": 588.0864020259984
+                },
+                {
+                    "Symbol": "SUNPHARMA",
+                    "param_0": 1803,
+                    "param_1": 1825.3,
+                    "param_2": -1.22,
+                    "param_3": 457.95115555168974
+                },
+                {
+                    "Symbol": "LT",
+                    "param_0": 3440.2,
+                    "param_1": 3719.5,
+                    "param_2": -7.51,
+                    "param_3": 4045.6288291022947
+                },
+                {
+                    "Symbol": "HINDALCO",
+                    "param_0": 910,
+                    "param_1": 969.75,
+                    "param_2": -6.16,
+                    "param_3": 978.5460153416612
+                },
+                {
+                    "Symbol": "WAAREEENER",
+                    "param_0": 2724.6,
+                    "param_1": 2739.4,
+                    "param_2": -0.54,
+                    "param_3": 599.1857790445692
+                },
+                {
+                    "Symbol": "ONGC",
+                    "param_0": 264.15,
+                    "param_1": 270.55,
+                    "param_2": -2.37,
+                    "param_3": 506.3062631148196
+                },
+                {
+                    "Symbol": "AMBER",
+                    "param_0": 6437.5,
+                    "param_1": 6929.5,
+                    "param_2": -7.1,
+                    "param_3": 416.5531625164839
+                }
+            ],
+            "intraday_boost": [
+                {
+                    "Symbol": "SYNGENE",
+                    "param_0": 422,
+                    "param_1": 404.1,
+                    "param_2": 4.43,
+                    "param_3": 1.9411226387480114
+                },
+                {
+                    "Symbol": "MAZDOCK",
+                    "param_0": 2324.9,
+                    "param_1": 2443.3,
+                    "param_2": -4.85,
+                    "param_3": 1.9219929768627324
+                },
+                {
+                    "Symbol": "FEDERALBNK",
+                    "param_0": 262.65,
+                    "param_1": 270.25,
+                    "param_2": -2.81,
+                    "param_3": 1.7780803955800937
+                },
+                {
+                    "Symbol": "AXISBANK",
+                    "param_0": 1198.2,
+                    "param_1": 1234.5,
+                    "param_2": -2.94,
+                    "param_3": 1.6729366553811456
+                },
+                {
+                    "Symbol": "GLENMARK",
+                    "param_0": 2166,
+                    "param_1": 2256.4,
+                    "param_2": -4.01,
+                    "param_3": 2.892274774030636
+                },
+                {
+                    "Symbol": "SONACOMS",
+                    "param_0": 485.3,
+                    "param_1": 510.3,
+                    "param_2": -4.9,
+                    "param_3": 2.458566489454683
+                },
+                {
+                    "Symbol": "HINDUNILVR",
+                    "param_0": 2162.1,
+                    "param_1": 2136.9,
+                    "param_2": 1.18,
+                    "param_3": 2.2027431698350903
+                },
+                {
+                    "Symbol": "RECLTD",
+                    "param_0": 331.25,
+                    "param_1": 343.5,
+                    "param_2": -3.57,
+                    "param_3": 2.138765612003696
+                },
+                {
+                    "Symbol": "CIPLA",
+                    "param_0": 1317,
+                    "param_1": 1324.3,
+                    "param_2": -0.55,
+                    "param_3": 2.040533902671352
+                },
+                {
+                    "Symbol": "AMBUJACEM",
+                    "param_0": 424.8,
+                    "param_1": 446.45,
+                    "param_2": -4.85,
+                    "param_3": 2.0389348690523534
+                },
+                {
+                    "Symbol": "NHPC",
+                    "param_0": 75.09,
+                    "param_1": 74.78,
+                    "param_2": 0.41,
+                    "param_3": 1.820873027021327
+                },
+                {
+                    "Symbol": "NYKAA",
+                    "param_0": 238,
+                    "param_1": 244.95,
+                    "param_2": -2.84,
+                    "param_3": 1.7268738248888171
+                },
+                {
+                    "Symbol": "TATACONSUM",
+                    "param_0": 1081,
+                    "param_1": 1057.8,
+                    "param_2": 2.19,
+                    "param_3": 2.519073303719359
+                },
+                {
+                    "Symbol": "MAXHEALTH",
+                    "param_0": 993,
+                    "param_1": 1020.4,
+                    "param_2": -2.69,
+                    "param_3": 2.0888229713055426
+                },
+                {
+                    "Symbol": "EXIDEIND",
+                    "param_0": 295.6,
+                    "param_1": 310,
+                    "param_2": -4.65,
+                    "param_3": 2.5769017561822323
+                },
+                {
+                    "Symbol": "MOTHERSON",
+                    "param_0": 113.67,
+                    "param_1": 120.17,
+                    "param_2": -5.41,
+                    "param_3": 1.853107731031172
+                },
+                {
+                    "Symbol": "SBIN",
+                    "param_0": 1044.5,
+                    "param_1": 1085.2,
+                    "param_2": -3.75,
+                    "param_3": 1.7150745432580927
+                },
+                {
+                    "Symbol": "BOSCHLTD",
+                    "param_0": 30180,
+                    "param_1": 31305,
+                    "param_2": -3.59,
+                    "param_3": 1.609665788543887
+                },
+                {
+                    "Symbol": "LICI",
+                    "param_0": 773.9,
+                    "param_1": 796.65,
+                    "param_2": -2.86,
+                    "param_3": 1.8095330131908833
+                },
+                {
+                    "Symbol": "BAJAJFINSV",
+                    "param_0": 1740.4,
+                    "param_1": 1770.8,
+                    "param_2": -1.72,
+                    "param_3": 1.6518434592157607
+                },
+                {
+                    "Symbol": "LT",
+                    "param_0": 3440.2,
+                    "param_1": 3719.5,
+                    "param_2": -7.51,
+                    "param_3": 3.1490828505208586
+                },
+                {
+                    "Symbol": "SUPREMEIND",
+                    "param_0": 3887.9,
+                    "param_1": 4043.7,
+                    "param_2": -3.85,
+                    "param_3": 2.4593494394368562
+                },
+                {
+                    "Symbol": "INDUSTOWER",
+                    "param_0": 424.65,
+                    "param_1": 442.05,
+                    "param_2": -3.94,
+                    "param_3": 2.365494495793745
+                },
+                {
+                    "Symbol": "APLAPOLLO",
+                    "param_0": 1931.5,
+                    "param_1": 2009.2,
+                    "param_2": -3.87,
+                    "param_3": 2.3271575400993636
+                },
+                {
+                    "Symbol": "UNITDSPR",
+                    "param_0": 1312,
+                    "param_1": 1363.5,
+                    "param_2": -3.78,
+                    "param_3": 2.300027283411006
+                },
+                {
+                    "Symbol": "GAIL",
+                    "param_0": 147.83,
+                    "param_1": 152.35,
+                    "param_2": -2.97,
+                    "param_3": 2.201722911766386
+                },
+                {
+                    "Symbol": "PIIND",
+                    "param_0": 2885.4,
+                    "param_1": 2952.4,
+                    "param_2": -2.27,
+                    "param_3": 2.1541240313941703
+                },
+                {
+                    "Symbol": "HEROMOTOCO",
+                    "param_0": 5195,
+                    "param_1": 5394.5,
+                    "param_2": -3.7,
+                    "param_3": 2.1020780877582657
+                },
+                {
+                    "Symbol": "SUNPHARMA",
+                    "param_0": 1803,
+                    "param_1": 1825.3,
+                    "param_2": -1.22,
+                    "param_3": 2.063284250669786
+                },
+                {
+                    "Symbol": "KAYNES",
+                    "param_0": 3493.4,
+                    "param_1": 3700.3,
+                    "param_2": -5.59,
+                    "param_3": 1.9624929495846664
+                },
+                {
+                    "Symbol": "DIXON",
+                    "param_0": 10320,
+                    "param_1": 10803,
+                    "param_2": -4.47,
+                    "param_3": 1.6885511142823317
+                },
+                {
+                    "Symbol": "GRASIM",
+                    "param_0": 2570,
+                    "param_1": 2673.1,
+                    "param_2": -3.86,
+                    "param_3": 2.351936238926026
+                },
+                {
+                    "Symbol": "LUPIN",
+                    "param_0": 2312.1,
+                    "param_1": 2357.3,
+                    "param_2": -1.92,
+                    "param_3": 2.236830335341592
+                },
+                {
+                    "Symbol": "UNIONBANK",
+                    "param_0": 173.9,
+                    "param_1": 182.1,
+                    "param_2": -4.5,
+                    "param_3": 1.909503712618032
+                },
+                {
+                    "Symbol": "TATASTEEL",
+                    "param_0": 183.25,
+                    "param_1": 193.47,
+                    "param_2": -5.28,
+                    "param_3": 1.6490770279663474
+                },
+                {
+                    "Symbol": "ABCAPITAL",
+                    "param_0": 310.8,
+                    "param_1": 319.95,
+                    "param_2": -2.86,
+                    "param_3": 1.6253695362642717
+                },
+                {
+                    "Symbol": "LAURUSLABS",
+                    "param_0": 1003.5,
+                    "param_1": 1046.8,
+                    "param_2": -4.14,
+                    "param_3": 3.444080277273257
+                },
+                {
+                    "Symbol": "NATIONALUM",
+                    "param_0": 385.9,
+                    "param_1": 409.15,
+                    "param_2": -5.68,
+                    "param_3": 2.152769033953993
+                },
+                {
+                    "Symbol": "WIPRO",
+                    "param_0": 197.79,
+                    "param_1": 202.51,
+                    "param_2": -2.33,
+                    "param_3": 2.0511674733057594
+                },
+                {
+                    "Symbol": "POWERGRID",
+                    "param_0": 301.2,
+                    "param_1": 303.6,
+                    "param_2": -0.79,
+                    "param_3": 1.931897165186047
+                },
+                {
+                    "Symbol": "CGPOWER",
+                    "param_0": 708.95,
+                    "param_1": 737.3,
+                    "param_2": -3.85,
+                    "param_3": 2.6336891933867554
+                },
+                {
+                    "Symbol": "BLUESTARCO",
+                    "param_0": 1839.5,
+                    "param_1": 1953.5,
+                    "param_2": -5.84,
+                    "param_3": 2.511707852748666
+                },
+                {
+                    "Symbol": "JSWSTEEL",
+                    "param_0": 1122.6,
+                    "param_1": 1172.6,
+                    "param_2": -4.26,
+                    "param_3": 2.455850457108067
+                },
+                {
+                    "Symbol": "MFSL",
+                    "param_0": 1627.5,
+                    "param_1": 1696.2,
+                    "param_2": -4.05,
+                    "param_3": 2.385941869823045
+                },
+                {
+                    "Symbol": "VOLTAS",
+                    "param_0": 1403.6,
+                    "param_1": 1449.4,
+                    "param_2": -3.16,
+                    "param_3": 1.9240374667695
+                },
+                {
+                    "Symbol": "HAVELLS",
+                    "param_0": 1314.3,
+                    "param_1": 1354,
+                    "param_2": -2.93,
+                    "param_3": 1.8976294555809416
+                },
+                {
+                    "Symbol": "UNOMINDA",
+                    "param_0": 1011.9,
+                    "param_1": 1068.5,
+                    "param_2": -5.3,
+                    "param_3": 1.869743871148043
+                },
+                {
+                    "Symbol": "GMRAIRPORT",
+                    "param_0": 89.6,
+                    "param_1": 93.29,
+                    "param_2": -3.96,
+                    "param_3": 1.8580873660320811
+                },
+                {
+                    "Symbol": "BRITANNIA",
+                    "param_0": 5815,
+                    "param_1": 5787,
+                    "param_2": 0.48,
+                    "param_3": 1.9851571210822692
+                },
+                {
+                    "Symbol": "NTPC",
+                    "param_0": 384.3,
+                    "param_1": 390.55,
+                    "param_2": -1.6,
+                    "param_3": 1.6338572433081666
+                },
+                {
+                    "Symbol": "ULTRACEMCO",
+                    "param_0": 10710,
+                    "param_1": 11089,
+                    "param_2": -3.42,
+                    "param_3": 1.6279276930313518
+                },
+                {
+                    "Symbol": "SRF",
+                    "param_0": 2496.8,
+                    "param_1": 2626.3,
+                    "param_2": -4.93,
+                    "param_3": 2.6153573220060538
+                },
+                {
+                    "Symbol": "DIVISLAB",
+                    "param_0": 6071.5,
+                    "param_1": 6282,
+                    "param_2": -3.35,
+                    "param_3": 3.274097729708594
+                },
+                {
+                    "Symbol": "PPLPHARMA",
+                    "param_0": 140,
+                    "param_1": 145.54,
+                    "param_2": -3.81,
+                    "param_3": 1.7267358415488907
+                },
+                {
+                    "Symbol": "DMART",
+                    "param_0": 3827.4,
+                    "param_1": 3953.6,
+                    "param_2": -3.19,
+                    "param_3": 1.6899812040896047
+                },
+                {
+                    "Symbol": "NESTLEIND",
+                    "param_0": 1202,
+                    "param_1": 1220.8,
+                    "param_2": -1.54,
+                    "param_3": 1.5864836004554834
+                },
+                {
+                    "Symbol": "ASTRAL",
+                    "param_0": 1610.1,
+                    "param_1": 1696,
+                    "param_2": -5.06,
+                    "param_3": 2.6015212241029326
+                },
+                {
+                    "Symbol": "BHARATFORG",
+                    "param_0": 1673,
+                    "param_1": 1779.6,
+                    "param_2": -5.99,
+                    "param_3": 2.4700518051800255
+                },
+                {
+                    "Symbol": "PFC",
+                    "param_0": 404.8,
+                    "param_1": 415.9,
+                    "param_2": -2.67,
+                    "param_3": 2.0044194691187447
+                },
+                {
+                    "Symbol": "TORNTPOWER",
+                    "param_0": 1462.9,
+                    "param_1": 1506,
+                    "param_2": -2.86,
+                    "param_3": 1.6646773624280011
+                },
+                {
+                    "Symbol": "JINDALSTEL",
+                    "param_0": 1146.4,
+                    "param_1": 1225,
+                    "param_2": -6.42,
+                    "param_3": 3.3590890034909253
+                },
+                {
+                    "Symbol": "PIDILITIND",
+                    "param_0": 1342,
+                    "param_1": 1387.4,
+                    "param_2": -3.27,
+                    "param_3": 3.10929442311469
+                },
+                {
+                    "Symbol": "PGEL",
+                    "param_0": 501.4,
+                    "param_1": 532.2,
+                    "param_2": -5.79,
+                    "param_3": 2.630697533834051
+                },
+                {
+                    "Symbol": "BHEL",
+                    "param_0": 258.6,
+                    "param_1": 267.85,
+                    "param_2": -3.45,
+                    "param_3": 1.9310115964125627
+                },
+                {
+                    "Symbol": "HINDALCO",
+                    "param_0": 910,
+                    "param_1": 969.75,
+                    "param_2": -6.16,
+                    "param_3": 2.27655376087601
+                },
+                {
+                    "Symbol": "SIEMENS",
+                    "param_0": 3210.8,
+                    "param_1": 3324.7,
+                    "param_2": -3.43,
+                    "param_3": 2.229844727658453
+                },
+                {
+                    "Symbol": "INOXWIND",
+                    "param_0": 79.74,
+                    "param_1": 83.68,
+                    "param_2": -4.71,
+                    "param_3": 2.059365842033296
+                },
+                {
+                    "Symbol": "CONCOR",
+                    "param_0": 452.95,
+                    "param_1": 467.15,
+                    "param_2": -3.04,
+                    "param_3": 2.038276415691528
+                },
+                {
+                    "Symbol": "BEL",
+                    "param_0": 439.05,
+                    "param_1": 453.55,
+                    "param_2": -3.2,
+                    "param_3": 1.862251877147355
+                },
+                {
+                    "Symbol": "INDIANB",
+                    "param_0": 871,
+                    "param_1": 909.6,
+                    "param_2": -4.24,
+                    "param_3": 1.578396175596205
+                },
+                {
+                    "Symbol": "DRREDDY",
+                    "param_0": 1291.9,
+                    "param_1": 1319,
+                    "param_2": -2.05,
+                    "param_3": 2.652267628346528
+                },
+                {
+                    "Symbol": "AMBER",
+                    "param_0": 6437.5,
+                    "param_1": 6929.5,
+                    "param_2": -7.1,
+                    "param_3": 2.5340325699148702
+                },
+                {
+                    "Symbol": "TORNTPHARM",
+                    "param_0": 4387.2,
+                    "param_1": 4446,
+                    "param_2": -1.32,
+                    "param_3": 2.1795761266745366
+                },
+                {
+                    "Symbol": "MANKIND",
+                    "param_0": 2135.1,
+                    "param_1": 2207.9,
+                    "param_2": -3.3,
+                    "param_3": 2.131846457857657
+                },
+                {
+                    "Symbol": "TMPV",
+                    "param_0": 314.25,
+                    "param_1": 324.55,
+                    "param_2": -3.17,
+                    "param_3": 1.9076553202299509
+                },
+                {
+                    "Symbol": "IREDA",
+                    "param_0": 115.1,
+                    "param_1": 117.03,
+                    "param_2": -1.65,
+                    "param_3": 1.8225662478428213
+                },
+                {
+                    "Symbol": "BIOCON",
+                    "param_0": 384.35,
+                    "param_1": 392.2,
+                    "param_2": -2,
+                    "param_3": 3.485581034233336
+                },
+                {
+                    "Symbol": "SAIL",
+                    "param_0": 149.22,
+                    "param_1": 153.65,
+                    "param_2": -2.88,
+                    "param_3": 2.606297595300133
+                },
+                {
+                    "Symbol": "PNB",
+                    "param_0": 111.64,
+                    "param_1": 116.61,
+                    "param_2": -4.26,
+                    "param_3": 1.9576741140780776
+                },
+                {
+                    "Symbol": "BAJAJ-AUTO",
+                    "param_0": 8876,
+                    "param_1": 9162,
+                    "param_2": -3.12,
+                    "param_3": 1.9566384638705752
+                }
+            ],
+            "low_level_stocks": [
+                {
+                    "Symbol": "RVNL",
+                    "param_0": 270.9,
+                    "param_1": 279.6,
+                    "param_2": -3.11,
+                    "param_3": 0.09237021984112323
+                },
+                {
+                    "Symbol": "SONACOMS",
+                    "param_0": 485.3,
+                    "param_1": 510.3,
+                    "param_2": -4.9,
+                    "param_3": 0.06185567010309513
+                },
+                {
+                    "Symbol": "GODREJCP",
+                    "param_0": 1026.8,
+                    "param_1": 1052.3,
+                    "param_2": -2.42,
+                    "param_3": 0.06821947178638003
+                },
+                {
+                    "Symbol": "CANBK",
+                    "param_0": 134.59,
+                    "param_1": 140.34,
+                    "param_2": -4.1,
+                    "param_3": 0.07435497062978236
+                },
+                {
+                    "Symbol": "AUBANK",
+                    "param_0": 883.85,
+                    "param_1": 902.2,
+                    "param_2": -2.03,
+                    "param_3": 0.09626274065685421
+                },
+                {
+                    "Symbol": "KEI",
+                    "param_0": 4149.5,
+                    "param_1": 4330,
+                    "param_2": -4.17,
+                    "param_3": 0.09649017006392474
+                },
+                {
+                    "Symbol": "MAZDOCK",
+                    "param_0": 2324.9,
+                    "param_1": 2443.3,
+                    "param_2": -4.85,
+                    "param_3": 0.11195797269947504
+                },
+                {
+                    "Symbol": "DMART",
+                    "param_0": 3827.4,
+                    "param_1": 3953.6,
+                    "param_2": -3.19,
+                    "param_3": 0
+                },
+                {
+                    "Symbol": "BAJAJHLDNG",
+                    "param_0": 9500,
+                    "param_1": 9789,
+                    "param_2": -2.95,
+                    "param_3": 0
+                },
+                {
+                    "Symbol": "EXIDEIND",
+                    "param_0": 295.6,
+                    "param_1": 310,
+                    "param_2": -4.65,
+                    "param_3": 0
+                },
+                {
+                    "Symbol": "COLPAL",
+                    "param_0": 1952.1,
+                    "param_1": 1975.8,
+                    "param_2": -1.2,
+                    "param_3": 0.02049495311778775
+                },
+                {
+                    "Symbol": "SBIN",
+                    "param_0": 1044.5,
+                    "param_1": 1085.2,
+                    "param_2": -3.75,
+                    "param_3": 0.07665037846123929
+                },
+                {
+                    "Symbol": "GLENMARK",
+                    "param_0": 2166,
+                    "param_1": 2256.4,
+                    "param_2": -4.01,
+                    "param_3": 0.0877963125548769
+                },
+                {
+                    "Symbol": "UNITDSPR",
+                    "param_0": 1312,
+                    "param_1": 1363.5,
+                    "param_2": -3.78,
+                    "param_3": 0
+                },
+                {
+                    "Symbol": "ASIANPAINT",
+                    "param_0": 2191.9,
+                    "param_1": 2221.2,
+                    "param_2": -1.32,
+                    "param_3": 0.013688629311926534
+                },
+                {
+                    "Symbol": "PNB",
+                    "param_0": 111.64,
+                    "param_1": 116.61,
+                    "param_2": -4.26,
+                    "param_3": 0.08068130883012409
+                },
+                {
+                    "Symbol": "BANKINDIA",
+                    "param_0": 150,
+                    "param_1": 154.78,
+                    "param_2": -3.09,
+                    "param_3": 0.1001001001001039
+                },
+                {
+                    "Symbol": "AMBER",
+                    "param_0": 6437.5,
+                    "param_1": 6929.5,
+                    "param_2": -7.1,
+                    "param_3": 0.12442647173186096
+                },
+                {
+                    "Symbol": "AMBUJACEM",
+                    "param_0": 424.8,
+                    "param_1": 446.45,
+                    "param_2": -4.85,
+                    "param_3": 0
+                },
+                {
+                    "Symbol": "MARICO",
+                    "param_0": 751.1,
+                    "param_1": 757.15,
+                    "param_2": -0.8,
+                    "param_3": 0.013315579227699431
+                },
+                {
+                    "Symbol": "FEDERALBNK",
+                    "param_0": 262.65,
+                    "param_1": 270.25,
+                    "param_2": -2.81,
+                    "param_3": 0.03808798324127438
+                },
+                {
+                    "Symbol": "SRF",
+                    "param_0": 2496.8,
+                    "param_1": 2626.3,
+                    "param_2": -4.93,
+                    "param_3": 0.0721442885771616
+                },
+                {
+                    "Symbol": "HDFCLIFE",
+                    "param_0": 625.5,
+                    "param_1": 645.7,
+                    "param_2": -3.13,
+                    "param_3": 0.08
+                },
+                {
+                    "Symbol": "NESTLEIND",
+                    "param_0": 1202,
+                    "param_1": 1220.8,
+                    "param_2": -1.54,
+                    "param_3": 0.08326394671107411
+                },
+                {
+                    "Symbol": "BHARATFORG",
+                    "param_0": 1673,
+                    "param_1": 1779.6,
+                    "param_2": -5.99,
+                    "param_3": 0.08973975471133712
+                }
+            ],
+            "top_gainers": [
+                {
+                    "Symbol": "MUTHOOTFIN",
+                    "param_0": 3333.8,
+                    "param_1": 3244,
+                    "param_2": 2.77,
+                    "param_3": 0.57
+                },
+                {
+                    "Symbol": "ANGELONE",
+                    "param_0": 217.15,
+                    "param_1": 213.07,
+                    "param_2": 1.91,
+                    "param_3": 1.4
+                },
+                {
+                    "Symbol": "BRITANNIA",
+                    "param_0": 5815,
+                    "param_1": 5787,
+                    "param_2": 0.48,
+                    "param_3": 1.98
+                },
+                {
+                    "Symbol": "SWIGGY",
+                    "param_0": 282,
+                    "param_1": 280.9,
+                    "param_2": 0.39,
+                    "param_3": 0.81
+                },
+                {
+                    "Symbol": "LODHA",
+                    "param_0": 867.3,
+                    "param_1": 869.05,
+                    "param_2": -0.2,
+                    "param_3": 0
+                },
+                {
+                    "Symbol": "ABB",
+                    "param_0": 6389,
+                    "param_1": 6409,
+                    "param_2": -0.31,
+                    "param_3": 0.92
+                },
+                {
+                    "Symbol": "LICHSGFIN",
+                    "param_0": 496.5,
+                    "param_1": 498.5,
+                    "param_2": -0.4,
+                    "param_3": 0.27
+                },
+                {
+                    "Symbol": "SYNGENE",
+                    "param_0": 422,
+                    "param_1": 404.1,
+                    "param_2": 4.43,
+                    "param_3": 1.94
+                },
+                {
+                    "Symbol": "NHPC",
+                    "param_0": 75.09,
+                    "param_1": 74.78,
+                    "param_2": 0.41,
+                    "param_3": 1.82
+                },
+                {
+                    "Symbol": "BHARTIARTL",
+                    "param_0": 1805.5,
+                    "param_1": 1801.3,
+                    "param_2": 0.23,
+                    "param_3": 1.03
+                },
+                {
+                    "Symbol": "CROMPTON",
+                    "param_0": 246.55,
+                    "param_1": 247.2,
+                    "param_2": -0.26,
+                    "param_3": 1.02
+                },
+                {
+                    "Symbol": "ADANIGREEN",
+                    "param_0": 863,
+                    "param_1": 866.55,
+                    "param_2": -0.41,
+                    "param_3": 1.03
+                },
+                {
+                    "Symbol": "POWERGRID",
+                    "param_0": 301.2,
+                    "param_1": 303.6,
+                    "param_2": -0.79,
+                    "param_3": 1.93
+                },
+                {
+                    "Symbol": "COALINDIA",
+                    "param_0": 466.35,
+                    "param_1": 470.1,
+                    "param_2": -0.8,
+                    "param_3": 1.54
+                },
+                {
+                    "Symbol": "MARICO",
+                    "param_0": 751.1,
+                    "param_1": 757.15,
+                    "param_2": -0.8,
+                    "param_3": 0.64
+                },
+                {
+                    "Symbol": "HINDUNILVR",
+                    "param_0": 2162.1,
+                    "param_1": 2136.9,
+                    "param_2": 1.18,
+                    "param_3": 2.2
+                },
+                {
+                    "Symbol": "MANAPPURAM",
+                    "param_0": 256.9,
+                    "param_1": 255.55,
+                    "param_2": 0.53,
+                    "param_3": 0.48
+                },
+                {
+                    "Symbol": "PRESTIGE",
+                    "param_0": 1250.2,
+                    "param_1": 1252.7,
+                    "param_2": -0.2,
+                    "param_3": 0
+                },
+                {
+                    "Symbol": "PHOENIXLTD",
+                    "param_0": 1556.4,
+                    "param_1": 1560.2,
+                    "param_2": -0.24,
+                    "param_3": 0.32
+                },
+                {
+                    "Symbol": "APOLLOHOSP",
+                    "param_0": 7545,
+                    "param_1": 7574.5,
+                    "param_2": -0.39,
+                    "param_3": 1.41
+                },
+                {
+                    "Symbol": "CIPLA",
+                    "param_0": 1317,
+                    "param_1": 1324.3,
+                    "param_2": -0.55,
+                    "param_3": 2.04
+                },
+                {
+                    "Symbol": "JUBLFOOD",
+                    "param_0": 458.5,
+                    "param_1": 461.75,
+                    "param_2": -0.7,
+                    "param_3": 1.38
+                },
+                {
+                    "Symbol": "TATACONSUM",
+                    "param_0": 1081,
+                    "param_1": 1057.8,
+                    "param_2": 2.19,
+                    "param_3": 2.51
+                },
+                {
+                    "Symbol": "NAUKRI",
+                    "param_0": 951.6,
+                    "param_1": 955.4,
+                    "param_2": -0.4,
+                    "param_3": 0.2
+                },
+                {
+                    "Symbol": "WAAREEENER",
+                    "param_0": 2724.6,
+                    "param_1": 2739.4,
+                    "param_2": -0.54,
+                    "param_3": 0.47
+                }
+            ],
+            "top_level_stocks": [
+                {
+                    "Symbol": "PERSISTENT",
+                    "param_0": 4641.4,
+                    "param_1": 4714.4,
+                    "param_2": -1.55,
+                    "param_3": 0.05
+                },
+                {
+                    "Symbol": "ANGELONE",
+                    "param_0": 217.15,
+                    "param_1": 213.07,
+                    "param_2": 1.91,
+                    "param_3": 0.05
+                },
+                {
+                    "Symbol": "HDFCBANK",
+                    "param_0": 816.5,
+                    "param_1": 832.75,
+                    "param_2": -1.95,
+                    "param_3": 0.06
+                },
+                {
+                    "Symbol": "SBICARD",
+                    "param_0": 702,
+                    "param_1": 710.25,
+                    "param_2": -1.16,
+                    "param_3": 0.08
+                },
+                {
+                    "Symbol": "LODHA",
+                    "param_0": 867.3,
+                    "param_1": 869.05,
+                    "param_2": -0.2,
+                    "param_3": 0.1
+                },
+                {
+                    "Symbol": "RBLBANK",
+                    "param_0": 294.45,
+                    "param_1": 299.8,
+                    "param_2": -1.78,
+                    "param_3": 0.1
+                },
+                {
+                    "Symbol": "SBILIFE",
+                    "param_0": 1905.1,
+                    "param_1": 1939.4,
+                    "param_2": -1.77,
+                    "param_3": 0.1
+                },
+                {
+                    "Symbol": "TECHM",
+                    "param_0": 1332.5,
+                    "param_1": 1349.8,
+                    "param_2": -1.28,
+                    "param_3": 0.04
+                },
+                {
+                    "Symbol": "MUTHOOTFIN",
+                    "param_0": 3333.8,
+                    "param_1": 3244,
+                    "param_2": 2.77,
+                    "param_3": 0.06
+                },
+                {
+                    "Symbol": "KPITTECH",
+                    "param_0": 662.5,
+                    "param_1": 671.25,
+                    "param_2": -1.3,
+                    "param_3": 0.07
+                },
+                {
+                    "Symbol": "APOLLOHOSP",
+                    "param_0": 7545,
+                    "param_1": 7574.5,
+                    "param_2": -0.39,
+                    "param_3": 0.09
+                },
+                {
+                    "Symbol": "HDFCAMC",
+                    "param_0": 2385,
+                    "param_1": 2429,
+                    "param_2": -1.81,
+                    "param_3": 0.11
+                },
+                {
+                    "Symbol": "MANAPPURAM",
+                    "param_0": 256.9,
+                    "param_1": 255.55,
+                    "param_2": 0.53,
+                    "param_3": 0.04
+                },
+                {
+                    "Symbol": "DELHIVERY",
+                    "param_0": 404.3,
+                    "param_1": 408.2,
+                    "param_2": -0.96,
+                    "param_3": 0.04
+                },
+                {
+                    "Symbol": "BHARTIARTL",
+                    "param_0": 1805.5,
+                    "param_1": 1801.3,
+                    "param_2": 0.23,
+                    "param_3": 0.05
+                },
+                {
+                    "Symbol": "CROMPTON",
+                    "param_0": 246.55,
+                    "param_1": 247.2,
+                    "param_2": -0.26,
+                    "param_3": 0.05
+                },
+                {
+                    "Symbol": "CIPLA",
+                    "param_0": 1317,
+                    "param_1": 1324.3,
+                    "param_2": -0.55,
+                    "param_3": 0.07
+                },
+                {
+                    "Symbol": "ICICIPRULI",
+                    "param_0": 584.6,
+                    "param_1": 592.95,
+                    "param_2": -1.41,
+                    "param_3": 0.09
+                },
+                {
+                    "Symbol": "POLICYBZR",
+                    "param_0": 1446.6,
+                    "param_1": 1462.7,
+                    "param_2": -1.1,
+                    "param_3": 0.09
+                },
+                {
+                    "Symbol": "INDIGO",
+                    "param_0": 4164.2,
+                    "param_1": 4251.7,
+                    "param_2": -2.06,
+                    "param_3": 0.1
+                },
+                {
+                    "Symbol": "ICICIBANK",
+                    "param_0": 1253,
+                    "param_1": 1266.5,
+                    "param_2": -1.07,
+                    "param_3": 0.07
+                },
+                {
+                    "Symbol": "OBEROIRLTY",
+                    "param_0": 1452.7,
+                    "param_1": 1470.3,
+                    "param_2": -1.2,
+                    "param_3": 0.1
+                },
+                {
+                    "Symbol": "KFINTECH",
+                    "param_0": 892.95,
+                    "param_1": 907.6,
+                    "param_2": -1.61,
+                    "param_3": 0.11
+                },
+                {
+                    "Symbol": "TATACONSUM",
+                    "param_0": 1081,
+                    "param_1": 1057.8,
+                    "param_2": 2.19,
+                    "param_3": 0.11
+                },
+                {
+                    "Symbol": "COFORGE",
+                    "param_0": 1091.2,
+                    "param_1": 1107.9,
+                    "param_2": -1.51,
+                    "param_3": 0.02
+                }
+            ],
+            "top_losers": [
+                {
+                    "Symbol": "HINDALCO",
+                    "param_0": 910,
+                    "param_1": 969.75,
+                    "param_2": -6.16,
+                    "param_3": 2.27
+                },
+                {
+                    "Symbol": "HINDZINC",
+                    "param_0": 551.15,
+                    "param_1": 583,
+                    "param_2": -5.46,
+                    "param_3": 1.4
+                },
+                {
+                    "Symbol": "UNIONBANK",
+                    "param_0": 173.9,
+                    "param_1": 182.1,
+                    "param_2": -4.5,
+                    "param_3": 1.9
+                },
+                {
+                    "Symbol": "DIXON",
+                    "param_0": 10320,
+                    "param_1": 10803,
+                    "param_2": -4.47,
+                    "param_3": 1.68
+                },
+                {
+                    "Symbol": "VEDL",
+                    "param_0": 687.65,
+                    "param_1": 719.6,
+                    "param_2": -4.44,
+                    "param_3": 1.42
+                },
+                {
+                    "Symbol": "ASHOKLEY",
+                    "param_0": 170.84,
+                    "param_1": 178.47,
+                    "param_2": -4.28,
+                    "param_3": 1.46
+                },
+                {
+                    "Symbol": "JSWSTEEL",
+                    "param_0": 1122.6,
+                    "param_1": 1172.6,
+                    "param_2": -4.26,
+                    "param_3": 2.45
+                },
+                {
+                    "Symbol": "BHARATFORG",
+                    "param_0": 1673,
+                    "param_1": 1779.6,
+                    "param_2": -5.99,
+                    "param_3": 2.47
+                },
+                {
+                    "Symbol": "NATIONALUM",
+                    "param_0": 385.9,
+                    "param_1": 409.15,
+                    "param_2": -5.68,
+                    "param_3": 2.15
+                },
+                {
+                    "Symbol": "KAYNES",
+                    "param_0": 3493.4,
+                    "param_1": 3700.3,
+                    "param_2": -5.59,
+                    "param_3": 1.96
+                },
+                {
+                    "Symbol": "MOTHERSON",
+                    "param_0": 113.67,
+                    "param_1": 120.17,
+                    "param_2": -5.41,
+                    "param_3": 1.85
+                },
+                {
+                    "Symbol": "MAZDOCK",
+                    "param_0": 2324.9,
+                    "param_1": 2443.3,
+                    "param_2": -4.85,
+                    "param_3": 1.92
+                },
+                {
+                    "Symbol": "AMBUJACEM",
+                    "param_0": 424.8,
+                    "param_1": 446.45,
+                    "param_2": -4.85,
+                    "param_3": 2.03
+                },
+                {
+                    "Symbol": "AMBER",
+                    "param_0": 6437.5,
+                    "param_1": 6929.5,
+                    "param_2": -7.1,
+                    "param_3": 2.53
+                },
+                {
+                    "Symbol": "PGEL",
+                    "param_0": 501.4,
+                    "param_1": 532.2,
+                    "param_2": -5.79,
+                    "param_3": 2.63
+                },
+                {
+                    "Symbol": "TATASTEEL",
+                    "param_0": 183.25,
+                    "param_1": 193.47,
+                    "param_2": -5.28,
+                    "param_3": 1.64
+                },
+                {
+                    "Symbol": "ASTRAL",
+                    "param_0": 1610.1,
+                    "param_1": 1696,
+                    "param_2": -5.06,
+                    "param_3": 2.6
+                },
+                {
+                    "Symbol": "LT",
+                    "param_0": 3440.2,
+                    "param_1": 3719.5,
+                    "param_2": -7.51,
+                    "param_3": 3.14
+                },
+                {
+                    "Symbol": "JINDALSTEL",
+                    "param_0": 1146.4,
+                    "param_1": 1225,
+                    "param_2": -6.42,
+                    "param_3": 3.35
+                },
+                {
+                    "Symbol": "BLUESTARCO",
+                    "param_0": 1839.5,
+                    "param_1": 1953.5,
+                    "param_2": -5.84,
+                    "param_3": 2.51
+                },
+                {
+                    "Symbol": "UNOMINDA",
+                    "param_0": 1011.9,
+                    "param_1": 1068.5,
+                    "param_2": -5.3,
+                    "param_3": 1.86
+                },
+                {
+                    "Symbol": "SRF",
+                    "param_0": 2496.8,
+                    "param_1": 2626.3,
+                    "param_2": -4.93,
+                    "param_3": 2.61
+                },
+                {
+                    "Symbol": "SONACOMS",
+                    "param_0": 485.3,
+                    "param_1": 510.3,
+                    "param_2": -4.9,
+                    "param_3": 2.45
+                },
+                {
+                    "Symbol": "INOXWIND",
+                    "param_0": 79.74,
+                    "param_1": 83.68,
+                    "param_2": -4.71,
+                    "param_3": 2.05
+                },
+                {
+                    "Symbol": "EXIDEIND",
+                    "param_0": 295.6,
+                    "param_1": 310,
+                    "param_2": -4.65,
+                    "param_3": 2.57
+                }
+            ]
+        }
+    },
+    "status": "SUCCESS"
+}

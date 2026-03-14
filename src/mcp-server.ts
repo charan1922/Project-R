@@ -403,11 +403,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               `Regime: ${signal.regime}\n` +
               `Composite Score: ${signal.compositeRFactor.toFixed(2)}\n` +
               `Blast Trade: ${signal.isBlastTrade ? 'YES 🚀' : 'NO'}\n\n` +
-              `Individual Z-Scores:\n` +
-              `  Volume: ${signal.zScores.volume.toFixed(2)}σ\n` +
-              `  OI: ${signal.zScores.oi.toFixed(2)}σ\n` +
-              `  Turnover: ${signal.zScores.turnover.toFixed(2)}σ\n` +
-              `  Spread: ${signal.zScores.spread.toFixed(2)}σ`
+              `Individual Scores:\n` +
+              `  Spread (ratio): ${signal.zScores.spread.toFixed(2)}\n` +
+              `  Fut Turnover: ${signal.zScores.fut_turnover.toFixed(2)}σ\n` +
+              `  PCR: ${signal.zScores.pcr.toFixed(2)}\n` +
+              `  OI Change: ${signal.zScores.oi_change.toFixed(2)}σ\n` +
+              `  Trade Size: ${signal.zScores.eq_trade_size.toFixed(2)}σ\n` +
+              `  Fut Volume: ${signal.zScores.fut_volume.toFixed(2)}σ\n` +
+              `  Opt Volume: ${signal.zScores.opt_volume.toFixed(2)}σ`
           }]
         };
       } catch (err) {
