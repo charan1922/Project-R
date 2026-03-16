@@ -4,6 +4,7 @@ import { transformToFactorData, SignalOutput, DailyStockData } from './types';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { resolveSymbol, batchResolveFutures } from '../historify/master-contracts';
+import { env, hasDhanCredentials } from '@/lib/env';
 
 /** Extended signal with live price data */
 export interface BoostSignal extends SignalOutput {
@@ -50,9 +51,9 @@ async function dhanMarketFeed(
   endpoint: 'ohlc' | 'quote',
   securities: Record<string, number[]>
 ): Promise<Record<string, Record<string, { last_price: number; ohlc: { open: number; close: number; high: number; low: number }; volume?: number; oi?: number }>>> {
-  const token = process.env.DHAN_ACCESS_TOKEN;
-  const clientId = process.env.DHAN_CLIENT_ID;
-  if (!token || !clientId) return {};
+  if (!hasDhanCredentials()) return {};
+  const token = env.DHAN_ACCESS_TOKEN!;
+  const clientId = env.DHAN_CLIENT_ID!;
 
   const resp = await fetch(`https://api.dhan.co/v2/marketfeed/${endpoint}`, {
     method: 'POST',
@@ -116,7 +117,7 @@ export class RFactorDataService {
 
     await this.preWarmCache();
 
-    const hasDhan = !!process.env.DHAN_ACCESS_TOKEN && !!process.env.DHAN_CLIENT_ID;
+    const hasDhan = hasDhanCredentials();
     const marketOpen = isMarketHours();
 
     if (hasDhan) {

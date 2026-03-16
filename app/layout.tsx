@@ -4,6 +4,8 @@ import "./globals.css";
 import Sidebar from "./components/Sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CommandPalette } from "@/components/command-palette";
+import { Analytics } from "@vercel/analytics/next";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,13 +38,16 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <main className="flex-1 overflow-auto">
-              {children}
-            </main>
-          </div>
-          <CommandPalette />
+          <NuqsAdapter>
+            <div className="flex min-h-screen">
+              <Sidebar />
+              <main className="flex-1 overflow-auto">
+                {children}
+              </main>
+            </div>
+            <CommandPalette />
+          </NuqsAdapter>
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>

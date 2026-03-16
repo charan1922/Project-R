@@ -1,5 +1,6 @@
 import { DhanHQClient } from "../../dhanv2/src";
 import { HistoricalDataRequest, IntradayDataRequest, ExchangeSegment } from "../../dhanv2/src/types";
+import { env } from '@/lib/env';
 
 // Helper to delay execution (Rate Limiting)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -10,14 +11,10 @@ export class HistorifyDhanClient {
     private readonly RATE_LIMIT_MS = 250; // 4 requests per sec to stay safely under 5/sec
 
     constructor() {
-        const clientId = process.env.DHAN_CLIENT_ID || "";
-        const accessToken = process.env.DHAN_ACCESS_TOKEN || "";
-        const env = "prod"; // User explicitly requested real one, not sandbox
-
         this.client = new DhanHQClient(
-            clientId,
-            accessToken,
-            env
+            env.DHAN_CLIENT_ID ?? "",
+            env.DHAN_ACCESS_TOKEN ?? "",
+            "prod"
         );
     }
 

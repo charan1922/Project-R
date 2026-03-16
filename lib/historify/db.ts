@@ -1,7 +1,9 @@
 import path from "path";
 import fs from "fs";
 
-const dataDir = process.env.VERCEL === '1'
+import { isVercel } from '@/lib/env';
+
+const dataDir = isVercel()
     ? '/tmp'
     : path.join(process.cwd(), "data");
 

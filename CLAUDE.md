@@ -12,7 +12,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 pnpm dev              # Dev server on port 5000
 pnpm build            # Production build (output: dist/)
 pnpm start            # Production server
-pnpm lint             # ESLint
+pnpm lint             # Biome check (linting + formatting)
+pnpm format           # Biome format --write
 pnpm mcp              # Start MCP server for AI queries
 pnpm extract          # Playwright data extractor
 pnpm install:browsers # Install Playwright browsers (needed for extract)
@@ -59,6 +60,18 @@ Browser → SSE (`/api/historify/live-stream`) → `LiveManager` singleton → D
 
 Located in `/lib/quant/strategies/`: EMA Crossover, RSI Accumulation, Buy & Hold 75/25, Dual Momentum. The backtest engine (`/lib/quant/backtest-engine.ts`) calculates Sharpe ratio, max drawdown, CAGR, win rate, profit factor with Indian market fee modeling.
 
+### Operational Infrastructure
+
+- **Environment validation**: `lib/env.ts` — Zod schema validates all env vars at import time. Use `env.*`, `hasDhanCredentials()`, `isVercel()` instead of raw `process.env`
+- **Error boundaries**: `app/error.tsx` (page-level) and `app/global-error.tsx` (root layout) with Sentry integration
+- **Error tracking**: Sentry via `@sentry/nextjs` — client/server/edge configs at project root, instrumentation in `instrumentation.ts`
+- **Middleware**: `middleware.ts` — request timing, CORS for API routes
+- **Security headers**: Configured in `next.config.ts` headers() — HSTS, X-Frame-Options, CSP, etc.
+- **Analytics**: Vercel Analytics (`@vercel/analytics`) in root layout
+- **URL state**: `nuqs` adapter in root layout — use `useQueryState` for bookmarkable filter/search state
+- **Structured logging**: `lib/logger.ts` — JSON output in production, console in dev
+- **Linter**: Biome (`biome.json`) — replaces ESLint. Config ignores `dhanv2/`, `data/`, `derive-r/`
+
 ## Key Conventions
 
 - **Path alias**: `@/*` maps to project root (configured in tsconfig.json)
@@ -68,13 +81,17 @@ Located in `/lib/quant/strategies/`: EMA Crossover, RSI Accumulation, Buy & Hold
 - **Charting**: Lightweight Charts v5 for real-time (ref-based updates bypassing React DOM), Recharts for dashboards
 - **Icons**: Lucide React
 - **Feature pages** use underscore-prefixed folders for co-located non-route files: `_hooks/`, `_components/`, `_lib/`
+- **Type-safe actions**: `next-safe-action` available for new mutation endpoints (server actions over POST routes)
 
 ## Environment Variables
 
-Required in `.env.local` (never committed):
+Validated in `lib/env.ts`. Required in `.env.local` (never committed):
 ```
 DHAN_CLIENT_ID=<client-id>
 DHAN_ACCESS_TOKEN=<jwt-token>
+NEXT_PUBLIC_SENTRY_DSN=<sentry-dsn>     # Optional: error tracking
+SENTRY_ORG=<org>                         # Optional: source maps
+SENTRY_PROJECT=<project>                 # Optional: source maps
 ```
 
 ## Specs & Design Docs

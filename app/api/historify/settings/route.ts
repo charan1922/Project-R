@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { env, isVercel } from '@/lib/env';
 
 export const dynamic = "force-dynamic";
 
-const SETTINGS_PATH = process.env.VERCEL === '1'
+const SETTINGS_PATH = isVercel()
     ? path.join('/tmp', 'historify-settings.json')
     : path.join(process.cwd(), "data", "historify-settings.json");
 
 const DEFAULTS = {
-    dhanClientId: process.env.DHAN_CLIENT_ID || "",
-    dhanAccessToken: process.env.DHAN_ACCESS_TOKEN || "",
+    dhanClientId: env.DHAN_CLIENT_ID ?? "",
+    dhanAccessToken: env.DHAN_ACCESS_TOKEN ?? "",
     batchSize: 10,
     rateLimitMs: 250,
     defaultRange: "30",

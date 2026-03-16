@@ -2,10 +2,12 @@ import { DuckDBInstance, DuckDBConnection } from '@duckdb/node-api';
 import path from 'path';
 import fs from 'fs';
 
+import { isVercel as checkVercel } from '@/lib/env';
+
 let _db: DuckDBInstance | null = null;
 let _httpfsLoaded = false;
-const isVercel = process.env.VERCEL === '1';
-const parquetDir = isVercel
+const onVercel = checkVercel();
+const parquetDir = onVercel
     ? path.join('/tmp', 'parquet', 'historify')
     : path.join(process.cwd(), 'data', 'parquet', 'historify');
 
@@ -39,7 +41,7 @@ export async function getDuckDb(): Promise<DuckDBInstance> {
 export async function ensureHttpfs(conn: DuckDBConnection): Promise<void> {
     if (_httpfsLoaded) return;
     // On Vercel, extensions must be installed to /tmp (only writable dir)
-    if (isVercel) {
+    if (onVercel) {
         await conn.run("SET extension_directory = '/tmp/duckdb_extensions';");
     }
     await conn.run("INSTALL httpfs; LOAD httpfs;");

@@ -1,32 +1,9 @@
 import { MarketFeedSocket } from '../../dhanv2/src/websockets/MarketFeedSocket';
 import { FeedInstrument, FeedRequestCode, QuoteData, ExchangeSegment } from '../../dhanv2/src/types';
 import { resolveSymbol } from './master-contracts';
-import path from 'path';
-import fs from 'fs';
+import { env, hasDhanCredentials } from '@/lib/env';
 
 const TAG = '[LiveManager]';
-
-function loadEnvLocal() {
-    try {
-        const envLocalPath = path.resolve(process.cwd(), '.env.local');
-        if (fs.existsSync(envLocalPath)) {
-            const content = fs.readFileSync(envLocalPath, 'utf8');
-            content.split('\n').forEach(line => {
-                const index = line.indexOf('=');
-                if (index !== -1) {
-                    const key = line.substring(0, index).trim();
-                    const value = line.substring(index + 1).trim().replace(/^["']|["']$/g, '');
-                    if (key && value) process.env[key] = value;
-                }
-            });
-            console.log(`${TAG} .env.local loaded`);
-        }
-    } catch (e: any) {
-        console.error(`${TAG} env load error:`, e.message);
-    }
-}
-
-if (process.env.NODE_ENV !== 'production') loadEnvLocal();
 
 class LiveManager {
     private socket: MarketFeedSocket | null = null;
@@ -35,15 +12,13 @@ class LiveManager {
 
     public connect() {
         if (this.socket) return;
-        const clientId = process.env.DHAN_CLIENT_ID;
-        const accessToken = process.env.DHAN_ACCESS_TOKEN;
-        if (!clientId || !accessToken) {
+        if (!hasDhanCredentials()) {
             console.error(`${TAG} connect failed: missing DHAN_CLIENT_ID or DHAN_ACCESS_TOKEN`);
             return;
         }
 
         console.log(`${TAG} initializing Dhan WebSocket...`);
-        this.socket = new MarketFeedSocket(clientId, accessToken);
+        this.socket = new MarketFeedSocket(env.DHAN_CLIENT_ID!, env.DHAN_ACCESS_TOKEN!);
 
         this.socket.on('connect', () => {
             console.log(`${TAG} WebSocket connected to Dhan`);

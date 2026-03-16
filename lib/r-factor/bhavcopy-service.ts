@@ -31,8 +31,10 @@ interface DailyCache {
   stocks: Record<string, DailyStockData>;
 }
 
+import { isVercel } from '@/lib/env';
+
 // Cache in /tmp on Vercel (serverless), local otherwise
-const IS_VERCEL = !!process.env.VERCEL;
+const IS_VERCEL = isVercel();
 const CACHE_BASE = IS_VERCEL
   ? '/tmp/cache/rfactor/daily'
   : path.join(process.cwd(), 'lib', 'cache', 'rfactor', 'daily');
