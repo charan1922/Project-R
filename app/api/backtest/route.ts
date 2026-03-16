@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 const TOP_50_STOCKS = [
   "RELIANCE","TCS","HDFCBANK","ICICIBANK","INFY","HINDUNILVR","ITC","SBIN",
   "BHARTIARTL","KOTAKBANK","AXISBANK","LT","HCLTECH","ASIANPAINT","MARUTI",

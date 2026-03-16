@@ -98,7 +98,8 @@ export async function POST(request: NextRequest) {
                     }));
 
                     const conn = await duckDb.connect();
-                    const tempDir = process.env.VERCEL === '1' ? '/tmp' : path.join(process.cwd(), 'data');
+                    const { isVercel } = await import('@/lib/env');
+                    const tempDir = isVercel() ? '/tmp' : path.join(process.cwd(), 'data');
                     const tempJsonPath = path.join(tempDir, `temp_sync_${symbol}.json`);
 
                     try {

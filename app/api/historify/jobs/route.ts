@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJobs, createJob } from "@/lib/historify/scheduler";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
     return NextResponse.json(getJobs());
 }

@@ -14,6 +14,10 @@ pnpm build            # Production build (output: dist/)
 pnpm start            # Production server
 pnpm lint             # Biome check (linting + formatting)
 pnpm format           # Biome format --write
+pnpm db:migrate       # Prisma migrate dev (create/apply migrations)
+pnpm db:push          # Prisma push schema to DB (no migration file)
+pnpm db:studio        # Prisma Studio (visual DB editor)
+pnpm db:generate      # Regenerate Prisma client
 pnpm mcp              # Start MCP server for AI queries
 pnpm extract          # Playwright data extractor
 pnpm install:browsers # Install Playwright browsers (needed for extract)
@@ -45,10 +49,9 @@ Browser → SSE (`/api/historify/live-stream`) → `LiveManager` singleton → D
 
 ### Data Layer
 
-- **SQLite** (better-sqlite3): Composite PRIMARY KEY `(symbol, exchange, interval, timestamp)` for O(log N) lookups. Config and watchlist in `/lib/historify/db.ts`
-- **DuckDB** (@duckdb/node-api): Parquet columnar storage for large datasets in `/lib/historify/duckdb.ts`
-- **No ORM** — direct SQL for performance
-- Native modules (better-sqlite3, duckdb) are externalized in webpack config (`next.config.ts`)
+- **Prisma ORM** + **SQLite** (default): Watchlist, activity log, settings in `data/project-r.db`. Schema in `prisma/schema.prisma`, config in `prisma/prisma.config.ts`. Client singleton in `lib/db.ts`. Switch to PostgreSQL by setting `DATABASE_URL` and changing provider in schema.
+- **DuckDB** (@duckdb/node-api): Parquet columnar storage for large market datasets in `/lib/historify/duckdb.ts`
+- Native modules (prisma, duckdb) are externalized in webpack config (`next.config.ts`)
 
 ### State Management
 
@@ -89,6 +92,7 @@ Validated in `lib/env.ts`. Required in `.env.local` (never committed):
 ```
 DHAN_CLIENT_ID=<client-id>
 DHAN_ACCESS_TOKEN=<jwt-token>
+DATABASE_URL=<url>                       # Optional: default is SQLite file:data/project-r.db
 NEXT_PUBLIC_SENTRY_DSN=<sentry-dsn>     # Optional: error tracking
 SENTRY_ORG=<org>                         # Optional: source maps
 SENTRY_PROJECT=<project>                 # Optional: source maps

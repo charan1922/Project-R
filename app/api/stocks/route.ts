@@ -3,6 +3,8 @@ import { NseIndia } from "stock-nse-india";
 import { promises as fs } from "fs";
 import path from "path";
 
+export const dynamic = "force-dynamic";
+
 const nseIndia = new NseIndia();
 
 // Load F&O stocks list

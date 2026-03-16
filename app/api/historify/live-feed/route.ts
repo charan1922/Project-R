@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { liveManager } from '@/lib/historify/live-manager';
 
+export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {

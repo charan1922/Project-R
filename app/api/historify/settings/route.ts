@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-import { env, isVercel } from '@/lib/env';
+import { prisma } from "@/lib/db";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
-
-const SETTINGS_PATH = isVercel()
-    ? path.join('/tmp', 'historify-settings.json')
-    : path.join(process.cwd(), "data", "historify-settings.json");
 
 const DEFAULTS = {
     dhanClientId: env.DHAN_CLIENT_ID ?? "",
@@ -21,28 +16,20 @@ const DEFAULTS = {
     showTooltips: true,
 };
 
-function readSettings() {
-    try {
-        if (fs.existsSync(SETTINGS_PATH)) {
-            const raw = fs.readFileSync(SETTINGS_PATH, "utf-8");
-            return { ...DEFAULTS, ...JSON.parse(raw) };
-        }
-    } catch { }
-    return { ...DEFAULTS };
-}
-
 export async function GET() {
-    return NextResponse.json(readSettings());
+    const row = await prisma.settings.findUnique({ where: { id: 1 } });
+    if (!row) return NextResponse.json(DEFAULTS);
+    return NextResponse.json({ ...DEFAULTS, ...row });
 }
 
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const current = readSettings();
-        const merged = { ...current, ...body };
-        const dir = path.dirname(SETTINGS_PATH);
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        fs.writeFileSync(SETTINGS_PATH, JSON.stringify(merged, null, 2), "utf-8");
+        await prisma.settings.upsert({
+            where: { id: 1 },
+            update: body,
+            create: { id: 1, ...body },
+        });
         return NextResponse.json({ ok: true });
     } catch (err) {
         return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });

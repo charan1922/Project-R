@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { NseIndia } from "stock-nse-india";
 
+export const dynamic = "force-dynamic";
+
 const nseIndia = new NseIndia();
 
 // Top F&O stocks to scan

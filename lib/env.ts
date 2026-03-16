@@ -6,6 +6,7 @@ const envSchema = z.object({
   VERCEL: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
   NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
+  DATABASE_URL: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

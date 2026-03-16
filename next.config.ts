@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true
   },
-  serverExternalPackages: ['duckdb', '@duckdb/node-api'],
+  serverExternalPackages: ['duckdb', '@duckdb/node-api', '@prisma/client', '.prisma/client'],
   turbopack: {},
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }];

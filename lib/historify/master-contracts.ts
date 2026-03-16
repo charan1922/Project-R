@@ -1,168 +1,303 @@
 /**
- * Dhan Master Contract Lookup
+ * Dhan Master Contract Lookup — Prisma SQLite backed
  *
- * Fetches the NSE equity master contract from Dhan's public CSV endpoint
- * and resolves symbol names to their securityId for use in historical data calls.
- * Also resolves near-month stock futures for live F&O data.
+ * Downloads Dhan's master CSV once per day, stores in SQLite via Prisma.
+ * All lookups hit the DB (indexed) — no 100MB CSV download on every restart.
  */
 
-const MASTER_CSV_URL = "https://images.dhan.co/api-data/api-scrip-master.csv";
-const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // Refresh every 4 hours
+import { prisma } from '@/lib/db';
+
+const MASTER_CSV_URL = 'https://images.dhan.co/api-data/api-scrip-master.csv';
 
 export type SecurityEntry = {
+  securityId: string;
+  symbol: string;
+  exchange: string;
+  segment: string;
+  name: string;
+  instrument: string;
+};
+
+export type FuturesEntry = SecurityEntry & {
+  expiry: Date;
+  underlying: string;
+};
+
+// Process-level flag — skip even the DB check once synced
+let synced = false;
+let syncPromise: Promise<void> | null = null;
+
+/** Today's date in IST (YYYY-MM-DD) */
+function todayIST(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+}
+
+/**
+ * Ensure master contracts are synced for today.
+ * Downloads CSV from Dhan only if no rows exist for today's date.
+ */
+async function ensureSynced(): Promise<void> {
+  if (synced) return;
+
+  // Deduplicate concurrent calls
+  if (syncPromise) return syncPromise;
+
+  syncPromise = (async () => {
+    try {
+      const today = todayIST();
+      const count = await prisma.masterContract.count({
+        where: { syncDate: today },
+      });
+
+      if (count > 0) {
+        console.log(`[MasterContracts] Already synced for ${today} (${count} rows)`);
+        synced = true;
+        return;
+      }
+
+      await syncFromDhan(today);
+      synced = true;
+    } finally {
+      syncPromise = null;
+    }
+  })();
+
+  return syncPromise;
+}
+
+/**
+ * Download CSV from Dhan, parse, and bulk-insert into SQLite.
+ */
+async function syncFromDhan(today: string): Promise<void> {
+  console.log(`[MasterContracts] Syncing from Dhan CSV for ${today}...`);
+  const startMs = Date.now();
+
+  const resp = await fetch(MASTER_CSV_URL);
+  if (!resp.ok) throw new Error(`Failed to fetch master CSV: ${resp.status}`);
+
+  const text = await resp.text();
+  const lines = text.split('\n');
+  if (lines.length < 2) throw new Error('Empty master contract CSV');
+
+  const header = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+  const col = (name: string) => header.findIndex(h => h === name);
+
+  const idxExch = col('SEM_EXM_EXCH_ID');
+  const idxSeg = col('SEM_SEGMENT');
+  const idxId = col('SEM_SMST_SECURITY_ID');
+  const idxSym = col('SEM_TRADING_SYMBOL');
+  const idxName = col('SEM_INSTRUMENT_NAME');
+  const idxInstType = col('SEM_EXCH_INSTRUMENT_TYPE');
+  const idxExpiry = col('SEM_EXPIRY_DATE');
+
+  // Parse all rows
+  const entries: {
     securityId: string;
     symbol: string;
     exchange: string;
-    segment: string;    // Should match ExchangeSegment enum (e.g. NSE_EQ)
+    segment: string;
+    instrument: string;
     name: string;
-    instrument: string; // Should match InstrumentType enum (e.g. EQUITY)
-};
+    underlying: string | null;
+    expiryDate: Date | null;
+    syncDate: string;
+  }[] = [];
 
-/** Near-month futures entry for an underlying symbol */
-export type FuturesEntry = SecurityEntry & {
-    expiry: Date;
-    underlying: string;
-};
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
 
-let cache: Map<string, SecurityEntry> | null = null;
-let futuresCache: Map<string, FuturesEntry> | null = null;
-let cacheTs = 0;
+    const cols = line.split(',').map(c => c.trim().replace(/"/g, ''));
 
-async function fetchMasterContracts(): Promise<Map<string, SecurityEntry>> {
-    const now = Date.now();
-    if (cache && (now - cacheTs) < CACHE_TTL_MS) return cache;
+    const rawExch = cols[idxExch] || '';
+    const rawSeg = cols[idxSeg] || '';
+    const secId = cols[idxId] || '';
+    const symbol = cols[idxSym] || '';
+    const name = cols[idxName] || '';
+    const instType = cols[idxInstType] || '';
+    const expiryStr = cols[idxExpiry] || '';
 
-    console.log("[MasterContracts] Fetching fresh master contract CSV...");
-    const resp = await fetch(MASTER_CSV_URL, { next: { revalidate: 14400 } } as any);
-    if (!resp.ok) throw new Error(`Failed to fetch Dhan master contracts: ${resp.status}`);
+    if (!secId || !symbol) continue;
 
-    const text = await resp.text();
-    const lines = text.split("\n");
-    if (lines.length < 2) throw new Error("Empty master contract CSV");
+    // Normalize segment
+    let segment = rawSeg;
+    if (rawExch === 'NSE' && rawSeg === 'E') segment = 'NSE_EQ';
+    else if (rawExch === 'BSE' && rawSeg === 'E') segment = 'BSE_EQ';
+    else if (rawExch === 'NSE' && rawSeg === 'D') segment = 'NSE_FNO';
+    else if (rawExch === 'BSE' && rawSeg === 'D') segment = 'BSE_FNO';
+    else if (rawExch === 'NSE' && rawSeg === 'I') segment = 'IDX_I';
+    else if (rawExch === 'MCX' && rawSeg === 'M') segment = 'MCX_COMM';
 
-    const header = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
+    // Normalize instrument
+    let instrument = instType.toUpperCase();
+    if (segment.includes('_EQ')) instrument = 'EQUITY';
+    if (instrument === 'FUT') instrument = name.toUpperCase(); // FUTSTK, FUTIDX
+    if (instrument === 'OP') instrument = name.toUpperCase();  // OPTSTK, OPTIDX
 
-    const col = (name: string) => header.findIndex(h => h === name);
-
-    const idxExch = col("SEM_EXM_EXCH_ID");
-    const idxSeg = col("SEM_SEGMENT");
-    const idxId = col("SEM_SMST_SECURITY_ID");
-    const idxSym = col("SEM_TRADING_SYMBOL");
-    const idxName = col("SEM_INSTRUMENT_NAME");
-    const idxInstType = col("SEM_INSTRUMENT_TYPE");
-    const idxExpiry = col("SEM_EXPIRY_DATE");
-
-    const map = new Map<string, SecurityEntry>();
-    const fmap = new Map<string, FuturesEntry>();
-    const today = new Date();
-
-    for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-
-        const cols = line.split(",").map(c => c.trim().replace(/"/g, ""));
-
-        const rawExch = cols[idxExch] || "";
-        const rawSeg = cols[idxSeg] || "";
-        const secId = cols[idxId] || "";
-        const symbol = cols[idxSym] || "";
-        const name = cols[idxName] || "";
-        let inst = cols[idxInstType] || "";
-        const expiryStr = cols[idxExpiry] || "";
-
-        if (!secId || !symbol) continue;
-
-        // Normalize Segment
-        let segment = rawSeg;
-        if (rawExch === "NSE" && rawSeg === "E") segment = "NSE_EQ";
-        else if (rawExch === "BSE" && rawSeg === "E") segment = "BSE_EQ";
-        else if (rawExch === "NSE" && rawSeg === "D") segment = "NSE_FNO";
-        else if (rawExch === "BSE" && rawSeg === "D") segment = "BSE_FNO";
-
-        if (segment.includes("_EQ")) {
-            inst = "EQUITY";
-        }
-
-        const entry: SecurityEntry = {
-            securityId: secId,
-            symbol,
-            exchange: rawExch,
-            segment: segment.toUpperCase(),
-            name,
-            instrument: inst.toUpperCase()
-        };
-
-        map.set(`${rawExch}:${symbol}`, entry);
-        if (!map.has(symbol) || rawExch === "NSE") {
-            map.set(symbol, entry);
-        }
-
-        // Build futures index: NSE FUTSTK → underlying → near-month entry
-        if (rawExch === "NSE" && rawSeg === "D" && inst.toUpperCase() === "FUTSTK" && expiryStr) {
-            const dash = symbol.indexOf('-');
-            if (dash <= 0) continue;
-            const underlying = symbol.substring(0, dash);
-
-            const expiry = new Date(expiryStr);
-            if (isNaN(expiry.getTime())) continue;
-            // Only consider contracts that haven't expired
-            if (expiry < today) continue;
-
-            const existing = fmap.get(underlying);
-            if (!existing || expiry < existing.expiry) {
-                // Keep the nearest expiry (near-month)
-                fmap.set(underlying, { ...entry, expiry, underlying });
-            }
-        }
+    // Extract underlying for futures
+    let underlying: string | null = null;
+    if (instrument === 'FUTSTK' || instrument === 'OPTSTK') {
+      const dash = symbol.indexOf('-');
+      if (dash > 0) underlying = symbol.substring(0, dash);
     }
 
-    cache = map;
-    futuresCache = fmap;
-    cacheTs = now;
-    console.log(`[MasterContracts] Loaded ${map.size} entries, ${fmap.size} near-month futures`);
-    return map;
-}
+    // Parse expiry
+    let expiryDate: Date | null = null;
+    if (expiryStr) {
+      const d = new Date(expiryStr);
+      if (!isNaN(d.getTime())) expiryDate = d;
+    }
 
-export async function resolveSymbol(symbol: string, exchange = "NSE"): Promise<SecurityEntry | null> {
-    const map = await fetchMasterContracts();
-    return map.get(`${exchange}:${symbol}`) || map.get(symbol) || null;
+    entries.push({
+      securityId: secId,
+      symbol,
+      exchange: rawExch,
+      segment,
+      instrument,
+      name,
+      underlying,
+      expiryDate,
+      syncDate: today,
+    });
+  }
+
+  console.log(`[MasterContracts] Parsed ${entries.length} entries, inserting into DB...`);
+
+  // Bulk insert in chunks within a single transaction
+  const CHUNK_SIZE = 2000;
+  const chunks: (typeof entries)[] = [];
+  for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
+    chunks.push(entries.slice(i, i + CHUNK_SIZE));
+  }
+
+  await prisma.$transaction([
+    prisma.masterContract.deleteMany({}),
+    ...chunks.map(chunk =>
+      prisma.masterContract.createMany({ data: chunk })
+    ),
+  ]);
+
+  const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
+  console.log(`[MasterContracts] Synced ${entries.length} rows in ${elapsed}s`);
 }
 
 /**
- * Resolve near-month stock futures security entry for an underlying symbol.
- * e.g. "RELIANCE" → { securityId: "52023", symbol: "RELIANCE-Mar2026-FUT", ... }
+ * Resolve equity security entry by symbol.
  */
-export async function resolveFuturesSecurity(underlying: string): Promise<FuturesEntry | null> {
-    await fetchMasterContracts(); // Ensure cache is populated
-    return futuresCache?.get(underlying) || null;
+export async function resolveSymbol(
+  symbol: string,
+  exchange = 'NSE'
+): Promise<SecurityEntry | null> {
+  await ensureSynced();
+
+  const row = await prisma.masterContract.findFirst({
+    where: {
+      symbol,
+      exchange,
+      segment: `${exchange}_EQ`,
+    },
+  });
+
+  if (!row) return null;
+  return {
+    securityId: row.securityId,
+    symbol: row.symbol,
+    exchange: row.exchange,
+    segment: row.segment,
+    name: row.name,
+    instrument: row.instrument,
+  };
 }
 
 /**
- * Batch-resolve futures security IDs for multiple underlying symbols.
+ * Resolve near-month stock futures for a single underlying.
+ */
+export async function resolveFuturesSecurity(
+  underlying: string
+): Promise<FuturesEntry | null> {
+  await ensureSynced();
+
+  const rows = await prisma.masterContract.findMany({
+    where: {
+      underlying,
+      instrument: 'FUTSTK',
+      segment: 'NSE_FNO',
+      expiryDate: { gte: new Date() },
+    },
+    orderBy: { expiryDate: 'asc' },
+    take: 1,
+  });
+
+  if (rows.length === 0) return null;
+  const row = rows[0];
+  return {
+    securityId: row.securityId,
+    symbol: row.symbol,
+    exchange: row.exchange,
+    segment: row.segment,
+    name: row.name,
+    instrument: row.instrument,
+    expiry: row.expiryDate!,
+    underlying: row.underlying!,
+  };
+}
+
+/**
+ * Batch-resolve near-month futures security IDs for multiple underlyings.
  * Returns Map<underlying, futuresSecurityId>.
  */
-export async function batchResolveFutures(underlyings: string[]): Promise<Map<string, string>> {
-    await fetchMasterContracts();
-    const result = new Map<string, string>();
-    if (!futuresCache) return result;
-    for (const u of underlyings) {
-        const entry = futuresCache.get(u);
-        if (entry) result.set(u, entry.securityId);
+export async function batchResolveFutures(
+  underlyings: string[]
+): Promise<Map<string, string>> {
+  await ensureSynced();
+
+  const result = new Map<string, string>();
+  if (underlyings.length === 0) return result;
+
+  const rows = await prisma.masterContract.findMany({
+    where: {
+      underlying: { in: underlyings },
+      instrument: 'FUTSTK',
+      segment: 'NSE_FNO',
+      expiryDate: { gte: new Date() },
+    },
+    orderBy: { expiryDate: 'asc' },
+  });
+
+  // Pick nearest expiry per underlying
+  for (const row of rows) {
+    if (row.underlying && !result.has(row.underlying)) {
+      result.set(row.underlying, row.securityId);
     }
-    return result;
+  }
+
+  return result;
 }
 
-export async function searchSymbols(query: string, exchange?: string): Promise<SecurityEntry[]> {
-    const map = await fetchMasterContracts();
-    const q = query.toLowerCase();
-    const results: SecurityEntry[] = [];
-    for (const [key, entry] of map) {
-        if (key.includes(":")) continue;
-        if (exchange && entry.exchange !== exchange) continue;
-        if (entry.symbol.toLowerCase().includes(q) || entry.name.toLowerCase().includes(q)) {
-            results.push(entry);
-        }
-        if (results.length >= 20) break;
-    }
-    return results;
+/**
+ * Search symbols by query string.
+ */
+export async function searchSymbols(
+  query: string,
+  exchange?: string
+): Promise<SecurityEntry[]> {
+  await ensureSynced();
+
+  const rows = await prisma.masterContract.findMany({
+    where: {
+      symbol: { contains: query.toUpperCase() },
+      ...(exchange ? { exchange } : {}),
+      segment: { endsWith: '_EQ' },
+    },
+    take: 20,
+  });
+
+  return rows.map(r => ({
+    securityId: r.securityId,
+    symbol: r.symbol,
+    exchange: r.exchange,
+    segment: r.segment,
+    name: r.name,
+    instrument: r.instrument,
+  }));
 }

@@ -2,6 +2,19 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
+  // Handle CORS preflight
+  if (request.method === "OPTIONS" && request.nextUrl.pathname.startsWith("/api/")) {
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, access-token, client-id",
+        "Access-Control-Max-Age": "86400",
+      },
+    });
+  }
+
   const start = Date.now();
   const response = NextResponse.next();
 

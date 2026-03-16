@@ -5,6 +5,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDuckDb, resolveParquetSource, ensureHttpfs } from "@/lib/historify/duckdb";
 
+export const dynamic = "force-dynamic";
+
 function getDateRange(preset: string): { startTs: number; endTs: number } {
     const now = Math.floor(Date.now() / 1000);
     const day = 86400;
