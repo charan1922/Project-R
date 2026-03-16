@@ -1,0 +1,177 @@
+---
+title: Master contracts
+description: Dhan instrument mapping service — symbol-to-securityId resolution for equity and futures.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Master contracts
+
+## Overview
+
+Master contracts is the instrument resolution layer. It downloads Dhan's full CSV of tradeable instruments, filters to the segments needed by R-Factor, and stores them in SQLite for fast indexed lookups.
+
+**Without synced master contracts, Intraday Boost cannot resolve security IDs and will show a sync modal.**
+
+## Source and filtering
+
+| Property | Value |
+|----------|-------|
+| **CSV URL** | `https://images.dhan.co/api-data/api-scrip-master.csv` |
+| **Kept segments** | `NSE_EQ`, `NSE_FNO` |
+| **Kept instruments** | `EQUITY`, `FUTSTK`, `FUTIDX` |
+| **Typical row count** | ~24,000 after filtering |
+| **Storage** | `master_contracts` SQLite table via Prisma |
+
+## Sync behavior
+
+<Steps>
+
+### Download CSV
+
+Fetches the full master CSV from Dhan (~100MB). Parses column headers dynamically using `SEM_*` column names.
+
+### Normalize segments
+
+Maps raw exchange + segment codes to human-readable segments:
+
+| Exchange | Raw segment | Normalized |
+|----------|-------------|------------|
+| NSE | E | `NSE_EQ` |
+| BSE | E | `BSE_EQ` |
+| NSE | D | `NSE_FNO` |
+| BSE | D | `BSE_FNO` |
+| NSE | I | `IDX_I` |
+| MCX | M | `MCX_COMM` |
+
+### Normalize instruments
+
+Maps instrument types: `FUT` becomes `FUTSTK`/`FUTIDX` based on the instrument name field. Only `EQUITY`, `FUTSTK`, and `FUTIDX` are kept.
+
+### Extract futures underlying
+
+For `FUTSTK` instruments, extracts the underlying symbol from the trading symbol (e.g., `RELIANCE-Mar2026-FUT` becomes underlying `RELIANCE`).
+
+### Bulk insert
+
+Clears old data, then inserts in chunks of 500 rows using raw SQL `INSERT OR IGNORE` for speed.
+
+</Steps>
+
+### Process-level sync flag
+
+A `synced` boolean prevents repeated DB checks within the same process. Once `ensureSynced()` succeeds, it skips the DB query entirely. The flag resets on server restart.
+
+### Date handling
+
+Sync date is computed in IST (`Asia/Kolkata`) using `toLocaleDateString('en-CA')` for `YYYY-MM-DD` format. `ensureSynced()` checks if any rows exist with today's IST date.
+
+## Lookup functions
+
+### `resolveSymbol(symbol, exchange?)`
+
+Resolves an equity security entry by symbol. Queries the `master_contracts` table filtering by `segment = NSE_EQ` (or `BSE_EQ`).
+
+```typescript
+const entry = await resolveSymbol('RELIANCE', 'NSE');
+// Returns: { securityId, symbol, exchange, segment, name, instrument }
+```
+
+### `resolveFuturesSecurity(underlying)`
+
+Finds the near-month stock futures contract for an underlying symbol. Orders by `expiryDate ASC` and takes the first future expiry after today.
+
+```typescript
+const futures = await resolveFuturesSecurity('RELIANCE');
+// Returns: { securityId, symbol, expiry, underlying, ... }
+```
+
+### `batchResolveFutures(underlyings[])`
+
+Batch-resolves near-month futures security IDs for multiple underlyings. Returns `Map<underlying, futuresSecurityId>`. Picks the nearest expiry per underlying.
+
+### `searchSymbols(query, exchange?)`
+
+Searches symbols using `contains` matching (case-insensitive via uppercase). Returns up to 20 equity results.
+
+## TypeScript types
+
+```typescript
+type SecurityEntry = {
+  securityId: string;
+  symbol: string;
+  exchange: string;
+  segment: string;
+  name: string;
+  instrument: string;
+};
+
+type FuturesEntry = SecurityEntry & {
+  expiry: Date;
+  underlying: string;
+};
+```
+
+## API endpoints
+
+### `GET /api/master-contracts`
+
+Query stored master contracts with filtering and pagination.
+
+| Parameter | Type | Default | Max | Description |
+|-----------|------|---------|-----|-------------|
+| `q` | string | — | — | Symbol search (contains, uppercased) |
+| `segment` | string | — | — | Filter by segment |
+| `instrument` | string | — | — | Filter by instrument type |
+| `limit` | number | 50 | 200 | Results per page |
+| `offset` | number | 0 | — | Pagination offset |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [],
+  "total": 24000,
+  "syncDate": "2026-03-17",
+  "filters": {
+    "segments": ["NSE_EQ", "NSE_FNO"],
+    "instruments": ["EQUITY", "FUTIDX", "FUTSTK"]
+  }
+}
+```
+
+### `POST /api/master-contracts/sync`
+
+Force re-sync from Dhan CSV. Clears existing data and re-imports.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "count": 24132,
+  "elapsed": "3.2s"
+}
+```
+
+## Dhan CSV column reference
+
+| CSV column | Used for |
+|------------|----------|
+| `SEM_EXM_EXCH_ID` | Exchange (NSE, BSE, MCX) |
+| `SEM_SEGMENT` | Segment code (E, D, I, M) |
+| `SEM_SMST_SECURITY_ID` | Numeric security ID for API calls |
+| `SEM_TRADING_SYMBOL` | Trading symbol (e.g., `RELIANCE`) |
+| `SEM_INSTRUMENT_NAME` | Instrument name (FUTSTK, FUTIDX, etc.) |
+| `SEM_EXCH_INSTRUMENT_TYPE` | Raw instrument type (FUT, OP, etc.) |
+| `SEM_EXPIRY_DATE` | Expiry date for derivatives |
+
+## File map
+
+| File | Purpose |
+|------|---------|
+| `lib/historify/master-contracts.ts` | Core sync + lookup logic |
+| `app/api/master-contracts/route.ts` | GET: query contracts with filters |
+| `app/api/master-contracts/sync/route.ts` | POST: force re-sync |
+| `app/trading-lab/master-contracts/page.tsx` | UI: browse + trigger sync |

@@ -1,10 +1,11 @@
-import { bhavcopyService } from './bhavcopy-service';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import { dhanMarketFeed, isMarketHours } from '@/lib/dhan/market-feed';
+import { hasDhanCredentials } from '@/lib/env';
+import { batchResolveFutures, ensureSynced, resolveSymbol } from '../historify/master-contracts';
+import { getHistoricalData } from './bhavcopy-service';
 import { engine } from './engine';
-import { transformToFactorData, SignalOutput, DailyStockData } from './types';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { resolveSymbol, batchResolveFutures } from '../historify/master-contracts';
-import { env, hasDhanCredentials } from '@/lib/env';
+import { type DailyStockData, type SignalOutput, transformToFactorData } from './types';
 
 /** Extended signal with live price data */
 export interface BoostSignal extends SignalOutput {
@@ -15,7 +16,7 @@ export interface BoostSignal extends SignalOutput {
 interface LiveEqOHLC {
   high: number;
   low: number;
-  close: number;     // Previous day close
+  close: number; // Previous day close
   lastPrice: number;
 }
 
@@ -24,55 +25,6 @@ interface LiveFutData {
   volume: number;
   oi: number;
   lastPrice: number;
-}
-
-/**
- * Check if Indian market is currently open.
- * IST = UTC+5:30, market hours 9:15–15:30.
- */
-function isMarketHours(): boolean {
-  const now = new Date();
-  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
-  const ist = new Date(utcMs + 5.5 * 3600000);
-  const day = ist.getDay();
-  if (day === 0 || day === 6) return false;
-  const hours = ist.getHours();
-  const mins = ist.getMinutes();
-  const time = hours * 60 + mins;
-  return time >= 9 * 60 + 15 && time <= 15 * 60 + 30;
-}
-
-/**
- * Raw Dhan V2 market feed call.
- * The API expects numeric security IDs and returns nested structure:
- * { data: { SEGMENT: { "secId": { last_price, ohlc: { open, close, high, low }, volume?, oi? } } } }
- */
-async function dhanMarketFeed(
-  endpoint: 'ohlc' | 'quote',
-  securities: Record<string, number[]>
-): Promise<Record<string, Record<string, { last_price: number; ohlc: { open: number; close: number; high: number; low: number }; volume?: number; oi?: number }>>> {
-  if (!hasDhanCredentials()) return {};
-  const token = env.DHAN_ACCESS_TOKEN!;
-  const clientId = env.DHAN_CLIENT_ID!;
-
-  const resp = await fetch(`https://api.dhan.co/v2/marketfeed/${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'access-token': token,
-      'client-id': clientId,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(securities),
-  });
-
-  if (!resp.ok) {
-    console.error(`[Dhan] marketfeed/${endpoint} failed: ${resp.status}`);
-    return {};
-  }
-
-  const json = await resp.json() as { data?: Record<string, Record<string, unknown>>; status: string };
-  if (json.status !== 'success' || !json.data) return {};
-  return json.data as Record<string, Record<string, { last_price: number; ohlc: { open: number; close: number; high: number; low: number }; volume?: number; oi?: number }>>;
 }
 
 export class RFactorDataService {
@@ -88,11 +40,9 @@ export class RFactorDataService {
   }
 
   async getRFactorSignal(symbol: string): Promise<SignalOutput> {
-    const dailyData = await bhavcopyService.getHistoricalData(symbol, 25);
+    const dailyData = await getHistoricalData(symbol, 25);
     if (dailyData.length < 15) {
-      throw new Error(
-        `Insufficient data for ${symbol}: found ${dailyData.length} days, need at least 15`
-      );
+      throw new Error(`Insufficient data for ${symbol}: found ${dailyData.length} days, need at least 15`);
     }
     const factorData = transformToFactorData(dailyData);
     const current = factorData[factorData.length - 1];
@@ -115,8 +65,6 @@ export class RFactorDataService {
     const symbols = await this.getFnOStocks();
     const targetSymbols = symbols.slice(0, limit);
 
-    await this.preWarmCache();
-
     const hasDhan = hasDhanCredentials();
     const marketOpen = isMarketHours();
 
@@ -130,12 +78,10 @@ export class RFactorDataService {
   }
 
   private async computeBhavcopySignals(symbols: string[]): Promise<BoostSignal[]> {
-    const results = await Promise.allSettled(
-      symbols.map(s => this.getRFactorSignal(s))
-    );
+    const results = await Promise.allSettled(symbols.map((s) => this.getRFactorSignal(s)));
     return results
       .filter((r): r is PromiseFulfilledResult<SignalOutput> => r.status === 'fulfilled')
-      .map(r => ({ ...r.value }))
+      .map((r) => ({ ...r.value }))
       .sort((a, b) => b.compositeRFactor - a.compositeRFactor);
   }
 
@@ -149,9 +95,12 @@ export class RFactorDataService {
    * 4. Run engine with live current vs 20-day historical baseline
    */
   private async computeLiveSignals(symbols: string[]): Promise<BoostSignal[]> {
+    // Step 0: Verify master contracts are synced (throws MasterContractsNotSyncedError if not)
+    await ensureSynced();
+
     // Step 1: Resolve equity + futures security IDs
-    const eqIdMap = new Map<string, number>();   // symbol → equity securityId
-    const futIdMap = new Map<string, number>();   // symbol → futures securityId
+    const eqIdMap = new Map<string, number>(); // symbol → equity securityId
+    const futIdMap = new Map<string, number>(); // symbol → futures securityId
 
     const eqResolves = symbols.map(async (s) => {
       const entry = await resolveSymbol(s, 'NSE');
@@ -180,54 +129,58 @@ export class RFactorDataService {
     const fetchPromises: Promise<void>[] = [];
 
     if (eqIdMap.size > 0) {
-      fetchPromises.push((async () => {
-        try {
-          const data = await dhanMarketFeed('ohlc', {
-            NSE_EQ: Array.from(eqIdMap.values()),
-          });
-          const segment = data['NSE_EQ'];
-          if (!segment) return;
-          for (const [secIdStr, quote] of Object.entries(segment)) {
-            const sym = eqIdToSym.get(parseInt(secIdStr, 10));
-            if (sym && quote.ohlc) {
-              liveEq.set(sym, {
-                high: quote.ohlc.high,
-                low: quote.ohlc.low,
-                close: quote.ohlc.close,
-                lastPrice: quote.last_price,
-              });
+      fetchPromises.push(
+        (async () => {
+          try {
+            const data = await dhanMarketFeed('ohlc', {
+              NSE_EQ: Array.from(eqIdMap.values()),
+            });
+            const segment = data.NSE_EQ;
+            if (!segment) return;
+            for (const [secIdStr, quote] of Object.entries(segment)) {
+              const sym = eqIdToSym.get(parseInt(secIdStr, 10));
+              if (sym && quote.ohlc) {
+                liveEq.set(sym, {
+                  high: quote.ohlc.high,
+                  low: quote.ohlc.low,
+                  close: quote.ohlc.close,
+                  lastPrice: quote.last_price,
+                });
+              }
             }
+            console.log(`[Boost] Got equity OHLC for ${liveEq.size} symbols`);
+          } catch (e) {
+            console.error('[Boost] Equity OHLC fetch failed:', e);
           }
-          console.log(`[Boost] Got equity OHLC for ${liveEq.size} symbols`);
-        } catch (e) {
-          console.error('[Boost] Equity OHLC fetch failed:', e);
-        }
-      })());
+        })(),
+      );
     }
 
     if (futIdMap.size > 0) {
-      fetchPromises.push((async () => {
-        try {
-          const data = await dhanMarketFeed('quote', {
-            NSE_FNO: Array.from(futIdMap.values()),
-          });
-          const segment = data['NSE_FNO'];
-          if (!segment) return;
-          for (const [secIdStr, quote] of Object.entries(segment)) {
-            const sym = futIdToSym.get(parseInt(secIdStr, 10));
-            if (sym) {
-              liveFut.set(sym, {
-                volume: quote.volume ?? 0,
-                oi: quote.oi ?? 0,
-                lastPrice: quote.last_price,
-              });
+      fetchPromises.push(
+        (async () => {
+          try {
+            const data = await dhanMarketFeed('quote', {
+              NSE_FNO: Array.from(futIdMap.values()),
+            });
+            const segment = data.NSE_FNO;
+            if (!segment) return;
+            for (const [secIdStr, quote] of Object.entries(segment)) {
+              const sym = futIdToSym.get(parseInt(secIdStr, 10));
+              if (sym) {
+                liveFut.set(sym, {
+                  volume: quote.volume ?? 0,
+                  oi: quote.oi ?? 0,
+                  lastPrice: quote.last_price,
+                });
+              }
             }
+            console.log(`[Boost] Got futures depth for ${liveFut.size} symbols`);
+          } catch (e) {
+            console.error('[Boost] Futures depth fetch failed:', e);
           }
-          console.log(`[Boost] Got futures depth for ${liveFut.size} symbols`);
-        } catch (e) {
-          console.error('[Boost] Futures depth fetch failed:', e);
-        }
-      })());
+        })(),
+      );
     }
 
     await Promise.all(fetchPromises);
@@ -235,7 +188,7 @@ export class RFactorDataService {
     // Step 3: Compute R-Factor for each symbol with live blend
     const signalPromises = symbols.map(async (symbol) => {
       try {
-        const dailyData = await bhavcopyService.getHistoricalData(symbol, 25);
+        const dailyData = await getHistoricalData(symbol, 25);
         if (dailyData.length < 15) return null;
 
         const eq = liveEq.get(symbol);
@@ -247,7 +200,7 @@ export class RFactorDataService {
           // Equity: live from Dhan
           eq_high: eq?.high ?? lastDay.eq_high,
           eq_low: eq?.low ?? lastDay.eq_low,
-          eq_close: eq?.close ?? lastDay.eq_close,
+          eq_close: eq?.lastPrice ?? lastDay.eq_close, // Use LTP (not yesterday's close) for live spread
           eq_volume: lastDay.eq_volume,
           eq_turnover: lastDay.eq_turnover,
           // Futures: live volume + OI from Dhan
@@ -289,10 +242,6 @@ export class RFactorDataService {
     }
 
     return signals.sort((a, b) => b.compositeRFactor - a.compositeRFactor);
-  }
-
-  private async preWarmCache(): Promise<void> {
-    await bhavcopyService.getHistoricalData('RELIANCE', 25);
   }
 }
 

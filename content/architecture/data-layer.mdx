@@ -1,0 +1,46 @@
+---
+title: Data layer
+description: SQLite, DuckDB, and Prisma ORM configuration.
+---
+
+# Data layer
+
+## Database stack
+
+Project-R uses a dual-database approach:
+
+| Database | Purpose | Driver |
+|----------|---------|--------|
+| **SQLite** | App state, master contracts, bhavcopy | `@prisma/adapter-better-sqlite3` |
+| **DuckDB** | Large-scale Parquet columnar storage | `@duckdb/node-api` |
+
+## Prisma schema
+
+Schema is defined in `prisma/schema.prisma` with the client singleton in `lib/db.ts` using a lazy proxy pattern. The database file lives at `data/project-r.db`.
+
+### Tables
+
+| Table | Purpose | Row count |
+|-------|---------|-----------|
+| `watchlist` | User watchlist state | Small |
+| `activity` | Activity log | Medium |
+| `settings` | App configuration | Small |
+| `master_contracts` | Dhan instrument mappings (symbol to securityId) | ~24K rows (EQUITY + FUTSTK + FUTIDX) |
+| `bhavcopy_days` | NSE daily equity + F&O data per stock per day | ~206 stocks x 25+ days |
+
+### Covering index
+
+The `historical_data` table uses a composite `PRIMARY KEY (symbol, exchange, interval, timestamp)`. SQLite automatically creates a B-Tree index in this order, enabling O(log N) lookups instead of full table scans.
+
+## DuckDB and Parquet
+
+For large-scale quant research, data transitions into Parquet files via `/lib/historify/duckdb.ts`:
+
+- Column-oriented storage scans only the columns you need
+- Millions of "Close" price rows read without touching "Open" or "Volume"
+- 10x faster backtests compared to row-oriented storage
+- Cloud data lake queries via DuckDB's `httpfs` extension (Hugging Face datasets)
+
+## Native module configuration
+
+Both `prisma` and `duckdb` are native Node.js modules. They are externalized in the webpack config at `next.config.ts` to prevent bundling issues.

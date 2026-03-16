@@ -52,6 +52,31 @@ model MasterContract {
   @@map("master_contracts")
 }
 
+model BhavcopyDay {
+  id          Int    @id @default(autoincrement())
+  date        String
+  symbol      String
+  eqVolume    Float  @default(0)
+  eqTurnover  Float  @default(0)
+  eqHigh      Float  @default(0)
+  eqLow       Float  @default(0)
+  eqClose     Float  @default(0)
+  futVolume   Float  @default(0)
+  futOi       Float  @default(0)
+  futOiChange Float  @default(0)
+  futTurnover Float  @default(0)
+  optVolume   Float  @default(0)
+  optOi       Float  @default(0)
+  optTurnover Float  @default(0)
+  ceVolume    Float  @default(0)
+  peVolume    Float  @default(0)
+
+  @@unique([date, symbol])
+  @@index([symbol])
+  @@index([date])
+  @@map("bhavcopy_days")
+}
+
 model Settings {
   id              Int     @id @default(1)
   dhanClientId    String  @default("")

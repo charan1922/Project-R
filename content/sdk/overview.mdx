@@ -1,0 +1,60 @@
+---
+title: Dhan V2 SDK
+description: Standalone TypeScript SDK for the Dhan V2 trading API.
+---
+
+import { Callout } from 'nextra/components'
+
+# Dhan V2 SDK
+
+## Overview
+
+The Dhan V2 SDK lives in `/dhanv2` as a separate pnpm package (`dhanhq-ts`). It provides typed REST clients, WebSocket handlers, and a binary protocol parser for the Dhan V2 API.
+
+## Features
+
+- Full REST client for Dhan V2 endpoints
+- WebSocket handler with binary protocol parsing
+- Rate limiting (4 requests/second)
+- TypeScript types for all API responses
+
+## Testing
+
+The SDK uses Vitest:
+
+```bash
+cd dhanv2
+pnpm test
+```
+
+## Raw API calls
+
+<Callout type="info">
+  The R-Factor engine bypasses the SDK for market feed calls. The SDK sends string IDs, but the API needs numbers. `dhanMarketFeed()` in `data-service.ts` calls the API directly.
+</Callout>
+
+### Endpoints used directly
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/v2/marketfeed/ohlc` | POST | Equity OHLC data |
+| `/v2/marketfeed/quote` | POST | Futures depth with volume + OI |
+
+### Response format
+
+Responses are nested as:
+
+```typescript
+{
+  data: {
+    [SEGMENT]: {
+      [securityId]: {
+        last_price: number;
+        ohlc: { open: number; high: number; low: number; close: number };
+        volume?: number;
+        oi?: number;
+      }
+    }
+  }
+}
+```

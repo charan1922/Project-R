@@ -11,13 +11,13 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { v1Items, historifyItems, quantLabItems, v01Items } from "./_sidebar/nav-data";
+import { v1Items, marketScopeItems, historifyItems, quantLabItems, v01Items } from "./_sidebar/nav-data";
 import { NavItem } from "./_sidebar/NavItem";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>(["/v1", "/historify"]);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["/v1", "/trading-lab/sector-scope", "/historify"]);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -101,6 +101,16 @@ export default function Sidebar() {
               <div className="h-px bg-slate-800/60 flex-1"></div>
             </div>
             {v1Items.map((item) => (
+              <NavItem key={item.href} item={item} {...commonProps} />
+            ))}
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="px-2 text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <span>Market Scope</span>
+              <div className="h-px bg-amber-800/40 flex-1"></div>
+            </div>
+            {marketScopeItems.map((item) => (
               <NavItem key={item.href} item={item} {...commonProps} />
             ))}
           </div>

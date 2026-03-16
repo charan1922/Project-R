@@ -1,11 +1,9 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import path from "node:path";
+import path from 'node:path';
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
+import { PrismaClient } from '@prisma/client';
 
-const isVercel = process.env.VERCEL === "1";
-const dbPath = isVercel
-  ? "/tmp/project-r.db"
-  : path.join(process.cwd(), "data", "project-r.db");
+const isVercel = process.env.VERCEL === '1';
+const dbPath = isVercel ? '/tmp/project-r.db' : path.join(process.cwd(), 'data', 'project-r.db');
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;

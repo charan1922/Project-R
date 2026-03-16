@@ -1,0 +1,47 @@
+---
+title: Quant lab
+description: Backtest engine with multiple strategies and Indian market fee modeling.
+---
+
+# Quant lab
+
+## Overview
+
+The Quant lab provides a backtesting framework with pure TypeScript implementations of technical indicators and strategy logic. No Python bridge — everything runs bare-metal in V8.
+
+## Strategies
+
+Located in `lib/quant/strategies/`:
+
+| Strategy | Description |
+|----------|-------------|
+| **EMA Crossover** | Fast/slow exponential moving average crossover signals |
+| **RSI Accumulation** | Accumulate positions on RSI oversold conditions |
+| **Buy & Hold 75/25** | 75% equity / 25% cash allocation baseline |
+| **Dual Momentum** | Relative + absolute momentum combination |
+
+## Backtest engine
+
+The engine in `lib/quant/backtest-engine.ts` calculates:
+
+| Metric | Description |
+|--------|-------------|
+| **Sharpe ratio** | Risk-adjusted return |
+| **Max drawdown** | Largest peak-to-trough decline |
+| **CAGR** | Compound annual growth rate |
+| **Win rate** | Percentage of profitable trades |
+| **Profit factor** | Gross profit / gross loss |
+
+All calculations include Indian market fee modeling (brokerage, STT, GST, stamp duty, exchange charges).
+
+## Math utilities
+
+`lib/quant/math-utils.ts` provides pure TypeScript implementations:
+
+- **EMA** — Exponential moving average
+- **RSI** — Relative Strength Index (Wilder's smoothing)
+- Additional technical indicator primitives
+
+## Data loader
+
+The data loader includes a 5-minute TTL cache to avoid redundant API calls during rapid strategy iterations.

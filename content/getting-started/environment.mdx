@@ -1,0 +1,49 @@
+---
+title: Environment variables
+description: Required and optional environment variables for Project-R.
+---
+
+import { Callout } from 'nextra/components'
+
+# Environment variables
+
+All environment variables are validated at import time using a Zod schema in `lib/env.ts`. Use `env.*` accessors and helper functions instead of raw `process.env`.
+
+## Required variables
+
+| Variable | Description |
+|----------|-------------|
+| `DHAN_CLIENT_ID` | Your Dhan V2 client ID |
+| `DHAN_ACCESS_TOKEN` | JWT token from Dhan |
+
+## Optional variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | `file:data/project-r.db` | SQLite database path |
+| `NEXT_PUBLIC_SENTRY_DSN` | — | Sentry DSN for error tracking |
+| `SENTRY_ORG` | — | Sentry org for source maps |
+| `SENTRY_PROJECT` | — | Sentry project for source maps |
+
+## Helper functions
+
+```typescript
+import { env, hasDhanCredentials, isVercel } from '@/lib/env';
+
+// Access validated variables
+const clientId = env.DHAN_CLIENT_ID;
+
+// Check if Dhan credentials are configured
+if (hasDhanCredentials()) {
+  // Safe to make Dhan API calls
+}
+
+// Check deployment environment
+if (isVercel()) {
+  // Running on Vercel
+}
+```
+
+<Callout type="info">
+  Never use `process.env` directly. The `env` object ensures all variables are validated and typed at import time.
+</Callout>

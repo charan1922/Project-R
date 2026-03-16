@@ -1,0 +1,77 @@
+---
+title: Quickstart
+description: Get Project-R running locally in under 5 minutes.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Quickstart
+
+## Prerequisites
+
+- Node.js 22+
+- pnpm 10.x
+
+## Setup
+
+<Steps>
+
+### Clone and install
+
+```bash
+git clone <your-repo-url>
+cd project-r
+pnpm install
+```
+
+### Configure environment
+
+Create `.env.local` in the project root:
+
+```bash
+DHAN_CLIENT_ID=<your-client-id>
+DHAN_ACCESS_TOKEN=<your-jwt-token>
+```
+
+`DATABASE_URL` defaults to `file:data/project-r.db` if not set.
+
+### Initialize the database
+
+```bash
+pnpm db:push
+```
+
+This pushes the Prisma schema to SQLite without creating migration files.
+
+### Start the dev server
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:5000](http://localhost:5000).
+
+</Steps>
+
+## First steps after setup
+
+1. **Sync master contracts** — Go to `/trading-lab/master-contracts` and click "Sync" to download Dhan instrument mappings.
+2. **Sync bhavcopy** — Go to `/trading-lab/bhavcopy` and sync NSE daily data for R-Factor baselines.
+3. **Run Intraday Boost** — Go to `/trading-lab/intraday-boost` to see live R-Factor signals.
+
+<Callout type="warning">
+  Data sync is always user-triggered. No page auto-downloads external data.
+</Callout>
+
+## Available commands
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Dev server on port 5000 |
+| `pnpm build` | Production build |
+| `pnpm lint` | Biome check (linting + formatting) |
+| `pnpm format` | Biome format with auto-fix |
+| `pnpm db:migrate` | Create and apply Prisma migrations |
+| `pnpm db:push` | Push schema to DB (no migration file) |
+| `pnpm db:studio` | Visual database editor |
+| `pnpm db:generate` | Regenerate Prisma client |

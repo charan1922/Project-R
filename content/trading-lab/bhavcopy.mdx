@@ -1,0 +1,191 @@
+---
+title: Bhavcopy
+description: NSE daily equity and F&O data sync — the 20-day historical baseline for R-Factor Z-scores.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Bhavcopy
+
+## Overview
+
+Bhavcopy is the historical data layer for R-Factor. It downloads and stores NSE's daily bhavcopy files (equity + F&O), which provide the 20-day lookback window needed for Z-score normalization. Without bhavcopy data, the R-Factor engine cannot compute meaningful signals.
+
+## Data sources
+
+NSE publishes daily ZIP archives at `https://nsearchives.nseindia.com/content/`:
+
+| Source | URL pattern | Content |
+|--------|-------------|---------|
+| **F&O bhavcopy** | `/fo/BhavCopy_NSE_FO_0_0_0_{YYYYMMDD}_F_0000.csv.zip` | Futures + options data |
+| **Equity bhavcopy** | `/cm/BhavCopy_NSE_CM_0_0_0_{YYYYMMDD}_F_0000.csv.zip` | Equity cash market data |
+
+## Sync pipeline
+
+<Steps>
+
+### Import from local cache
+
+First checks `lib/cache/rfactor/daily/*.json` for previously cached data. Skips dates already in the DB. This is instant (no network).
+
+### Find missing dates
+
+Generates a list of weekday dates (skipping Saturday/Sunday), checks which ones are already in the `bhavcopy_days` table, and identifies gaps.
+
+### Get NSE session cookie
+
+NSE uses Akamai CDN protection. `getNSECookie()` visits `https://www.nseindia.com/` with browser-like headers to obtain session cookies. Without this, ZIP downloads return 403.
+
+### Download and parse
+
+For each missing date, downloads both F&O and equity ZIPs in parallel. Extracts the CSV from each ZIP using `adm-zip`, then parses into structured data.
+
+### Merge equity + F&O
+
+Merges equity and F&O data by symbol. F&O data is keyed by the ticker symbol from the bhavcopy. If a symbol has F&O data but no equity data, equity fields default to 0.
+
+### Bulk insert
+
+Inserts rows in chunks of 200 using raw SQL `INSERT OR IGNORE` for speed.
+
+</Steps>
+
+## NSE CSV column reference
+
+### F&O bhavcopy columns
+
+| CSV column | Maps to | Description |
+|------------|---------|-------------|
+| `TckrSymb` | symbol | Ticker symbol |
+| `FinInstrmTp` | — | `STF` = stock futures, `STO` = stock options |
+| `XpryDt` | — | Expiry date (for nearest-month selection) |
+| `OpnIntrst` | `fut_oi` | Open interest |
+| `ChngInOpnIntrst` | `fut_oi_change` | Change in OI |
+| `TtlTradgVol` | `fut_volume` / `opt_volume` | Total trading volume |
+| `TtlTrfVal` | `fut_turnover` / `opt_turnover` | Total transfer value |
+| `OptnTp` | — | `CE` or `PE` (for PCR calculation) |
+
+### Equity bhavcopy columns
+
+| CSV column | Maps to | Description |
+|------------|---------|-------------|
+| `TckrSymb` | symbol | Ticker symbol |
+| `SctySrs` | — | Must be `EQ` (filters out non-equity series) |
+| `HghPric` | `eq_high` | Day high |
+| `LwPric` | `eq_low` | Day low |
+| `ClsPric` | `eq_close` | Closing price |
+| `TtlTradgVol` | `eq_volume` | Total trading volume |
+| `TtlTrfVal` | `eq_turnover` | Total turnover value |
+
+## Futures nearest-expiry selection
+
+F&O bhavcopy contains multiple expiry months. The system selects the **near-month** contract:
+
+1. Collects all expiry dates for a symbol
+2. `findNearestExpiry()` picks the expiry closest to (but not before) the reference date
+3. Falls back to the absolute closest expiry if no future expiry exists
+4. Only the near-month futures data feeds into R-Factor
+
+## Options aggregation for PCR
+
+Options data is aggregated per symbol across all strikes and expiries:
+
+- `ce_volume` — total call options volume (all strikes, `OptnTp = CE`)
+- `pe_volume` — total put options volume (all strikes, `OptnTp = PE`)
+- PCR = `pe_volume / ce_volume` (computed during `transformToFactorData`)
+
+## Data model
+
+The `bhavcopy_days` Prisma table stores one row per symbol per date:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `date` | String | `YYYY-MM-DD` format |
+| `symbol` | String | Stock ticker (e.g., `RELIANCE`) |
+| `eqVolume` | Float | Equity trading volume |
+| `eqTurnover` | Float | Equity turnover value |
+| `eqHigh` | Float | Equity day high |
+| `eqLow` | Float | Equity day low |
+| `eqClose` | Float | Equity closing price |
+| `futVolume` | Float | Futures volume (near-month) |
+| `futOi` | Float | Futures open interest |
+| `futOiChange` | Float | Change in futures OI |
+| `futTurnover` | Float | Futures turnover |
+| `optVolume` | Float | Total options volume |
+| `optOi` | Float | Total options OI |
+| `optTurnover` | Float | Total options turnover |
+| `ceVolume` | Float | Call option volume |
+| `peVolume` | Float | Put option volume |
+
+Unique constraint on `(date, symbol)` — `INSERT OR IGNORE` prevents duplicates.
+
+## Read API
+
+### `getHistoricalData(symbol, days)`
+
+Returns the most recent `days` entries for a symbol from the DB. Used by the R-Factor engine for the 20-day lookback.
+
+Throws `BhavcopyNotSyncedError` if no rows exist for the symbol.
+
+```typescript
+const data = await getHistoricalData('RELIANCE', 25);
+// Returns: DailyStockData[] with eq_*, fut_*, opt_*, ce_*, pe_* fields
+```
+
+## API endpoints
+
+### `GET /api/bhavcopy`
+
+Query stored bhavcopy data with filtering and pagination.
+
+| Parameter | Type | Default | Max | Description |
+|-----------|------|---------|-----|-------------|
+| `symbol` | string | — | — | Symbol search (contains) |
+| `date` | string | — | — | Exact date filter (`YYYY-MM-DD`) |
+| `limit` | number | 50 | 500 | Results per page |
+| `offset` | number | 0 | — | Pagination offset |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [],
+  "total": 5150,
+  "dates": ["2026-03-17", "2026-03-14"],
+  "dateRange": { "from": "2026-02-10", "to": "2026-03-17" }
+}
+```
+
+### `POST /api/bhavcopy/sync`
+
+Trigger bhavcopy sync (cache import + NSE download).
+
+| Parameter | Type | Default | Max | Description |
+|-----------|------|---------|-----|-------------|
+| `days` | number | 25 | 60 | Number of trading days to sync |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "dates": 25,
+  "rows": 5150,
+  "elapsed": "12.4s"
+}
+```
+
+## Holiday handling
+
+The sync generates weekday-only candidate dates (skips Saturday/Sunday). Public holidays where NSE was closed will return empty data — the system logs "no data (holiday/blocked)" and skips. The 20-day lookback naturally adjusts since only trading days with data are stored.
+
+## File map
+
+| File | Purpose |
+|------|---------|
+| `lib/r-factor/bhavcopy-service.ts` | Sync pipeline + DB reads |
+| `lib/r-factor/types.ts` | `DailyStockData` type definition |
+| `app/api/bhavcopy/route.ts` | GET: query bhavcopy data |
+| `app/api/bhavcopy/sync/route.ts` | POST: trigger sync |
+| `app/trading-lab/bhavcopy/page.tsx` | UI: browse data + trigger sync |

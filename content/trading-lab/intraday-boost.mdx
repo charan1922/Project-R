@@ -1,0 +1,222 @@
+---
+title: Intraday boost
+description: Live R-Factor signals — blends Dhan real-time data with bhavcopy baselines to rank F&O stocks by institutional activity.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Intraday boost
+
+## Overview
+
+Intraday Boost is the primary trading interface. It scans up to 206 F&O stocks, computes a live R-Factor score for each by blending Dhan's real-time market feed with NSE bhavcopy history, and ranks them by institutional activity strength.
+
+## Prerequisites
+
+| Dependency | Required for | Error if missing |
+|------------|-------------|------------------|
+| Master contracts synced | Resolving symbols to Dhan security IDs | `MasterContractsNotSyncedError` (503, modal to master contracts page) |
+| Bhavcopy synced | 20-day historical baseline for Z-scores | `BhavcopyNotSyncedError` (503, modal to bhavcopy page) |
+| Dhan credentials | Live market data | Falls back to bhavcopy-only signals |
+
+## Two computation modes
+
+### Live mode (market hours + Dhan credentials)
+
+During Indian market hours (IST 9:15–15:30, Mon–Fri) with valid `DHAN_ACCESS_TOKEN`:
+
+<Steps>
+
+### Verify master contracts
+
+`ensureSynced()` checks the process-level flag, then DB for today's sync date. Throws `MasterContractsNotSyncedError` if not synced.
+
+### Resolve security IDs
+
+For each F&O stock:
+- `resolveSymbol(symbol, 'NSE')` returns the equity security ID (numeric)
+- `batchResolveFutures(symbols)` returns the near-month futures security ID (nearest expiry)
+
+Both run in parallel. Results stored in `eqIdMap` and `futIdMap`.
+
+### Batch fetch Dhan market feed
+
+Two parallel API calls:
+
+| Endpoint | Payload | Returns |
+|----------|---------|---------|
+| `POST /v2/marketfeed/ohlc` | `{ NSE_EQ: [securityIds] }` | Equity OHLC (high, low, close, last\_price) |
+| `POST /v2/marketfeed/quote` | `{ NSE_FNO: [securityIds] }` | Futures depth (volume, OI, last\_price) |
+
+<Callout type="warning">
+  These calls bypass the SDK because the SDK sends string IDs while the API requires numeric IDs. `dhanMarketFeed()` in `data-service.ts` calls the REST API directly.
+</Callout>
+
+### Build synthetic today
+
+For each symbol, constructs a `DailyStockData` record blending live and historical data:
+
+| Field | Source | Why |
+|-------|--------|-----|
+| `eq_high`, `eq_low`, `eq_close` | Dhan equity OHLC | Live spread calculation (coeff 0.625) |
+| `fut_volume` | Dhan futures depth | Live volume Z-score (coeff -1.733) |
+| `fut_turnover` | `fut.volume * fut.lastPrice` | Computed from live data (coeff 1.415) |
+| `fut_oi` | Dhan futures depth | Live open interest |
+| `fut_oi_change` | `abs(live_oi - yesterday_oi)` | OI change from yesterday's bhavcopy |
+| `eq_volume`, `eq_turnover` | Yesterday's bhavcopy | Not available intraday from Dhan |
+| `opt_*`, `ce_volume`, `pe_volume` | Yesterday's bhavcopy | PCR proxy (coeff only 0.077 — smallest impact) |
+
+### Blend and compute
+
+Replaces the last day of bhavcopy history with the synthetic live day:
+
+```
+blendedData = [...bhavcopy[0..N-2], liveDay]
+```
+
+Runs `transformToFactorData()` then `engine.calculateSignal()` for the composite R-Factor score.
+
+### Add price change
+
+Computes `pctChange = ((lastPrice - prevClose) / prevClose) * 100` from Dhan equity data.
+
+### Sort and return
+
+Sorts all signals by `compositeRFactor` descending. Top-ranked stocks have the strongest institutional activity.
+
+</Steps>
+
+### Bhavcopy-only mode (after hours / no Dhan)
+
+When market is closed or no Dhan credentials:
+- Calls `getRFactorSignal()` per symbol using pure bhavcopy data
+- All factors come from historical NSE data (no live blending)
+- `Promise.allSettled()` ensures partial failures don't block the scan
+
+## The R-Factor computation
+
+### Factor derivation (`transformToFactorData`)
+
+Raw `DailyStockData` is converted to 7-factor `FactorData`:
+
+| Factor | Derivation | Pearson correlation |
+|--------|-----------|---------------------|
+| `spread` | `(high - low) / close` as RATIO vs 20-day average | 0.54 (dominant) |
+| `pcr` | `pe_volume / ce_volume` | 0.31 |
+| `oi_change` | `abs(fut_oi_change)` | 0.21 |
+| `fut_turnover` | Raw futures turnover | 0.18 |
+| `fut_volume` | Raw futures volume | 0.16 |
+| `eq_trade_size` | `eq_turnover / eq_volume` | 0.13 |
+| `opt_volume` | Raw options volume | 0.09 |
+
+<Callout type="info">
+  Spread uses a **ratio** (today / 20-day average), not a Z-score. Validated to produce better results than Z-score normalization.
+</Callout>
+
+### OLS regression (`engine.calculateSignal`)
+
+The 5-feature OLS model with signed coefficients:
+
+```
+R = 1.11 + 0.625 × spread_r + 0.077 × pcr_z
+  + 0.226 × (spread_r × fut_turn_z)
+  + 1.415 × fut_turn_z - 1.733 × fut_vol_z
+```
+
+| Feature | Coefficient | Interpretation |
+|---------|-------------|----------------|
+| `spread_r` | +0.625 | Wide spreads signal urgency |
+| `pcr_z` | +0.077 | Put selling = bullish conviction (small effect) |
+| `spread_r * fut_turn_z` | +0.226 | Interaction: urgency + capital = strongest signal |
+| `fut_turn_z` | +1.415 | High futures turnover = institutional capital flow |
+| `fut_vol_z` | **-1.733** | NEGATIVE — high volume without turnover = noise. The turnover/volume divergence is the real signal. |
+
+### Regime classification
+
+| Regime | Conditions | Execution style |
+|--------|------------|-----------------|
+| **Elephant** | `oi_change > 1.0` AND `fut_turnover > 0.5` | Limit orders — heavy accumulation |
+| **Cheetah** | `spread > 1.5` AND `fut_volume > 1.0` | Market orders — momentum with urgency |
+| **Hybrid** | Both Elephant and Cheetah conditions met | Mixed — both signals present |
+| **Defensive** | Neither condition met | Low activity — avoid |
+
+### Blast trade threshold
+
+A stock is flagged as a "Blast" trade when `compositeRFactor >= 2.8`. This indicates high-conviction institutional participation across multiple factors.
+
+## Market hours detection
+
+```
+IST = UTC + 5:30
+Market open: 09:15 – 15:30, Monday to Friday
+```
+
+`isMarketHours()` converts current time to IST and checks. Weekend days always return `false`. Public holidays are not hard-coded — the system simply won't get fresh Dhan data on holidays.
+
+## Error handling
+
+| Error | HTTP | Response code | Modal action |
+|-------|------|---------------|-------------|
+| `MasterContractsNotSyncedError` | 503 | `SYNC_REQUIRED` | Directs to `/trading-lab/master-contracts` |
+| `BhavcopyNotSyncedError` | 503 | `SYNC_REQUIRED` | Directs to `/trading-lab/bhavcopy` |
+| Insufficient data (fewer than 15 days) | — | Skipped silently | Stock excluded from results |
+| Dhan API failure | — | Logged, falls back to bhavcopy | Degraded signals |
+
+## API endpoint
+
+### `GET /api/r-factor`
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `symbol` | string | — | Single symbol R-Factor. If omitted, runs bulk scan. |
+| `limit` | number | 15 | Max symbols for bulk scan (up to 206) |
+
+**Single symbol response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "RELIANCE",
+    "timestamp": "2026-03-17T10:30:00.000Z",
+    "zScores": {
+      "fut_turnover": 2.1,
+      "fut_volume": 1.8,
+      "opt_volume": 0.5,
+      "eq_trade_size": 1.2,
+      "oi_change": 1.9,
+      "spread": 2.3,
+      "pcr": 0.8
+    },
+    "compositeRFactor": 3.14,
+    "regime": "Elephant",
+    "isBlastTrade": true
+  }
+}
+```
+
+**Bulk scan response:**
+
+```json
+{
+  "success": true,
+  "count": 15,
+  "data": [
+    { "symbol": "RELIANCE", "compositeRFactor": 3.14, "regime": "Elephant", "isBlastTrade": true, "pctChange": 1.23 }
+  ]
+}
+```
+
+Cache: `revalidate = 60` (revalidates every minute).
+
+## File map
+
+| File | Purpose |
+|------|---------|
+| `lib/r-factor/data-service.ts` | `RFactorDataService` — orchestrator for live + bhavcopy blending |
+| `lib/r-factor/engine.ts` | `RFactorEngine` — OLS regression + regime classification |
+| `lib/r-factor/types.ts` | `DailyStockData`, `FactorData`, `SignalOutput`, `DEFAULT_CONFIG` |
+| `lib/r-factor/bhavcopy-service.ts` | `getHistoricalData()` — DB reads for 20-day lookback |
+| `lib/historify/master-contracts.ts` | `resolveSymbol()`, `batchResolveFutures()` — ID resolution |
+| `app/api/r-factor/route.ts` | GET: single symbol or bulk scan |
+| `app/trading-lab/intraday-boost/page.tsx` | UI: signal table with sorting + regime badges |

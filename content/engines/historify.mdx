@@ -1,0 +1,45 @@
+---
+title: Historify
+description: Data persistence, live WebSocket management, and historical data archiving.
+---
+
+# Historify
+
+## Overview
+
+Historify is the data infrastructure layer that manages all market data — from real-time WebSocket ticks to long-term Parquet archives.
+
+## Capabilities
+
+- **Live WebSocket management** via `LiveManager` singleton
+- **Historical data sync** from Dhan V2 REST API
+- **DuckDB Parquet storage** for large-scale columnar data
+- **Master contracts** resolution (symbol to securityId)
+- **Cloud data lake** queries via Hugging Face datasets
+
+## Key components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| LiveManager | `lib/historify/live-manager.ts` | Single Dhan WebSocket connection, broadcasts to SSE clients |
+| Live store | `lib/historify/live-store.ts` | Zustand store for connection status, ticks, active symbol |
+| Master contracts | `lib/historify/master-contracts.ts` | Dhan instrument lookup, daily sync from CSV (~24K rows) |
+| DuckDB | `lib/historify/duckdb.ts` | Parquet columnar storage for large market datasets |
+
+## Master contracts sync
+
+The master contracts table maps stock symbols to Dhan security IDs. It syncs daily from Dhan's CSV feed:
+
+- Filters to **EQUITY + FUTSTK + FUTIDX** segments only
+- Stores ~24K rows in the `master_contracts` SQLite table
+- Required before Intraday Boost can resolve security IDs
+- Managed via the [Master contracts page](/docs/trading-lab/master-contracts)
+
+## Cloud data lake
+
+DuckDB's `httpfs` extension enables querying 18+ months of F&O data directly from Hugging Face datasets without local downloads:
+
+- `fno-5min` — 5-minute F&O OHLCV data
+- `fno-data-18months` — 18 months of historical F&O data
+
+Streams only the required bytes over HTTP.

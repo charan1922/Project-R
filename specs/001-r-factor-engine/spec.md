@@ -1,8 +1,10 @@
-# Feature Specification: R-Factor Engine
+# Feature Specification: R-Factor Engine (V1 — SUPERSEDED)
 
-**Feature Branch**: `001-r-factor-engine`  
-**Created**: 2026-02-22  
-**Status**: Draft  
+> **SUPERSEDED** by `specs/002-r-factor-v3/`. This V1 spec describes the original 4-factor Z-score model (Pearson 0.19). The production engine uses V3 OLS regression (Pearson 0.67).
+
+**Feature Branch**: `001-r-factor-engine`
+**Created**: 2026-02-22
+**Status**: Superseded
 **Input**: User description: "Implement the 4-Factor Z-Score calculation engine for trading analysis."
 
 ## User Scenarios & Testing *(mandatory)*

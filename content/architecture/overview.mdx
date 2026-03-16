@@ -1,0 +1,68 @@
+---
+title: Architecture overview
+description: Layered architecture and domain organization of Project-R.
+---
+
+import { Cards } from 'nextra/components'
+
+# Architecture overview
+
+## Domain-based organization
+
+The codebase is organized by domain, not by type:
+
+```
+project-r/
+├── app/                  # Next.js App Router (pages + API routes)
+│   ├── api/              # Backend API endpoints
+│   ├── trading-lab/      # Trading feature pages
+│   ├── historify/        # Historical data dashboard
+│   └── quant/            # Quantitative research lab
+├── lib/                  # Core business logic
+│   ├── historify/        # Data persistence + WebSocket
+│   ├── r-factor/         # Market intelligence engine
+│   └── quant/            # Backtest engine + strategies
+├── dhanv2/               # Standalone Dhan V2 TypeScript SDK
+├── components/           # shadcn/ui components
+└── prisma/               # Database schema
+```
+
+## Layered architecture
+
+Project-R follows a sovereign, layered architecture:
+
+| Layer | Name | Responsibility |
+|-------|------|----------------|
+| 1 | **Surfaces** | Next.js 16 web dashboard and CLI |
+| 2 | **Channels** | Dhan WebSocket and filesystem adapters |
+| 3 | **Sessions** | State isolation via Zustand |
+| 4 | **Gateway** | Central control plane for secure ingress/egress |
+| 5 | **Runtime** | Deterministic R-Factor logic substrate |
+| 6 | **Tools** | SQLite/DuckDB persistence and technical modules |
+
+## Three core engines
+
+<Cards>
+  <Cards.Card title="Historify" href="/docs/engines/historify">
+    Data persistence, live WebSocket management, and Dhan API integration.
+  </Cards.Card>
+  <Cards.Card title="R-Factor" href="/docs/engines/r-factor">
+    4-factor OLS regression engine for detecting institutional activity.
+  </Cards.Card>
+  <Cards.Card title="Quant" href="/docs/engines/quant">
+    Backtest engine with multiple strategies and Indian market fee modeling.
+  </Cards.Card>
+</Cards>
+
+## Key architectural decisions
+
+| Decision | Reason |
+|----------|--------|
+| **better-sqlite3 + DuckDB** | Natively compiled, fastest drivers in Node.js for historical analysis |
+| **SSE bridge over raw WebSocket** | Decouples browser from binary WebSocket, handles reconnection, avoids Dhan's 5-connection limit |
+| **Canvas over SVG** | Renders thousands of data points at 60FPS for the Sector Rotation Map |
+| **useRef for chart updates** | Bypasses React Virtual DOM for zero-latency chart rendering |
+| **Pure TypeScript math** | No Python bridge — EMA, RSI, backtesting all run bare-metal in V8 |
+| **Parquet data lakes** | Column-oriented storage for 10x faster backtests on millions of rows |
+| **100% TypeScript, zero `any`** | Strict typing across all core calculation engines |
+| **Biome over ESLint** | Faster linting and formatting in a single tool |

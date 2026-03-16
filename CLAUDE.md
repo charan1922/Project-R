@@ -33,9 +33,13 @@ The codebase is organized by domain, not by type:
 
 - **`/app`** — Next.js App Router. Pages use `"use client"` with client-side data fetching via `useEffect`. API routes under `/app/api/` serve as the backend.
 - **`/lib`** — Core business logic, split into three engines:
-  - **`/lib/historify/`** — Data persistence (SQLite via better-sqlite3), live WebSocket management, Dhan API client, scheduler
+  - **`/lib/historify/`** — Data persistence, live WebSocket management, Dhan API client, scheduler. `master-contracts.ts` handles Dhan instrument lookup (Prisma-backed, daily sync).
   - **`/lib/quant/`** — Backtest engine, strategy implementations, data loader with 5-min TTL cache, math utils (EMA, RSI)
-  - **`/lib/r-factor/`** — Market intelligence engine: composite Z-score from volume, OI, turnover, spread; regime classification (Elephant/Cheetah); blast trade detection
+  - **`/lib/r-factor/`** — Market intelligence engine:
+    - `engine.ts` — OLS regression: `R = 1.11 + 0.625×spread + 0.077×pcr + 0.226×(spread×fut_turn) + 1.415×fut_turn - 1.733×fut_vol`
+    - `bhavcopy-service.ts` — NSE bhavcopy sync + DB reads. Data stored in `bhavcopy_days` Prisma table. Sync is user-triggered only (never auto-downloads). NSE requires session cookie — `getNSECookie()` visits nseindia.com first.
+    - `data-service.ts` — Orchestrator: resolves security IDs → fetches Dhan live data → blends with bhavcopy history → runs engine
+    - `types.ts` — DailyStockData, FactorData, SignalOutput types + `transformToFactorData()`
 - **`/dhanv2`** — Standalone TypeScript SDK for Dhan V2 API (separate pnpm package `dhanhq-ts`). REST clients, WebSocket handlers, binary protocol parser. Rate-limited to 4 req/sec.
 - **`/components`** — shadcn/ui components (Radix UI + Tailwind + CVA)
 
@@ -49,9 +53,24 @@ Browser → SSE (`/api/historify/live-stream`) → `LiveManager` singleton → D
 
 ### Data Layer
 
-- **Prisma ORM** + **SQLite** (default): Watchlist, activity log, settings in `data/project-r.db`. Schema in `prisma/schema.prisma`, config in `prisma/prisma.config.ts`. Client singleton in `lib/db.ts`. Switch to PostgreSQL by setting `DATABASE_URL` and changing provider in schema.
+- **Prisma ORM** + **SQLite** via `@prisma/adapter-better-sqlite3`: Schema in `prisma/schema.prisma`, config in `prisma/prisma.config.ts`, client singleton in `lib/db.ts` (lazy proxy pattern). DB file at `data/project-r.db`. Tables:
+  - `watchlist`, `activity`, `settings` — app state
+  - `master_contracts` — Dhan instrument mappings (symbol → securityId). Synced daily from Dhan CSV (~24K rows: EQUITY + FUTSTK + FUTIDX only). Managed via `/trading-lab/master-contracts` page.
+  - `bhavcopy_days` — NSE daily equity + F&O data (per stock per day). ~206 stocks × 25+ days. Synced via `/trading-lab/bhavcopy` page. NSE requires session cookie for downloads.
 - **DuckDB** (@duckdb/node-api): Parquet columnar storage for large market datasets in `/lib/historify/duckdb.ts`
 - Native modules (prisma, duckdb) are externalized in webpack config (`next.config.ts`)
+
+### Data Sync Architecture
+
+Data sync is **user-triggered only** — no page auto-downloads external data. Each data source has a dedicated management page:
+
+1. **Master Contracts** (`/trading-lab/master-contracts`) — Re-sync downloads Dhan's master CSV, filters to EQUITY + FUTSTK + FUTIDX, stores in SQLite. Required before Intraday Boost can resolve security IDs.
+2. **Bhavcopy** (`/trading-lab/bhavcopy`) — Sync downloads NSE bhavcopy ZIPs (equity + F&O), imports from local JSON cache first, then fetches missing dates from NSE. Required for R-Factor Z-score baselines.
+3. **Intraday Boost** (`/trading-lab/intraday-boost`) — Reads from DB only. Shows modal directing to the appropriate sync page if data is missing (`MasterContractsNotSyncedError` or `BhavcopyNotSyncedError`).
+
+### Dhan V2 Market Feed
+
+Raw API calls bypass the SDK (SDK sends string IDs, API needs numbers). `dhanMarketFeed()` in `data-service.ts` calls `POST /v2/marketfeed/ohlc` (equity OHLC) and `POST /v2/marketfeed/quote` (futures depth with volume + OI). Response is nested: `data.SEGMENT.securityId.{last_price, ohlc, volume?, oi?}`.
 
 ### State Management
 

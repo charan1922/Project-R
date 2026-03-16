@@ -1,31 +1,33 @@
-import React from "react";
 import {
-  GraduationCap,
-  BookOpen,
-  Layers,
-  Brain,
-  Target,
-  FlaskConical,
-  Cpu,
   Activity,
-  Calculator,
-  LineChart,
-  Zap,
-  ShieldCheck,
-  Play,
-  Database,
-  List,
   BarChart2,
+  BookOpen,
+  Brain,
+  Calculator,
   CalendarDays,
-  Download,
-  Upload,
-  HardDrive,
   Clock,
-  Settings,
   Compass,
-  TestTube2,
+  Cpu,
+  Database,
+  Download,
   Flame,
-} from "lucide-react";
+  FlaskConical,
+  GraduationCap,
+  HardDrive,
+  Layers,
+  LayoutGrid,
+  LineChart,
+  List,
+  Play,
+  Settings,
+  ShieldCheck,
+  Table2,
+  Target,
+  TestTube2,
+  Upload,
+  Zap,
+} from 'lucide-react';
+import type React from 'react';
 
 export interface NavItemType {
   label: string;
@@ -37,71 +39,71 @@ export interface NavItemType {
 
 export const learningItems: NavItemType[] = [
   {
-    label: "Quant Foundations",
-    href: "/learning/foundations",
+    label: 'Quant Foundations',
+    href: '/learning/foundations',
     icon: <GraduationCap className="w-4 h-4" />,
     children: [
       {
-        label: "Foundation of Flow",
-        href: "/learning/foundation-of-flow",
+        label: 'Foundation of Flow',
+        href: '/learning/foundation-of-flow',
         icon: <BookOpen className="w-3.5 h-3.5" />,
       },
       {
-        label: "The 4-Factor Model",
-        href: "/learning/4-factor-model",
+        label: 'The 4-Factor Model',
+        href: '/learning/4-factor-model',
         icon: <Layers className="w-3.5 h-3.5" />,
       },
       {
-        label: "Market Regimes",
-        href: "/learning/market-regimes",
+        label: 'Market Regimes',
+        href: '/learning/market-regimes',
         icon: <Brain className="w-3.5 h-3.5" />,
       },
       {
-        label: "The Blast Protocol",
-        href: "/learning/blast-protocol",
+        label: 'The Blast Protocol',
+        href: '/learning/blast-protocol',
         icon: <Target className="w-3.5 h-3.5" />,
       },
     ],
   },
   {
-    label: "Advanced Lab",
-    href: "/learning/advanced",
+    label: 'Advanced Lab',
+    href: '/learning/advanced',
     icon: <FlaskConical className="w-4 h-4" />,
-    badge: "PRO",
+    badge: 'PRO',
     children: [
       {
-        label: "Algo Implementation",
-        href: "/learning/algo-implementation",
+        label: 'Algo Implementation',
+        href: '/learning/algo-implementation',
         icon: <Cpu className="w-3.5 h-3.5" />,
       },
       {
-        label: "Advanced Factor Eng.",
-        href: "/learning/advanced-factors",
+        label: 'Advanced Factor Eng.',
+        href: '/learning/advanced-factors',
         icon: <Activity className="w-3.5 h-3.5" />,
       },
       {
-        label: "Quant Validation",
-        href: "/learning/quant-validation",
+        label: 'Quant Validation',
+        href: '/learning/quant-validation',
         icon: <Calculator className="w-3.5 h-3.5" />,
       },
       {
-        label: "OpenClaw Architecture",
-        href: "/learning/openclaw-arch",
+        label: 'OpenClaw Architecture',
+        href: '/learning/openclaw-arch',
         icon: <Layers className="w-3.5 h-3.5" />,
       },
       {
-        label: "Temporal Anomalies",
-        href: "/learning/temporal-anomalies",
+        label: 'Temporal Anomalies',
+        href: '/learning/temporal-anomalies',
         icon: <LineChart className="w-3.5 h-3.5" />,
       },
       {
-        label: "Execution Micro.",
-        href: "/learning/execution-microstructure",
+        label: 'Execution Micro.',
+        href: '/learning/execution-microstructure',
         icon: <Zap className="w-3.5 h-3.5" />,
       },
       {
-        label: "System Sovereignty",
-        href: "/learning/system-sovereignty",
+        label: 'System Sovereignty',
+        href: '/learning/system-sovereignty',
         icon: <ShieldCheck className="w-3.5 h-3.5" />,
       },
     ],
@@ -110,33 +112,33 @@ export const learningItems: NavItemType[] = [
 
 export const liveTools: NavItemType[] = [
   {
-    label: "R-Factor Engine",
-    href: "/learning/r-factor-engine",
+    label: 'R-Factor Engine',
+    href: '/learning/r-factor-engine',
     icon: <Activity className="w-4 h-4" />,
-    badge: "LIVE",
+    badge: 'LIVE',
   },
 ];
 
 export const backtestingItems: NavItemType[] = [
   {
-    label: "Backtesting",
-    href: "/backtesting",
+    label: 'Backtesting',
+    href: '/backtesting',
     icon: <FlaskConical className="w-4 h-4" />,
-    badge: "LAB",
+    badge: 'LAB',
     children: [
       {
-        label: "Strategy Backtest",
-        href: "/backtesting/playground",
+        label: 'Strategy Backtest',
+        href: '/backtesting/playground',
         icon: <LineChart className="w-3.5 h-3.5" />,
       },
       {
-        label: "Live Scanner",
-        href: "/trading-lab/scanner",
+        label: 'Live Scanner',
+        href: '/trading-lab/scanner',
         icon: <Cpu className="w-3.5 h-3.5" />,
       },
       {
-        label: "Algo Execute",
-        href: "/trading-lab/execute",
+        label: 'Algo Execute',
+        href: '/trading-lab/execute',
         icon: <Play className="w-3.5 h-3.5" />,
       },
     ],
@@ -145,33 +147,65 @@ export const backtestingItems: NavItemType[] = [
 
 export const v1Items: NavItemType[] = [
   {
-    label: "v1.0 (Current)",
-    href: "/v1",
+    label: 'v1.0 (Current)',
+    href: '/v1',
     icon: <Zap className="w-4 h-4" />,
     children: [
       {
-        label: "Intraday Boost",
-        href: "/trading-lab/intraday-boost",
+        label: 'Intraday Boost',
+        href: '/trading-lab/intraday-boost',
         icon: <Flame className="w-4 h-4" />,
-        badge: "LIVE",
+        badge: 'LIVE',
       },
       {
-        label: "Market Intelligence",
-        href: "/trading-lab/intelligence",
+        label: 'Market Intelligence',
+        href: '/trading-lab/intelligence',
         icon: <Brain className="w-4 h-4" />,
-        badge: "NEW",
+        badge: 'NEW',
       },
       {
-        label: "Trade Journal",
-        href: "/trading-lab/tradefinder",
+        label: 'Trade Journal',
+        href: '/trading-lab/tradefinder',
         icon: <LineChart className="w-4 h-4" />,
-        badge: "ANALYTICS",
+        badge: 'ANALYTICS',
       },
       {
-        label: "F&O Universe",
-        href: "/trading-lab/fno-universe",
+        label: 'F&O Universe',
+        href: '/trading-lab/fno-universe',
         icon: <Layers className="w-4 h-4" />,
-        badge: "NEW",
+        badge: 'NEW',
+      },
+      {
+        label: 'Master Contracts',
+        href: '/trading-lab/master-contracts',
+        icon: <Database className="w-4 h-4" />,
+      },
+      {
+        label: 'Bhavcopy',
+        href: '/trading-lab/bhavcopy',
+        icon: <BarChart2 className="w-4 h-4" />,
+      },
+    ],
+  },
+];
+
+export const marketScopeItems: NavItemType[] = [
+  {
+    label: 'Market Scope',
+    href: '/trading-lab/sector-scope',
+    icon: <Compass className="w-4 h-4" />,
+    badge: 'LIVE',
+    children: [
+      {
+        label: 'Sector Heatmap',
+        href: '/trading-lab/sector-scope',
+        icon: <LayoutGrid className="w-3.5 h-3.5" />,
+        badge: 'NEW',
+      },
+      {
+        label: 'Sector Tables',
+        href: '/trading-lab/sector-scope/tables',
+        icon: <Table2 className="w-3.5 h-3.5" />,
       },
     ],
   },
@@ -179,61 +213,61 @@ export const v1Items: NavItemType[] = [
 
 export const historifyItems: NavItemType[] = [
   {
-    label: "Historify",
-    href: "/historify",
+    label: 'Historify',
+    href: '/historify',
     icon: <Database className="w-4 h-4" />,
-    badge: "DATA",
+    badge: 'DATA',
     children: [
       {
-        label: "Live Trading",
-        href: "/historify/live",
+        label: 'Live Trading',
+        href: '/historify/live',
         icon: <Activity className="w-4 h-4" />,
-        badge: "LIVE",
+        badge: 'LIVE',
       },
       {
-        label: "Dashboard",
-        href: "/historify",
+        label: 'Dashboard',
+        href: '/historify',
         icon: <Activity className="w-4 h-4" />,
       },
       {
-        label: "Watchlist",
-        href: "/historify/watchlist",
+        label: 'Watchlist',
+        href: '/historify/watchlist',
         icon: <List className="w-4 h-4" />,
       },
       {
-        label: "Charts",
-        href: "/historify/charts",
+        label: 'Charts',
+        href: '/historify/charts',
         icon: <BarChart2 className="w-4 h-4" />,
       },
       {
-        label: "Day Chart",
-        href: "/historify/day-chart",
+        label: 'Day Chart',
+        href: '/historify/day-chart',
         icon: <CalendarDays className="w-4 h-4" />,
-        badge: "NEW",
+        badge: 'NEW',
       },
       {
-        label: "Download",
-        href: "/historify/download",
+        label: 'Download',
+        href: '/historify/download',
         icon: <Download className="w-4 h-4" />,
       },
       {
-        label: "Import",
-        href: "/historify/import",
+        label: 'Import',
+        href: '/historify/import',
         icon: <Upload className="w-4 h-4" />,
       },
       {
-        label: "Export",
-        href: "/historify/export",
+        label: 'Export',
+        href: '/historify/export',
         icon: <HardDrive className="w-4 h-4" />,
       },
       {
-        label: "Scheduler",
-        href: "/historify/scheduler",
+        label: 'Scheduler',
+        href: '/historify/scheduler',
         icon: <Clock className="w-4 h-4" />,
       },
       {
-        label: "Settings",
-        href: "/historify/settings",
+        label: 'Settings',
+        href: '/historify/settings',
         icon: <Settings className="w-4 h-4" />,
       },
     ],
@@ -242,22 +276,22 @@ export const historifyItems: NavItemType[] = [
 
 export const quantLabItems: NavItemType[] = [
   {
-    label: "Quant Lab",
-    href: "/quant",
+    label: 'Quant Lab',
+    href: '/quant',
     icon: <TestTube2 className="w-4 h-4" />,
-    badge: "NEW",
+    badge: 'NEW',
     children: [
       {
-        label: "Sector Rotation",
-        href: "/quant/sector-rotation",
+        label: 'Sector Rotation',
+        href: '/quant/sector-rotation',
         icon: <Compass className="w-4 h-4" />,
-        badge: "NEW",
+        badge: 'NEW',
       },
       {
-        label: "Backtester",
-        href: "/quant/backtester",
+        label: 'Backtester',
+        href: '/quant/backtester',
         icon: <FlaskConical className="w-4 h-4" />,
-        badge: "NEW",
+        badge: 'NEW',
       },
     ],
   },
@@ -265,25 +299,25 @@ export const quantLabItems: NavItemType[] = [
 
 export const v01Items: NavItemType[] = [
   {
-    label: "v0.1 (Legacy)",
-    href: "/v0.1",
+    label: 'v0.1 (Legacy)',
+    href: '/v0.1',
     icon: <Layers className="w-4 h-4" />,
     children: [
       {
-        label: "Learning Modules",
-        href: "/learning-group",
+        label: 'Learning Modules',
+        href: '/learning-group',
         icon: <GraduationCap className="w-4 h-4" />,
         children: learningItems,
       },
       {
-        label: "Live Intelligence",
-        href: "/live-group",
+        label: 'Live Intelligence',
+        href: '/live-group',
         icon: <Activity className="w-4 h-4" />,
         children: liveTools,
       },
       {
-        label: "Lab Environments",
-        href: "/lab-group",
+        label: 'Lab Environments',
+        href: '/lab-group',
         icon: <FlaskConical className="w-4 h-4" />,
         children: backtestingItems,
       },

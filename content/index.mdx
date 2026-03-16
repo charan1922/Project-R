@@ -1,0 +1,43 @@
+---
+title: Project-R (DeepQuant)
+description: AI-driven algorithmic trading platform with Historify data management, R-Factor market intelligence, and quantitative backtesting.
+---
+
+import { Cards } from 'nextra/components'
+
+# Project-R (DeepQuant)
+
+Project-R is a sovereign AI-driven algorithmic trading ecosystem that reverse-engineers and automates "Smart Money" execution patterns. It synthesizes verified P&L data with a proprietary 4-factor engine to build a deterministic AI agent that scans and executes like a professional market maker.
+
+## Core engines
+
+<Cards>
+  <Cards.Card title="R-Factor" href="/docs/engines/r-factor">
+    OLS regression on 4 market factors — Volume, OI, Spread, and Turnover — to detect institutional activity.
+  </Cards.Card>
+  <Cards.Card title="Historify" href="/docs/engines/historify">
+    Data persistence, live WebSocket management, DuckDB columnar storage, and Dhan API integration.
+  </Cards.Card>
+  <Cards.Card title="Quant lab" href="/docs/engines/quant">
+    Backtest engine with EMA Crossover, RSI Accumulation, Dual Momentum strategies and Indian market fee modeling.
+  </Cards.Card>
+</Cards>
+
+## The 4 R-Factors
+
+The engine tracks four key market indicators to identify "Smart Money Footprints":
+
+| Factor | What it measures |
+|--------|-----------------|
+| **Volume** | Total shares traded — participation gate |
+| **Open Interest** | Buildup/decline of outstanding contracts — directional compass |
+| **Bid-Ask Spread** | Urgency and liquidity consumption |
+| **Turnover** | Total value of transactions — quality filter |
+
+## Tech stack
+
+- **Framework**: Next.js 16 (App Router) + React 19
+- **Language**: TypeScript 5.7+ (Node.js 22+)
+- **Database**: SQLite (better-sqlite3) + DuckDB (Parquet)
+- **Charting**: Lightweight Charts v5 (real-time), Recharts (dashboards)
+- **Package manager**: pnpm 10.x

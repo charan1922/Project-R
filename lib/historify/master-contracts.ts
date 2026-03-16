@@ -9,6 +9,10 @@ import { prisma } from '@/lib/db';
 
 const MASTER_CSV_URL = 'https://images.dhan.co/api-data/api-scrip-master.csv';
 
+// Only sync instruments needed for R-Factor: equity OHLC + stock/index futures
+const KEEP_SEGMENTS = new Set(['NSE_EQ', 'NSE_FNO']);
+const KEEP_INSTRUMENTS = new Set(['EQUITY', 'FUTSTK', 'FUTIDX']);
+
 export type SecurityEntry = {
   securityId: string;
   symbol: string;
@@ -25,7 +29,6 @@ export type FuturesEntry = SecurityEntry & {
 
 // Process-level flag — skip even the DB check once synced
 let synced = false;
-let syncPromise: Promise<void> | null = null;
 
 /** Today's date in IST (YYYY-MM-DD) */
 function todayIST(): string {
@@ -33,36 +36,31 @@ function todayIST(): string {
 }
 
 /**
- * Ensure master contracts are synced for today.
- * Downloads CSV from Dhan only if no rows exist for today's date.
+ * Check if master contracts are synced for today.
+ * Does NOT trigger a download — consumers should direct users to the Master Contracts page.
  */
-async function ensureSynced(): Promise<void> {
+export async function ensureSynced(): Promise<void> {
   if (synced) return;
 
-  // Deduplicate concurrent calls
-  if (syncPromise) return syncPromise;
+  const today = todayIST();
+  const count = await prisma.masterContract.count({
+    where: { syncDate: today },
+  });
 
-  syncPromise = (async () => {
-    try {
-      const today = todayIST();
-      const count = await prisma.masterContract.count({
-        where: { syncDate: today },
-      });
+  if (count > 0) {
+    synced = true;
+    return;
+  }
 
-      if (count > 0) {
-        console.log(`[MasterContracts] Already synced for ${today} (${count} rows)`);
-        synced = true;
-        return;
-      }
+  throw new MasterContractsNotSyncedError(today);
+}
 
-      await syncFromDhan(today);
-      synced = true;
-    } finally {
-      syncPromise = null;
-    }
-  })();
-
-  return syncPromise;
+/** Thrown when master contracts haven't been synced today. */
+export class MasterContractsNotSyncedError extends Error {
+  constructor(date: string) {
+    super(`Master contracts not synced for ${date}. Please sync from the Master Contracts page.`);
+    this.name = 'MasterContractsNotSyncedError';
+  }
 }
 
 /**
@@ -79,8 +77,8 @@ async function syncFromDhan(today: string): Promise<void> {
   const lines = text.split('\n');
   if (lines.length < 2) throw new Error('Empty master contract CSV');
 
-  const header = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-  const col = (name: string) => header.findIndex(h => h === name);
+  const header = lines[0].split(',').map((h) => h.trim().replace(/"/g, ''));
+  const col = (name: string) => header.indexOf(name);
 
   const idxExch = col('SEM_EXM_EXCH_ID');
   const idxSeg = col('SEM_SEGMENT');
@@ -107,7 +105,7 @@ async function syncFromDhan(today: string): Promise<void> {
     const line = lines[i].trim();
     if (!line) continue;
 
-    const cols = line.split(',').map(c => c.trim().replace(/"/g, ''));
+    const cols = line.split(',').map((c) => c.trim().replace(/"/g, ''));
 
     const rawExch = cols[idxExch] || '';
     const rawSeg = cols[idxSeg] || '';
@@ -132,11 +130,14 @@ async function syncFromDhan(today: string): Promise<void> {
     let instrument = instType.toUpperCase();
     if (segment.includes('_EQ')) instrument = 'EQUITY';
     if (instrument === 'FUT') instrument = name.toUpperCase(); // FUTSTK, FUTIDX
-    if (instrument === 'OP') instrument = name.toUpperCase();  // OPTSTK, OPTIDX
+    if (instrument === 'OP') instrument = name.toUpperCase(); // OPTSTK, OPTIDX
 
-    // Extract underlying for futures
+    // Only keep what R-Factor needs: equity + stock/index futures
+    if (!KEEP_SEGMENTS.has(segment) || !KEEP_INSTRUMENTS.has(instrument)) continue;
+
+    // Extract underlying for futures (e.g. "RELIANCE-Mar2026-FUT" → "RELIANCE")
     let underlying: string | null = null;
-    if (instrument === 'FUTSTK' || instrument === 'OPTSTK') {
+    if (instrument === 'FUTSTK') {
       const dash = symbol.indexOf('-');
       if (dash > 0) underlying = symbol.substring(0, dash);
     }
@@ -145,7 +146,7 @@ async function syncFromDhan(today: string): Promise<void> {
     let expiryDate: Date | null = null;
     if (expiryStr) {
       const d = new Date(expiryStr);
-      if (!isNaN(d.getTime())) expiryDate = d;
+      if (!Number.isNaN(d.getTime())) expiryDate = d;
     }
 
     entries.push({
@@ -163,31 +164,52 @@ async function syncFromDhan(today: string): Promise<void> {
 
   console.log(`[MasterContracts] Parsed ${entries.length} entries, inserting into DB...`);
 
-  // Bulk insert in chunks within a single transaction
-  const CHUNK_SIZE = 2000;
-  const chunks: (typeof entries)[] = [];
-  for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
-    chunks.push(entries.slice(i, i + CHUNK_SIZE));
-  }
+  // Clear old data
+  await prisma.masterContract.deleteMany({});
 
-  await prisma.$transaction([
-    prisma.masterContract.deleteMany({}),
-    ...chunks.map(chunk =>
-      prisma.masterContract.createMany({ data: chunk })
-    ),
-  ]);
+  // Bulk insert using raw SQL for speed
+  const CHUNK_SIZE = 500;
+  for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
+    const chunk = entries.slice(i, i + CHUNK_SIZE);
+    const values = chunk
+      .map((e) => {
+        const esc = (s: string) => s.replace(/'/g, "''");
+        const exp = e.expiryDate ? `'${e.expiryDate.toISOString()}'` : 'NULL';
+        const und = e.underlying ? `'${esc(e.underlying)}'` : 'NULL';
+        return `(NULL, '${esc(e.securityId)}', '${esc(e.symbol)}', '${esc(e.exchange)}', '${esc(e.segment)}', '${esc(e.instrument)}', '${esc(e.name)}', ${und}, ${exp}, '${e.syncDate}')`;
+      })
+      .join(',');
+
+    await prisma.$executeRawUnsafe(
+      `INSERT OR IGNORE INTO master_contracts (id, securityId, symbol, exchange, segment, instrument, name, underlying, expiryDate, syncDate) VALUES ${values}`,
+    );
+
+    if ((i / CHUNK_SIZE) % 50 === 0 && i > 0) {
+      console.log(`[MasterContracts] Inserted ${i}/${entries.length}...`);
+    }
+  }
 
   const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
   console.log(`[MasterContracts] Synced ${entries.length} rows in ${elapsed}s`);
 }
 
 /**
+ * Force a fresh sync from Dhan CSV (used by the re-sync API).
+ * Returns the number of rows inserted.
+ */
+export async function forceSync(): Promise<{ count: number; elapsed: string }> {
+  const today = todayIST();
+  const startMs = Date.now();
+  await syncFromDhan(today);
+  synced = true;
+  const count = await prisma.masterContract.count();
+  return { count, elapsed: `${((Date.now() - startMs) / 1000).toFixed(1)}s` };
+}
+
+/**
  * Resolve equity security entry by symbol.
  */
-export async function resolveSymbol(
-  symbol: string,
-  exchange = 'NSE'
-): Promise<SecurityEntry | null> {
+export async function resolveSymbol(symbol: string, exchange = 'NSE'): Promise<SecurityEntry | null> {
   await ensureSynced();
 
   const row = await prisma.masterContract.findFirst({
@@ -212,9 +234,7 @@ export async function resolveSymbol(
 /**
  * Resolve near-month stock futures for a single underlying.
  */
-export async function resolveFuturesSecurity(
-  underlying: string
-): Promise<FuturesEntry | null> {
+export async function resolveFuturesSecurity(underlying: string): Promise<FuturesEntry | null> {
   await ensureSynced();
 
   const rows = await prisma.masterContract.findMany({
@@ -246,9 +266,7 @@ export async function resolveFuturesSecurity(
  * Batch-resolve near-month futures security IDs for multiple underlyings.
  * Returns Map<underlying, futuresSecurityId>.
  */
-export async function batchResolveFutures(
-  underlyings: string[]
-): Promise<Map<string, string>> {
+export async function batchResolveFutures(underlyings: string[]): Promise<Map<string, string>> {
   await ensureSynced();
 
   const result = new Map<string, string>();
@@ -277,10 +295,7 @@ export async function batchResolveFutures(
 /**
  * Search symbols by query string.
  */
-export async function searchSymbols(
-  query: string,
-  exchange?: string
-): Promise<SecurityEntry[]> {
+export async function searchSymbols(query: string, exchange?: string): Promise<SecurityEntry[]> {
   await ensureSynced();
 
   const rows = await prisma.masterContract.findMany({
@@ -292,7 +307,7 @@ export async function searchSymbols(
     take: 20,
   });
 
-  return rows.map(r => ({
+  return rows.map((r) => ({
     securityId: r.securityId,
     symbol: r.symbol,
     exchange: r.exchange,

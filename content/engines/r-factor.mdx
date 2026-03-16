@@ -1,0 +1,90 @@
+---
+title: R-Factor engine
+description: OLS regression engine that detects institutional activity using 4 market factors.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# R-Factor engine
+
+## Overview
+
+The R-Factor engine is the core intelligence layer of Project-R. It uses Ordinary Least Squares (OLS) regression on four market factors to produce a composite score that identifies "Smart Money" activity.
+
+## The model
+
+The regression formula in `lib/r-factor/engine.ts`:
+
+```
+R = 1.11 + 0.625 × spread + 0.077 × pcr + 0.226 × (spread × fut_turn) + 1.415 × fut_turn - 1.733 × fut_vol
+```
+
+### Features and coefficients
+
+| Feature | Coefficient | Description |
+|---------|-------------|-------------|
+| Intercept | 1.11 | Base R-Factor value |
+| `spread` | +0.625 | Bid-ask spread urgency |
+| `pcr` | +0.077 | Put-call ratio (directional bias) |
+| `spread × fut_turn` | +0.226 | Interaction: spread urgency with futures turnover |
+| `fut_turn` | +1.415 | Futures turnover (capital commitment) |
+| `fut_vol` | -1.733 | Futures volume (negative — high volume without turnover = noise) |
+
+### Validation
+
+- LOO Pearson correlation: **0.60**
+- Top stock accuracy: **7 out of 10**
+- Full research journey documented in `derive-r/R_FACTOR_JOURNEY.md`
+
+## The 4 factors
+
+| Factor | Z-score | What it detects |
+|--------|---------|-----------------|
+| **Volume** | Z &gt; 2.0 | Unusual participation (shares traded) |
+| **Open Interest** | Directional | Institutional put-selling vs call-selling |
+| **Bid-Ask Spread** | Urgency metric | Liquidity consumption speed |
+| **Turnover** | Quality filter | Total capital commitment |
+
+## Data pipeline
+
+<Steps>
+
+### Resolve security IDs
+
+`data-service.ts` resolves stock symbols to Dhan security IDs using the `master_contracts` table.
+
+### Fetch live data
+
+Calls Dhan V2 `POST /v2/marketfeed/ohlc` (equity) and `POST /v2/marketfeed/quote` (futures with volume + OI).
+
+### Blend with bhavcopy
+
+Merges live market data with NSE bhavcopy history from `bhavcopy_days` table for 20-day lookback.
+
+### Run engine
+
+Applies the OLS regression formula to produce the composite R-Factor score.
+
+</Steps>
+
+## Regime classification
+
+The engine classifies stocks into two regimes:
+
+| Regime | Behavior | Execution style |
+|--------|----------|-----------------|
+| **Elephant** | Stable, high turnover | Limit orders |
+| **Cheetah** | Volatile, rapid spread widening | Market orders |
+
+## Blast trade detection
+
+A "Blast" trade is triggered when the composite R-Factor score exceeds the threshold of **2.8** (not 2.5). This indicates high-conviction institutional participation across multiple factors simultaneously.
+
+## File map
+
+| File | Purpose |
+|------|---------|
+| `lib/r-factor/engine.ts` | OLS regression calculation |
+| `lib/r-factor/data-service.ts` | Orchestrator: resolve IDs, fetch data, blend, run engine |
+| `lib/r-factor/bhavcopy-service.ts` | NSE bhavcopy sync + DB reads |
+| `lib/r-factor/types.ts` | DailyStockData, FactorData, SignalOutput types |

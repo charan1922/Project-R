@@ -1,0 +1,55 @@
+---
+title: Real-time data pipeline
+description: How market data flows from Dhan exchange to the browser.
+---
+
+import { Steps } from 'nextra/components'
+
+# Real-time data pipeline
+
+## Pipeline overview
+
+```
+Browser → SSE (/api/historify/live-stream) → LiveManager → Dhan WebSocket
+```
+
+The real-time pipeline has three stages:
+
+<Steps>
+
+### LiveManager singleton
+
+`LiveManager` in `/lib/historify/live-manager.ts` maintains a single Dhan WebSocket connection and broadcasts to all connected SSE clients. It handles authentication, reconnection, and binary protocol parsing.
+
+### SSE bridge
+
+The SSE endpoint at `/app/api/historify/live-stream/route.ts` bridges WebSocket quotes to the browser. This decouples the client from the raw binary WebSocket and avoids hitting Dhan's 5-connection limit.
+
+### Client-side aggregation
+
+The `useLiveSession` hook in `/app/historify/live/_hooks/use-live-session.ts` aggregates incoming ticks into 1-minute candles client-side using `useRef` for the candle aggregator.
+
+</Steps>
+
+## Binary protocol parsing
+
+The Dhan V2 WebSocket sends binary frames with:
+- 12-byte headers
+- Little Endian payloads (LTP, LTT, OHLCV)
+- Zero-copy buffer slicing for minimal latency
+
+## Hybrid data seeding
+
+When a symbol is selected, the dashboard performs a "Flash Sync":
+
+1. Fetches 24 hours of 1-minute historical bars via REST
+2. Instantly switches to the live WebSocket tick stream
+3. Ensures the chart is never empty on load
+
+## State management
+
+| Store | Location | Purpose |
+|-------|----------|---------|
+| **Zustand** | `/lib/historify/live-store.ts` | Connection status, active symbol, ticks, historical data |
+| **useRef** | Client hooks | Non-state values like candle aggregators |
+| **useMemo/useCallback** | Client components | Performance optimization |
