@@ -95,7 +95,16 @@ function parseCSV(csv: string): Record<string, string>[] {
  * Returns null if the file doesn't exist (weekend/holiday).
  */
 async function downloadAndExtractZip(url: string): Promise<string | null> {
-  const res = await fetch(url, { headers: NSE_HEADERS });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: NSE_HEADERS, signal: controller.signal });
+  } catch {
+    return null; // Timeout or network error — treat as holiday
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!res.ok) {
     if (res.status === 404 || res.status === 403) {

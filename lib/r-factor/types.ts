@@ -82,7 +82,7 @@ export const DEFAULT_CONFIG: EngineConfig = {
     opt_volume: 0.05,    // Weak at 80-stock scale
   },
   thresholds: {
-    blastTrade: 2.0,
+    blastTrade: 2.8,
     regimeSwitch: 1.5,
   },
 };

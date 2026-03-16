@@ -24,6 +24,7 @@ import {
   Settings,
   Compass,
   TestTube2,
+  Flame,
 } from "lucide-react";
 
 export interface NavItemType {
@@ -148,6 +149,12 @@ export const v1Items: NavItemType[] = [
     href: "/v1",
     icon: <Zap className="w-4 h-4" />,
     children: [
+      {
+        label: "Intraday Boost",
+        href: "/trading-lab/intraday-boost",
+        icon: <Flame className="w-4 h-4" />,
+        badge: "LIVE",
+      },
       {
         label: "Market Intelligence",
         href: "/trading-lab/intelligence",
