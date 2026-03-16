@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowUpDown, Filter, Flame, Info, RefreshCw, Search, TrendingDown, TrendingUp, Zap } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface BoostStock {
   symbol: string;
@@ -35,18 +35,18 @@ export default function IntradayBoostPage() {
   const [sortAsc, setSortAsc] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
-  const fetchBoostData = async () => {
-    if (stocks.length > 0) setLoading(false); // Don't show spinner on auto-refresh
+  const mountedRef = useRef(true);
+
+  const fetchBoostData = useCallback(async () => {
     setError(null);
     try {
       const res = await fetch('/api/r-factor?limit=206');
+      if (!mountedRef.current) return;
       const result = await res.json();
+      if (!mountedRef.current) return;
       if (result.code === 'SYNC_REQUIRED') {
         setSyncRequired(result.syncTarget || 'master-contracts');
-        setLoading(false);
-        return;
-      }
-      if (result.success) {
+      } else if (result.success) {
         setSyncRequired(false);
         setStocks(result.data);
         setLastRefresh(new Date());
@@ -54,17 +54,21 @@ export default function IntradayBoostPage() {
         setError(result.error || 'Failed to fetch data');
       }
     } catch {
-      setError('Network error. Is the server running?');
+      if (mountedRef.current) setError('Network error. Is the server running?');
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
-  };
+  }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchBoostData intentionally excluded to prevent infinite re-fetch loop
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchBoostData is stable via useCallback with empty deps
   useEffect(() => {
+    mountedRef.current = true;
     fetchBoostData();
     const interval = setInterval(fetchBoostData, 60_000);
-    return () => clearInterval(interval);
+    return () => {
+      mountedRef.current = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const filteredStocks = useMemo(() => {

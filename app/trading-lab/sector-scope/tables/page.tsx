@@ -180,6 +180,7 @@ export default function SectorTablesPage() {
             </div>
           )}
           <button
+            type="button"
             onClick={fetchData}
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm text-slate-300 transition-colors disabled:opacity-50"
