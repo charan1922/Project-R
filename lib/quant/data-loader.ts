@@ -106,10 +106,11 @@ async function fetchFromDhanAPI(
         const entry = await resolveSymbol(symbol, exchange);
         if (!entry?.securityId) return [];
 
-        const { env: appEnv, hasDhanCredentials } = await import("@/lib/env");
-        if (!hasDhanCredentials()) return [];
+        const { env: appEnv } = await import("@/lib/env");
+        const { getDhanAccessToken, hasDhanAuth } = await import("@/lib/dhan/auth");
+        if (!hasDhanAuth()) return [];
         const clientId = appEnv.DHAN_CLIENT_ID!;
-        const accessToken = appEnv.DHAN_ACCESS_TOKEN!;
+        const accessToken = await getDhanAccessToken();
 
         const res = await fetch("https://api.dhan.co/v2/charts/historical", {
             method: "POST",

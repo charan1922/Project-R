@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DhanHQClient } from '@/dhanv2/src';
 import { resolveSymbol } from '@/lib/historify/master-contracts';
-import { env, hasDhanCredentials } from '@/lib/env';
+import { env } from '@/lib/env';
+import { getDhanAccessToken, hasDhanAuth } from '@/lib/dhan/auth';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -23,12 +24,13 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Could not resolve symbol' }, { status: 404 });
         }
 
-        if (!hasDhanCredentials()) {
+        if (!hasDhanAuth()) {
             logger.error('Dhan credentials missing in environment', { module: TAG });
             return NextResponse.json({ error: 'Dhan credentials missing' }, { status: 500 });
         }
 
-        const dhan = new DhanHQClient(env.DHAN_CLIENT_ID!, env.DHAN_ACCESS_TOKEN!);
+        const token = await getDhanAccessToken();
+        const dhan = new DhanHQClient(env.DHAN_CLIENT_ID!, token);
         const toDate = new Date().toISOString().split('T')[0];
         const fromDate = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 

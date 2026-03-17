@@ -34,6 +34,7 @@ export default function IntradayBoostPage() {
   const [sortField, setSortField] = useState<SortField>('rfactor');
   const [sortAsc, setSortAsc] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [dataSource, setDataSource] = useState<'live' | 'bhavcopy' | null>(null);
 
   const mountedRef = useRef(true);
 
@@ -49,6 +50,7 @@ export default function IntradayBoostPage() {
       } else if (result.success) {
         setSyncRequired(false);
         setStocks(result.data);
+        setDataSource(result.dataSource || 'bhavcopy');
         setLastRefresh(new Date());
       } else {
         setError(result.error || 'Failed to fetch data');
@@ -175,9 +177,18 @@ export default function IntradayBoostPage() {
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               Intraday Boost
-              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">
-                Live
-              </span>
+              {dataSource === 'live' ? (
+                <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">
+                  Live
+                </span>
+              ) : dataSource === 'bhavcopy' ? (
+                <span
+                  className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full"
+                  title="Dhan API unavailable. Showing bhavcopy data. Check your token."
+                >
+                  Stale
+                </span>
+              ) : null}
             </h1>
             <p className="text-sm text-slate-500">F&O stocks ranked by institutional activity (R-Factor)</p>
           </div>

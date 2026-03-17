@@ -43,6 +43,7 @@ model MasterContract {
   name       String    @default("")
   underlying String?
   expiryDate DateTime?
+  lotSize    Float     @default(1)
   syncDate   String
 
   @@unique([securityId, segment])

@@ -203,6 +203,11 @@ export const marketScopeItems: NavItemType[] = [
         badge: 'NEW',
       },
       {
+        label: 'Sector Chart',
+        href: '/trading-lab/sector-scope/chart',
+        icon: <BarChart2 className="w-3.5 h-3.5" />,
+      },
+      {
         label: 'Sector Tables',
         href: '/trading-lab/sector-scope/tables',
         icon: <Table2 className="w-3.5 h-3.5" />,

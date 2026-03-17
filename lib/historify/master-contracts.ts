@@ -87,6 +87,7 @@ async function syncFromDhan(today: string): Promise<void> {
   const idxName = col('SEM_INSTRUMENT_NAME');
   const idxInstType = col('SEM_EXCH_INSTRUMENT_TYPE');
   const idxExpiry = col('SEM_EXPIRY_DATE');
+  const idxLotSize = col('SEM_LOT_UNITS');
 
   // Parse all rows
   const entries: {
@@ -98,6 +99,7 @@ async function syncFromDhan(today: string): Promise<void> {
     name: string;
     underlying: string | null;
     expiryDate: Date | null;
+    lotSize: number;
     syncDate: string;
   }[] = [];
 
@@ -114,6 +116,7 @@ async function syncFromDhan(today: string): Promise<void> {
     const name = cols[idxName] || '';
     const instType = cols[idxInstType] || '';
     const expiryStr = cols[idxExpiry] || '';
+    const lotSizeStr = cols[idxLotSize] || '1';
 
     if (!secId || !symbol) continue;
 
@@ -158,6 +161,7 @@ async function syncFromDhan(today: string): Promise<void> {
       name,
       underlying,
       expiryDate,
+      lotSize: Number.parseFloat(lotSizeStr) || 1,
       syncDate: today,
     });
   }
@@ -176,12 +180,12 @@ async function syncFromDhan(today: string): Promise<void> {
         const esc = (s: string) => s.replace(/'/g, "''");
         const exp = e.expiryDate ? `'${e.expiryDate.toISOString()}'` : 'NULL';
         const und = e.underlying ? `'${esc(e.underlying)}'` : 'NULL';
-        return `(NULL, '${esc(e.securityId)}', '${esc(e.symbol)}', '${esc(e.exchange)}', '${esc(e.segment)}', '${esc(e.instrument)}', '${esc(e.name)}', ${und}, ${exp}, '${e.syncDate}')`;
+        return `(NULL, '${esc(e.securityId)}', '${esc(e.symbol)}', '${esc(e.exchange)}', '${esc(e.segment)}', '${esc(e.instrument)}', '${esc(e.name)}', ${und}, ${exp}, ${e.lotSize}, '${e.syncDate}')`;
       })
       .join(',');
 
     await prisma.$executeRawUnsafe(
-      `INSERT OR IGNORE INTO master_contracts (id, securityId, symbol, exchange, segment, instrument, name, underlying, expiryDate, syncDate) VALUES ${values}`,
+      `INSERT OR IGNORE INTO master_contracts (id, securityId, symbol, exchange, segment, instrument, name, underlying, expiryDate, lotSize, syncDate) VALUES ${values}`,
     );
 
     if ((i / CHUNK_SIZE) % 50 === 0 && i > 0) {
@@ -264,12 +268,14 @@ export async function resolveFuturesSecurity(underlying: string): Promise<Future
 
 /**
  * Batch-resolve near-month futures security IDs for multiple underlyings.
- * Returns Map<underlying, futuresSecurityId>.
+ * Returns Map<underlying, { securityId, lotSize }>.
  */
-export async function batchResolveFutures(underlyings: string[]): Promise<Map<string, string>> {
+export async function batchResolveFutures(
+  underlyings: string[],
+): Promise<Map<string, { securityId: string; lotSize: number }>> {
   await ensureSynced();
 
-  const result = new Map<string, string>();
+  const result = new Map<string, { securityId: string; lotSize: number }>();
   if (underlyings.length === 0) return result;
 
   const rows = await prisma.masterContract.findMany({
@@ -285,7 +291,7 @@ export async function batchResolveFutures(underlyings: string[]): Promise<Map<st
   // Pick nearest expiry per underlying
   for (const row of rows) {
     if (row.underlying && !result.has(row.underlying)) {
-      result.set(row.underlying, row.securityId);
+      result.set(row.underlying, { securityId: row.securityId, lotSize: row.lotSize });
     }
   }
 

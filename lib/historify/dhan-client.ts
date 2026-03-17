@@ -1,21 +1,22 @@
 import { DhanHQClient } from "../../dhanv2/src";
-import { HistoricalDataRequest, IntradayDataRequest, ExchangeSegment } from "../../dhanv2/src/types";
+import { HistoricalDataRequest, IntradayDataRequest } from "../../dhanv2/src/types";
 import { env } from '@/lib/env';
+import { getDhanAccessToken } from '@/lib/dhan/auth';
 
 // Helper to delay execution (Rate Limiting)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export class HistorifyDhanClient {
-    private client: DhanHQClient;
+    private client: DhanHQClient | null = null;
     private lastRequestTime: number = 0;
     private readonly RATE_LIMIT_MS = 250; // 4 requests per sec to stay safely under 5/sec
 
-    constructor() {
-        this.client = new DhanHQClient(
-            env.DHAN_CLIENT_ID ?? "",
-            env.DHAN_ACCESS_TOKEN ?? "",
-            "prod"
-        );
+    private async getClient(): Promise<DhanHQClient> {
+        const token = await getDhanAccessToken();
+        if (!this.client) {
+            this.client = new DhanHQClient(env.DHAN_CLIENT_ID ?? "", token, "prod");
+        }
+        return this.client;
     }
 
     private async throttle() {
@@ -52,7 +53,8 @@ export class HistorifyDhanClient {
             await this.throttle();
 
             try {
-                const chunkData = await this.client.historical.getIntradayHistorical({
+                const client = await this.getClient();
+                const chunkData = await client.historical.getIntradayHistorical({
                     ...req,
                     fromDate: currentFrom.toISOString().split('T')[0],
                     toDate: currentTo.toISOString().split('T')[0]
@@ -84,7 +86,8 @@ export class HistorifyDhanClient {
      */
     async fetchDaily(req: HistoricalDataRequest) {
         await this.throttle();
-        return this.client.historical.getDailyHistorical(req);
+        const client = await this.getClient();
+        return client.historical.getDailyHistorical(req);
     }
 }
 

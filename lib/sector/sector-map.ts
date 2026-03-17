@@ -22,15 +22,17 @@ for (const s of SECTORS) {
 }
 // Additional colors for sectors not in SECTORS array
 const EXTRA_COLORS: Record<string, string> = {
-  'PRIVATE BANK': '#9C27B0',
-  'PSU BANK': '#FF9800',
-  NBFC: '#673AB7',
-  TELECOM: '#00BCD4',
+  METAL: '#795548',
+  ENERGY: '#FF5722',
+  AUTO: '#2196F3',
+  REALTY: '#009688',
+  FMCG: '#8BC34A',
+  'FIN SERVICE': '#673AB7',
+  PHARMA: '#E91E63',
   CEMENT: '#607D8B',
-  CHEMICALS: '#4CAF50',
-  ELECTRONICS: '#3F51B5',
-  DEFENSE: '#F44336',
-  POWER: '#FF5722',
+  'PSU BANK': '#FF9800',
+  'PVT BANK': '#9C27B0',
+  IT: '#00BCD4',
 };
 
 // Build a reverse lookup: symbol → weight from SECTOR_HOLDINGS
@@ -78,10 +80,7 @@ export function getSectorMap(): SectorInfo[] {
   const fnoSectors = fnoSectorsRaw as Record<string, string>;
   const grouped = new Map<string, SectorStock[]>();
 
-  for (const [symbol, rawSector] of Object.entries(fnoSectors)) {
-    // Fix RELIANCE bug: value is "RELIANCE" instead of a sector
-    const sector = rawSector === symbol ? 'ENERGY' : rawSector;
-
+  for (const [symbol, sector] of Object.entries(fnoSectors)) {
     const stock: SectorStock = {
       symbol,
       name: nameLookup.get(symbol) ?? symbol,

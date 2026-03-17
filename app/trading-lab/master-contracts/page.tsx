@@ -13,6 +13,7 @@ interface Contract {
   name: string;
   underlying: string | null;
   expiryDate: string | null;
+  lotSize: number;
   syncDate: string;
 }
 
@@ -235,7 +236,7 @@ export default function MasterContractsPage() {
       {/* Table */}
       <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
         {/* Header Row */}
-        <div className="grid grid-cols-[80px_2fr_70px_1fr_1fr_1fr_1fr] gap-2 px-4 py-2 border-b border-slate-800 text-xs text-slate-500 font-medium">
+        <div className="grid grid-cols-[80px_2fr_70px_1fr_1fr_60px_1fr_1fr] gap-2 px-4 py-2 border-b border-slate-800 text-xs text-slate-500 font-medium">
           {(
             [
               ['securityId', 'ID'],
@@ -281,7 +282,7 @@ export default function MasterContractsPage() {
         {sorted.map((c, i) => (
           <div
             key={c.id}
-            className={`grid grid-cols-[80px_2fr_70px_1fr_1fr_1fr_1fr] gap-2 px-4 py-1.5 text-sm hover:bg-slate-800/40 transition-colors ${i !== sorted.length - 1 ? 'border-b border-slate-800/50' : ''}`}
+            className={`grid grid-cols-[80px_2fr_70px_1fr_1fr_60px_1fr_1fr] gap-2 px-4 py-1.5 text-sm hover:bg-slate-800/40 transition-colors ${i !== sorted.length - 1 ? 'border-b border-slate-800/50' : ''}`}
           >
             <div className="text-slate-500 font-mono text-xs">{c.securityId}</div>
             <div className="text-white font-medium truncate">{c.symbol}</div>

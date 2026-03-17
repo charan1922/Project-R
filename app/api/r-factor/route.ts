@@ -24,12 +24,13 @@ export async function GET(req: NextRequest) {
     // If no symbol, run a bulk scan
     console.log('Running bulk R-Factor scan...');
     const limit = parseInt(searchParams.get('limit') || '15', 10);
-    const signals = await rFactorService.scanAllSymbols(limit);
+    const result = await rFactorService.scanAllSymbols(limit);
 
     return NextResponse.json({
       success: true,
-      count: signals.length,
-      data: signals,
+      count: result.signals.length,
+      data: result.signals,
+      dataSource: result.dataSource,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

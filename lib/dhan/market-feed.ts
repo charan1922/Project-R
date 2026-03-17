@@ -1,4 +1,5 @@
-import { env, hasDhanCredentials } from '@/lib/env';
+import { getDhanAccessToken, hasDhanAuth } from '@/lib/dhan/auth';
+import { env } from '@/lib/env';
 
 export interface MarketFeedQuote {
   last_price: number;
@@ -34,8 +35,8 @@ export async function dhanMarketFeed(
   endpoint: 'ohlc' | 'quote',
   securities: Record<string, number[]>,
 ): Promise<MarketFeedResponse> {
-  if (!hasDhanCredentials()) return {};
-  const token = env.DHAN_ACCESS_TOKEN!;
+  if (!hasDhanAuth()) return {};
+  const token = await getDhanAccessToken();
   const clientId = env.DHAN_CLIENT_ID!;
 
   const resp = await fetch(`https://api.dhan.co/v2/marketfeed/${endpoint}`, {
@@ -49,7 +50,9 @@ export async function dhanMarketFeed(
   });
 
   if (!resp.ok) {
-    console.error(`[Dhan] marketfeed/${endpoint} failed: ${resp.status}`);
+    console.warn(
+      `[Dhan] marketfeed/${endpoint} HTTP ${resp.status}${resp.status === 401 ? ' — TOKEN EXPIRED. Will auto-refresh on next call.' : ''}`,
+    );
     return {};
   }
 

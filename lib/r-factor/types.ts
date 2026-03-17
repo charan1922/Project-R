@@ -12,19 +12,19 @@ export interface DailyStockData {
   opt_volume: number;
   opt_oi: number;
   opt_turnover: number;
-  ce_volume: number;   // Call options volume (for PCR)
-  pe_volume: number;   // Put options volume (for PCR)
+  ce_volume: number; // Call options volume (for PCR)
+  pe_volume: number; // Put options volume (for PCR)
 }
 
 /** 7-factor model inputs derived from DailyStockData */
 export interface FactorData {
-  fut_turnover: number;   // Futures turnover (80-stock Pearson 0.18)
-  fut_volume: number;     // Futures volume (Pearson 0.16, correlated with turnover)
-  opt_volume: number;     // Options total volume (Pearson 0.09)
-  eq_trade_size: number;  // Equity avg trade size = turnover/volume (Pearson 0.13)
-  oi_change: number;      // |today's fut OI - yesterday's fut OI| (Pearson 0.21)
-  spread: number;         // (high-low)/close RATIO vs 20d avg — dominant predictor (Pearson 0.54)
-  pcr: number;            // Put-Call ratio = pe_volume / ce_volume (Pearson 0.31)
+  fut_turnover: number; // Futures turnover (80-stock Pearson 0.18)
+  fut_volume: number; // Futures volume (Pearson 0.16, correlated with turnover)
+  opt_volume: number; // Options total volume (Pearson 0.09)
+  eq_trade_size: number; // Equity avg trade size = turnover/volume (Pearson 0.13)
+  oi_change: number; // |today's fut OI - yesterday's fut OI| (Pearson 0.21)
+  spread: number; // (high-low)/close RATIO vs 20d avg — dominant predictor (Pearson 0.54)
+  pcr: number; // Put-Call ratio = pe_volume / ce_volume (Pearson 0.31)
 }
 
 export interface HistoricalPoint extends FactorData {
@@ -53,34 +53,15 @@ export interface SignalOutput {
 
 export interface EngineConfig {
   lookbackPeriod: number;
-  weights: {
-    spread: number;
-    fut_turnover: number;
-    pcr: number;
-    oi_change: number;
-    eq_trade_size: number;
-    fut_volume: number;
-    opt_volume: number;
-  };
   thresholds: {
     blastTrade: number;
     regimeSwitch: number;
   };
 }
 
-// Weights validated against 80 F&O stocks from TradeFinder (March 13 2026)
-// Previous 11-stock weights were overfitting — this is the 80-stock corrected version
+// OLS coefficients are hardcoded in engine.ts — these thresholds are for regime/blast classification only
 export const DEFAULT_CONFIG: EngineConfig = {
   lookbackPeriod: 20,
-  weights: {
-    spread: 0.30,        // Dominant predictor (Pearson 0.54 as ratio)
-    fut_turnover: 0.20,  // Strong futures signal
-    pcr: 0.15,           // Put-Call ratio (Pearson 0.31)
-    oi_change: 0.12,     // OI change direction
-    eq_trade_size: 0.10, // Institutional block trade size
-    fut_volume: 0.08,    // Reduced — multicollinear with turnover
-    opt_volume: 0.05,    // Weak at 80-stock scale
-  },
   thresholds: {
     blastTrade: 2.8,
     regimeSwitch: 1.5,
@@ -97,10 +78,11 @@ export function transformToFactorData(daily: DailyStockData[]): FactorData[] {
     // Compute 20-day average spread for ratio calculation
     const lookbackStart = Math.max(0, i - 20);
     const lookback = daily.slice(lookbackStart, i);
-    const avgSpread = lookback.length > 0
-      ? lookback.reduce((sum, h) =>
-          sum + (h.eq_close > 0 ? (h.eq_high - h.eq_low) / h.eq_close : 0), 0) / lookback.length
-      : 0;
+    const avgSpread =
+      lookback.length > 0
+        ? lookback.reduce((sum, h) => sum + (h.eq_close > 0 ? (h.eq_high - h.eq_low) / h.eq_close : 0), 0) /
+          lookback.length
+        : 0;
     const currentSpread = d.eq_close > 0 ? (d.eq_high - d.eq_low) / d.eq_close : 0;
 
     return {

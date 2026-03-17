@@ -1,6 +1,15 @@
 'use client';
 
-import { Compass, Info, RefreshCw, Search, TrendingDown, TrendingUp } from 'lucide-react';
+import {
+  ArrowDownWideNarrow,
+  ArrowUpWideNarrow,
+  Compass,
+  Info,
+  RefreshCw,
+  Search,
+  TrendingDown,
+  TrendingUp,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 interface HeatmapStock {
@@ -35,6 +44,8 @@ interface HeatmapData {
     totalGainers: number;
     totalLosers: number;
     avgChange: number;
+    niftyChange: number;
+    niftyPrice: number;
     isMarketOpen: boolean;
     timestamp: string;
   };
@@ -75,6 +86,7 @@ export default function SectorScopePage() {
   const [error, setError] = useState<string | null>(null);
   const [syncRequired, setSyncRequired] = useState<string | false>(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const fetchData = async () => {
@@ -92,6 +104,9 @@ export default function SectorScopePage() {
         setSyncRequired(false);
         setData(result.data);
         setLastRefresh(new Date());
+        // Auto-sort based on Nifty direction: red day → losers first, green day → gainers first
+        const nifty = result.data.marketSummary?.niftyChange ?? 0;
+        setSortOrder(nifty >= 0 ? 'desc' : 'asc');
       } else {
         setError(result.error || 'Failed to fetch data');
       }
@@ -111,15 +126,24 @@ export default function SectorScopePage() {
 
   const filteredSectors = useMemo(() => {
     if (!data) return [];
-    if (!searchQuery) return data.sectors;
-    const q = searchQuery.toUpperCase();
-    return data.sectors
+    const mul = sortOrder === 'desc' ? -1 : 1;
+    let sectors = data.sectors;
+    if (searchQuery) {
+      const q = searchQuery.toUpperCase();
+      sectors = sectors
+        .map((sector) => ({
+          ...sector,
+          stocks: sector.stocks.filter((s) => s.symbol.includes(q) || s.name.toUpperCase().includes(q)),
+        }))
+        .filter((sector) => sector.stocks.length > 0);
+    }
+    return sectors
       .map((sector) => ({
         ...sector,
-        stocks: sector.stocks.filter((s) => s.symbol.includes(q) || s.name.toUpperCase().includes(q)),
+        stocks: [...sector.stocks].sort((a, b) => mul * (a.pctChange - b.pctChange)),
       }))
-      .filter((sector) => sector.stocks.length > 0);
-  }, [data, searchQuery]);
+      .sort((a, b) => mul * (a.avgChange - b.avgChange));
+  }, [data, searchQuery, sortOrder]);
 
   const summary = data?.marketSummary;
 
@@ -197,7 +221,19 @@ export default function SectorScopePage() {
 
       {/* Stats Bar */}
       {summary && (
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-5 gap-3">
+          <div
+            className={`px-4 py-3 rounded-lg bg-slate-900 border ${summary.niftyChange >= 0 ? 'border-emerald-500/30' : 'border-red-500/30'}`}
+          >
+            <p className="text-xs text-slate-500 uppercase tracking-wide">Nifty 50</p>
+            <p className={`text-xl font-bold mt-1 ${getChangeTextColor(summary.niftyChange)}`}>
+              {summary.niftyChange > 0 ? '+' : ''}
+              {summary.niftyChange.toFixed(2)}%
+            </p>
+            {summary.niftyPrice > 0 && (
+              <p className="text-[10px] text-slate-600 font-mono">{summary.niftyPrice.toFixed(0)}</p>
+            )}
+          </div>
           <div className="px-4 py-3 rounded-lg bg-slate-900 border border-slate-800">
             <p className="text-xs text-slate-500 uppercase tracking-wide">Total Stocks</p>
             <p className="text-xl font-bold text-white mt-1">{summary.totalStocks}</p>
@@ -220,16 +256,40 @@ export default function SectorScopePage() {
         </div>
       )}
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-        <input
-          type="text"
-          placeholder="Search symbol..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-900 border border-slate-800 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-slate-600"
-        />
+      {/* Controls */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <input
+            type="text"
+            placeholder="Search symbol..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-900 border border-slate-800 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-slate-600"
+          />
+        </div>
+        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
+          <button
+            type="button"
+            onClick={() => setSortOrder('desc')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              sortOrder === 'desc' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            <ArrowDownWideNarrow className="w-3.5 h-3.5" />
+            Top Gainers
+          </button>
+          <button
+            type="button"
+            onClick={() => setSortOrder('asc')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              sortOrder === 'asc' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            <ArrowUpWideNarrow className="w-3.5 h-3.5" />
+            Top Losers
+          </button>
+        </div>
       </div>
 
       {/* Error */}

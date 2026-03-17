@@ -38,8 +38,11 @@ The codebase is organized by domain, not by type:
   - **`/lib/r-factor/`** — Market intelligence engine:
     - `engine.ts` — OLS regression: `R = 1.11 + 0.625×spread + 0.077×pcr + 0.226×(spread×fut_turn) + 1.415×fut_turn - 1.733×fut_vol`
     - `bhavcopy-service.ts` — NSE bhavcopy sync + DB reads. Data stored in `bhavcopy_days` Prisma table. Sync is user-triggered only (never auto-downloads). NSE requires session cookie — `getNSECookie()` visits nseindia.com first.
-    - `data-service.ts` — Orchestrator: resolves security IDs → fetches Dhan live data → blends with bhavcopy history → runs engine
+    - `data-service.ts` — Orchestrator: resolves security IDs → fetches Dhan live data → blends with bhavcopy history → runs engine. Returns `{ signals, dataSource: 'live' | 'bhavcopy' }`.
     - `types.ts` — DailyStockData, FactorData, SignalOutput types + `transformToFactorData()`
+  - **`/lib/dhan/`** — Dhan API utilities:
+    - `auth.ts` — Auto-generates access tokens via TOTP (`otpauth` library). Priority: cached token → renew existing → generate via TOTP → fallback to static `DHAN_ACCESS_TOKEN`. Token cached in memory with 1hr refresh buffer.
+    - `market-feed.ts` — Raw Dhan V2 market feed calls (`dhanMarketFeed()`). Uses `getDhanAccessToken()` from auth.ts. Also exports `isMarketHours()` for IST 9:15–15:30 check.
 - **`/dhanv2`** — Standalone TypeScript SDK for Dhan V2 API (separate pnpm package `dhanhq-ts`). REST clients, WebSocket handlers, binary protocol parser. Rate-limited to 4 req/sec.
 - **`/components`** — shadcn/ui components (Radix UI + Tailwind + CVA)
 
@@ -55,7 +58,7 @@ Browser → SSE (`/api/historify/live-stream`) → `LiveManager` singleton → D
 
 - **Prisma ORM** + **SQLite** via `@prisma/adapter-better-sqlite3`: Schema in `prisma/schema.prisma`, config in `prisma/prisma.config.ts`, client singleton in `lib/db.ts` (lazy proxy pattern). DB file at `data/project-r.db`. Tables:
   - `watchlist`, `activity`, `settings` — app state
-  - `master_contracts` — Dhan instrument mappings (symbol → securityId). Synced daily from Dhan CSV (~24K rows: EQUITY + FUTSTK + FUTIDX only). Managed via `/trading-lab/master-contracts` page.
+  - `master_contracts` — Dhan instrument mappings (symbol → securityId). Synced daily from Dhan CSV (~24K rows: EQUITY + FUTSTK + FUTIDX only). Managed via `/trading-lab/master-contracts` page. Includes `lotSize` field for Dhan volume → contracts conversion.
   - `bhavcopy_days` — NSE daily equity + F&O data (per stock per day). ~206 stocks × 25+ days. Synced via `/trading-lab/bhavcopy` page. NSE requires session cookie for downloads.
 - **DuckDB** (@duckdb/node-api): Parquet columnar storage for large market datasets in `/lib/historify/duckdb.ts`
 - Native modules (prisma, duckdb) are externalized in webpack config (`next.config.ts`)
@@ -70,7 +73,19 @@ Data sync is **user-triggered only** — no page auto-downloads external data. E
 
 ### Dhan V2 Market Feed
 
-Raw API calls bypass the SDK (SDK sends string IDs, API needs numbers). `dhanMarketFeed()` in `data-service.ts` calls `POST /v2/marketfeed/ohlc` (equity OHLC) and `POST /v2/marketfeed/quote` (futures depth with volume + OI). Response is nested: `data.SEGMENT.securityId.{last_price, ohlc, volume?, oi?}`.
+Raw API calls bypass the SDK (SDK sends string IDs, API needs numbers). `dhanMarketFeed()` in `lib/dhan/market-feed.ts` calls `POST /v2/marketfeed/ohlc` (equity OHLC) and `POST /v2/marketfeed/quote` (futures depth with volume + OI). Response is nested: `data.SEGMENT.securityId.{last_price, ohlc, volume?, oi?}`.
+
+**Volume unit mismatch:** Dhan reports futures volume in **shares**, NSE bhavcopy reports in **contracts/lots**. `data-service.ts` divides Dhan volume by `lotSize` (from `master_contracts` table) before computing Z-scores.
+
+### Dhan Authentication
+
+`lib/dhan/auth.ts` manages access tokens automatically:
+
+1. **TOTP auto-generation** (preferred): Uses `otpauth` library to generate TOTP codes, calls `POST https://auth.dhan.co/app/generateAccessToken` with clientId + PIN + TOTP. Token cached 24hrs with 1hr refresh buffer.
+2. **Token renewal**: Calls `POST /v2/RenewToken` if existing token is still valid but near expiry.
+3. **Static fallback**: Uses `DHAN_ACCESS_TOKEN` from `.env.local` if TOTP credentials not configured.
+
+Rate limit: Dhan allows token generation once every 2 minutes. Concurrent calls are deduplicated via a promise lock.
 
 ### State Management
 
@@ -84,7 +99,7 @@ Located in `/lib/quant/strategies/`: EMA Crossover, RSI Accumulation, Buy & Hold
 
 ### Operational Infrastructure
 
-- **Environment validation**: `lib/env.ts` — Zod schema validates all env vars at import time. Use `env.*`, `hasDhanCredentials()`, `isVercel()` instead of raw `process.env`
+- **Environment validation**: `lib/env.ts` — Zod schema validates all env vars at import time. Use `env.*`, `isVercel()` instead of raw `process.env`
 - **Error boundaries**: `app/error.tsx` (page-level) and `app/global-error.tsx` (root layout) with Sentry integration
 - **Error tracking**: Sentry via `@sentry/nextjs` — client/server/edge configs at project root, instrumentation in `instrumentation.ts`
 - **Middleware**: `middleware.ts` — request timing, CORS for API routes
@@ -104,20 +119,26 @@ Located in `/lib/quant/strategies/`: EMA Crossover, RSI Accumulation, Buy & Hold
 - **Icons**: Lucide React
 - **Feature pages** use underscore-prefixed folders for co-located non-route files: `_hooks/`, `_components/`, `_lib/`
 - **Type-safe actions**: `next-safe-action` available for new mutation endpoints (server actions over POST routes)
+- **Code validation**: Use `pnpm lint` (Biome), NOT `tsc --noEmit`
 
 ## Environment Variables
 
 Validated in `lib/env.ts`. Required in `.env.local` (never committed):
 ```
 DHAN_CLIENT_ID=<client-id>
-DHAN_ACCESS_TOKEN=<jwt-token>
-DATABASE_URL=<url>                       # Optional: default is SQLite file:data/project-r.db
-NEXT_PUBLIC_SENTRY_DSN=<sentry-dsn>     # Optional: error tracking
-SENTRY_ORG=<org>                         # Optional: source maps
-SENTRY_PROJECT=<project>                 # Optional: source maps
+DHAN_ACCESS_TOKEN=<jwt-token>             # Optional if TOTP configured
+DHAN_PIN=<6-digit-pin>                    # For TOTP auto-token generation
+DHAN_TOTP_SECRET=<base32-secret>          # From Dhan authenticator setup
+DATABASE_URL=<url>                        # Optional: default is SQLite file:data/project-r.db
+NEXT_PUBLIC_SENTRY_DSN=<sentry-dsn>      # Optional: error tracking
+SENTRY_ORG=<org>                          # Optional: source maps
+SENTRY_PROJECT=<project>                  # Optional: source maps
 ```
 
 ## Specs & Design Docs
 
-- `/specs/` — Feature specifications (e.g., R-Factor engine)
+- `/specs/002-r-factor-v3/` — R-Factor V3 engine spec (OLS model, data model, architecture, API reference)
+- `/specs/001-r-factor-engine/` — V1 spec (superseded)
+- `/strategy/` — Strategy guides (Intraday Boost beginner's guide)
 - `/openspec/` — OpenSpec design documents with proposal → design → spec → tasks workflow
+- `/derive-r/R_FACTOR_JOURNEY.md` — Complete validation journey (Python scripts, LOO CV, 80-stock validation)

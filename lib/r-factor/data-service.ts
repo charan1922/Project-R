@@ -1,15 +1,26 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { hasDhanAuth } from '@/lib/dhan/auth';
 import { dhanMarketFeed, isMarketHours } from '@/lib/dhan/market-feed';
-import { hasDhanCredentials } from '@/lib/env';
-import { batchResolveFutures, ensureSynced, resolveSymbol } from '../historify/master-contracts';
-import { getHistoricalData } from './bhavcopy-service';
+import {
+  batchResolveFutures,
+  ensureSynced,
+  MasterContractsNotSyncedError,
+  resolveSymbol,
+} from '../historify/master-contracts';
+import { BhavcopyNotSyncedError, getHistoricalData } from './bhavcopy-service';
 import { engine } from './engine';
 import { type DailyStockData, type SignalOutput, transformToFactorData } from './types';
 
 /** Extended signal with live price data */
 export interface BoostSignal extends SignalOutput {
   pctChange?: number; // Live % change from Dhan
+}
+
+/** Result of scanning all symbols */
+export interface ScanResult {
+  signals: BoostSignal[];
+  dataSource: 'live' | 'bhavcopy';
 }
 
 /** Live equity OHLC from Dhan */
@@ -61,20 +72,30 @@ export class RFactorDataService {
    *
    * After hours / no Dhan → pure bhavcopy signals
    */
-  async scanAllSymbols(limit: number = 206): Promise<BoostSignal[]> {
+  async scanAllSymbols(limit: number = 206): Promise<ScanResult> {
     const symbols = await this.getFnOStocks();
     const targetSymbols = symbols.slice(0, limit);
 
-    const hasDhan = hasDhanCredentials();
+    const hasDhan = hasDhanAuth();
     const marketOpen = isMarketHours();
 
     if (hasDhan) {
-      console.log(`[Boost] Dhan available, market ${marketOpen ? 'OPEN' : 'closed'} → computing LIVE R-Factor`);
-      return this.computeLiveSignals(targetSymbols);
+      try {
+        console.log(`[Boost] Dhan available, market ${marketOpen ? 'OPEN' : 'closed'} → computing LIVE R-Factor`);
+        const signals = await this.computeLiveSignals(targetSymbols);
+        return { signals, dataSource: 'live' };
+      } catch (e) {
+        // Re-throw sync errors — these need user action, not silent fallback
+        if (e instanceof MasterContractsNotSyncedError || e instanceof BhavcopyNotSyncedError) throw e;
+        console.warn('[Boost] Live data failed, falling back to bhavcopy:', e);
+        const signals = await this.computeBhavcopySignals(targetSymbols);
+        return { signals, dataSource: 'bhavcopy' };
+      }
     }
 
     console.log('[Boost] No Dhan credentials → bhavcopy-only signals');
-    return this.computeBhavcopySignals(targetSymbols);
+    const signals = await this.computeBhavcopySignals(targetSymbols);
+    return { signals, dataSource: 'bhavcopy' };
   }
 
   private async computeBhavcopySignals(symbols: string[]): Promise<BoostSignal[]> {
@@ -101,6 +122,7 @@ export class RFactorDataService {
     // Step 1: Resolve equity + futures security IDs
     const eqIdMap = new Map<string, number>(); // symbol → equity securityId
     const futIdMap = new Map<string, number>(); // symbol → futures securityId
+    const lotSizeMap = new Map<string, number>(); // symbol → lot size (for Dhan volume → contracts conversion)
 
     const eqResolves = symbols.map(async (s) => {
       const entry = await resolveSymbol(s, 'NSE');
@@ -110,8 +132,9 @@ export class RFactorDataService {
 
     await Promise.all([...eqResolves, futMapPromise]);
     const futResolved = await futMapPromise;
-    for (const [sym, secId] of futResolved) {
-      futIdMap.set(sym, parseInt(secId, 10));
+    for (const [sym, { securityId, lotSize }] of futResolved) {
+      futIdMap.set(sym, parseInt(securityId, 10));
+      lotSizeMap.set(sym, lotSize);
     }
 
     console.log(`[Boost] Resolved ${eqIdMap.size} equity, ${futIdMap.size} futures IDs`);
@@ -194,6 +217,11 @@ export class RFactorDataService {
         const eq = liveEq.get(symbol);
         const fut = liveFut.get(symbol);
         const lastDay = dailyData[dailyData.length - 1];
+        const lotSize = lotSizeMap.get(symbol) || 1;
+
+        // Dhan reports volume in shares, bhavcopy in contracts.
+        // Convert Dhan volume to contracts for Z-score compatibility.
+        const futVolumeContracts = fut ? Math.round(fut.volume / lotSize) : lastDay.fut_volume;
 
         // Build today's DailyStockData from live + proxy
         const liveDay: DailyStockData = {
@@ -203,8 +231,10 @@ export class RFactorDataService {
           eq_close: eq?.lastPrice ?? lastDay.eq_close, // Use LTP (not yesterday's close) for live spread
           eq_volume: lastDay.eq_volume,
           eq_turnover: lastDay.eq_turnover,
-          // Futures: live volume + OI from Dhan
-          fut_volume: fut?.volume ?? lastDay.fut_volume,
+          // Futures: live from Dhan
+          // Volume: shares → contracts (÷ lotSize) for Z-score compatibility with bhavcopy
+          // Turnover: shares × price = ₹ value (same unit as bhavcopy TtlTrfVal)
+          fut_volume: futVolumeContracts,
           fut_turnover: fut ? fut.volume * fut.lastPrice : lastDay.fut_turnover,
           fut_oi: fut?.oi ?? lastDay.fut_oi,
           fut_oi_change: fut ? Math.abs(fut.oi - lastDay.fut_oi) : lastDay.fut_oi_change,

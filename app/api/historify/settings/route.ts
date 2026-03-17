@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const DEFAULTS = {
     dhanClientId: env.DHAN_CLIENT_ID ?? "",
-    dhanAccessToken: env.DHAN_ACCESS_TOKEN ?? "",
+    dhanAccessToken: "(auto-managed)",
     batchSize: 10,
     rateLimitMs: 250,
     defaultRange: "30",

@@ -1,7 +1,8 @@
 import { MarketFeedSocket } from '../../dhanv2/src/websockets/MarketFeedSocket';
 import { FeedInstrument, FeedRequestCode, QuoteData, ExchangeSegment } from '../../dhanv2/src/types';
 import { resolveSymbol } from './master-contracts';
-import { env, hasDhanCredentials } from '@/lib/env';
+import { env } from '@/lib/env';
+import { getDhanAccessToken, hasDhanAuth } from '@/lib/dhan/auth';
 
 const TAG = '[LiveManager]';
 
@@ -10,15 +11,16 @@ class LiveManager {
     private clients: Set<ReadableStreamDefaultController> = new Set();
     private activeSymbols: Map<string, FeedInstrument> = new Map();
 
-    public connect() {
+    public async connect() {
         if (this.socket) return;
-        if (!hasDhanCredentials()) {
-            console.error(`${TAG} connect failed: missing DHAN_CLIENT_ID or DHAN_ACCESS_TOKEN`);
+        if (!hasDhanAuth()) {
+            console.error(`${TAG} connect failed: missing Dhan credentials`);
             return;
         }
 
         console.log(`${TAG} initializing Dhan WebSocket...`);
-        this.socket = new MarketFeedSocket(env.DHAN_CLIENT_ID!, env.DHAN_ACCESS_TOKEN!);
+        const token = await getDhanAccessToken();
+        this.socket = new MarketFeedSocket(env.DHAN_CLIENT_ID!, token);
 
         this.socket.on('connect', () => {
             console.log(`${TAG} WebSocket connected to Dhan`);
@@ -55,10 +57,10 @@ class LiveManager {
         dead.forEach(c => this.clients.delete(c));
     }
 
-    public addClient(controller: ReadableStreamDefaultController) {
+    public async addClient(controller: ReadableStreamDefaultController) {
         this.clients.add(controller);
         console.log(`${TAG} client added (total: ${this.clients.size})`);
-        if (!this.socket) this.connect();
+        if (!this.socket) await this.connect();
     }
 
     public removeClient(controller: ReadableStreamDefaultController) {
