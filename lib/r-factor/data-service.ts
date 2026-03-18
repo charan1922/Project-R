@@ -2,7 +2,14 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { prisma } from '@/lib/db';
 import { hasDhanAuth } from '@/lib/dhan/auth';
-import { dhanMarketFeed, todayIST as getTodayIST, isMarketHours, isTradingDay } from '@/lib/dhan/market-feed';
+import {
+  dhanMarketFeed,
+  fetchOptionChain,
+  todayIST as getTodayIST,
+  isMarketHours,
+  isTradingDay,
+  type OptionChainSummary,
+} from '@/lib/dhan/market-feed';
 import {
   batchResolveFutures,
   ensureSynced,
@@ -56,6 +63,12 @@ export class RFactorDataService {
     liveFut: Map<string, LiveFutData>;
   } | null = null;
 
+  // Cache option chain summaries per trading day (rate limit: 1 req / 3s, so cache aggressively)
+  private optionChainCache: {
+    date: string;
+    data: Map<string, OptionChainSummary>;
+  } | null = null;
+
   async getFnOStocks(): Promise<string[]> {
     try {
       const filePath = path.join(process.cwd(), 'lib', 'data', 'fno_stocks_list.json');
@@ -101,26 +114,28 @@ export class RFactorDataService {
     const todayIST = getTodayIST();
 
     // Decision matrix:
-    // 1. Market hours + Dhan → live signals from Dhan
-    // 2. Post-market + today's bhavcopy synced → pure bhavcopy (matches TradeFinder exactly)
-    // 3. Post-market + no bhavcopy + Dhan → Dhan closing data (cached for consistency)
-    // 4. Non-trading day / no Dhan → latest bhavcopy
+    // 1. Today's bhavcopy synced (post-market) → pure bhavcopy (matches TradeFinder exactly)
+    // 2. Dhan available → fetch live/closing data (works during market, post-market, and pre-market next day)
+    // 3. No Dhan → latest bhavcopy
 
-    if (hasDhan && tradingDay) {
-      // Post-market: prefer today's bhavcopy if synced (same data source as TradeFinder)
-      if (!marketOpen && (await this.hasTodayBhavcopy())) {
-        console.log('[Boost] Post-market + today bhavcopy synced → using bhavcopy (matches TF)');
-        const signals = this.attachSectors(await this.computeBhavcopySignals(targetSymbols), sectorMap);
-        return { signals, dataSource: 'bhavcopy-today', latestDate: todayIST, marketOpen };
-      }
+    // Prefer today's bhavcopy if synced (post-market, same data source as TradeFinder)
+    if (hasDhan && tradingDay && !marketOpen && (await this.hasTodayBhavcopy())) {
+      console.log('[Boost] Post-market + today bhavcopy synced → using bhavcopy (matches TF)');
+      const signals = this.attachSectors(await this.computeBhavcopySignals(targetSymbols), sectorMap);
+      return { signals, dataSource: 'bhavcopy-today', latestDate: todayIST, marketOpen };
+    }
 
-      // Live or Dhan closing — retry once before falling back
+    // Try Dhan whenever credentials are available.
+    // Dhan API serves yesterday's closing data even at 1 AM — always valid.
+    if (hasDhan) {
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-          const label = marketOpen ? 'OPEN' : 'closed (post-market, no bhavcopy)';
-          console.log(`[Boost] Market ${label} + Dhan → computing LIVE R-Factor (attempt ${attempt})`);
+          const label = marketOpen ? 'OPEN' : tradingDay ? 'closed (post-market)' : 'pre-market/non-trading';
+          console.log(`[Boost] ${label} + Dhan → computing LIVE R-Factor (attempt ${attempt})`);
           const signals = this.attachSectors(await this.computeLiveSignals(targetSymbols), sectorMap);
-          return { signals, dataSource: 'live', latestDate: todayIST, marketOpen };
+          // latestDate: use today if trading day, otherwise Dhan cache date (yesterday's data)
+          const latestDate = tradingDay ? todayIST : (this.dhanCache?.date ?? todayIST);
+          return { signals, dataSource: 'live', latestDate, marketOpen };
         } catch (e) {
           if (e instanceof MasterContractsNotSyncedError || e instanceof BhavcopyNotSyncedError) throw e;
           if (attempt === 1) {
@@ -131,16 +146,14 @@ export class RFactorDataService {
           }
         }
       }
-      const latestDate = await this.getLatestBhavcopyDate();
-      const signals = this.attachSectors(await this.computeBhavcopySignals(targetSymbols), sectorMap);
-      return { signals, dataSource: 'bhavcopy', latestDate, marketOpen };
     }
 
-    const reason = !hasDhan ? 'no Dhan credentials' : 'non-trading day';
-    console.log(`[Boost] ${reason} → bhavcopy-only signals`);
-    const latestDate = await this.getLatestBhavcopyDate();
+    // Fallback: bhavcopy
+    const latestBhavDate = await this.getLatestBhavcopyDate();
+    const reason = !hasDhan ? 'no Dhan credentials' : 'Dhan failed';
+    console.log(`[Boost] ${reason} → bhavcopy-only signals (${latestBhavDate})`);
     const signals = this.attachSectors(await this.computeBhavcopySignals(targetSymbols), sectorMap);
-    return { signals, dataSource: 'bhavcopy', latestDate, marketOpen };
+    return { signals, dataSource: 'bhavcopy', latestDate: latestBhavDate, marketOpen };
   }
 
   private async getSectorMap(): Promise<Record<string, string>> {
@@ -170,6 +183,59 @@ export class RFactorDataService {
     const today = getTodayIST();
     const row = await prisma.bhavcopyDay.findFirst({ where: { date: today }, select: { date: true } });
     return row !== null;
+  }
+
+  private ocFetchInProgress = false;
+
+  /**
+   * Non-blocking option chain access. Returns cached data immediately.
+   * If cache is stale, triggers background fetch — results available on next scan (60s auto-refresh).
+   * Page loads instantly with spread-quad model, upgrades to full OLS on subsequent refreshes.
+   */
+  private getOptionChains(
+    eqIdMap: Map<string, number>,
+    expiries: Map<string, string>,
+  ): Map<string, OptionChainSummary> {
+    const todayCacheKey = getTodayIST();
+
+    if (this.optionChainCache?.date === todayCacheKey) {
+      return this.optionChainCache.data;
+    }
+
+    // Fire-and-forget background fetch
+    if (!this.ocFetchInProgress) {
+      this.ocFetchInProgress = true;
+      this.fetchOptionChainsBackground(eqIdMap, expiries, todayCacheKey).finally(() => {
+        this.ocFetchInProgress = false;
+      });
+    }
+
+    return new Map(); // Empty → spread-quad fallback for all stocks this request
+  }
+
+  private async fetchOptionChainsBackground(
+    eqIdMap: Map<string, number>,
+    expiries: Map<string, string>,
+    cacheKey: string,
+  ): Promise<void> {
+    const result = new Map<string, OptionChainSummary>();
+    const symbols = Array.from(eqIdMap.keys()).filter((s) => expiries.has(s));
+    console.log(`[Boost] Background: fetching option chains for ${symbols.length} symbols...`);
+
+    for (const sym of symbols) {
+      const secId = eqIdMap.get(sym)!;
+      const expiry = expiries.get(sym)!;
+      try {
+        const summary = await fetchOptionChain(secId, expiry);
+        if (summary) result.set(sym, summary);
+      } catch {
+        // Skip — spread-quad fallback for this symbol
+      }
+      await new Promise((r) => setTimeout(r, 3100)); // Rate limit: 1 req / 3s
+    }
+
+    console.log(`[Boost] Background: option chain done — ${result.size}/${symbols.length} cached`);
+    this.optionChainCache = { date: cacheKey, data: result };
   }
 
   private async computeBhavcopySignals(symbols: string[]): Promise<BoostSignal[]> {
@@ -206,9 +272,11 @@ export class RFactorDataService {
 
     await Promise.all([...eqResolves, futMapPromise]);
     const futResolved = await futMapPromise;
-    for (const [sym, { securityId, lotSize }] of futResolved) {
+    const expiryMap = new Map<string, string>(); // symbol → nearest expiry YYYY-MM-DD (for option chain)
+    for (const [sym, { securityId, lotSize, expiryDate }] of futResolved) {
       futIdMap.set(sym, parseInt(securityId, 10));
       lotSizeMap.set(sym, lotSize);
+      if (expiryDate) expiryMap.set(sym, expiryDate);
     }
 
     console.log(`[Boost] Resolved ${eqIdMap.size} equity, ${futIdMap.size} futures IDs`);
@@ -279,6 +347,10 @@ export class RFactorDataService {
       this.dhanCache = { date: todayCacheKey, liveEq, liveFut };
     }
 
+    // Step 2.5: Option chain data (CE/PE volume → live PCR)
+    // Non-blocking: returns cached data or empty map. Background fetch populates cache for next refresh.
+    const optChainData = this.getOptionChains(eqIdMap, expiryMap);
+
     // Step 3: Compute R-Factor for each symbol with live blend
     const signalPromises = symbols.map(async (symbol) => {
       try {
@@ -287,6 +359,7 @@ export class RFactorDataService {
 
         const eq = liveEq.get(symbol);
         const fut = liveFut.get(symbol);
+        const oc = optChainData.get(symbol); // Live option chain (CE/PE volume, OI)
         const lastDay = dailyData[dailyData.length - 1];
         const lotSize = lotSizeMap.get(symbol) || 1;
 
@@ -318,12 +391,12 @@ export class RFactorDataService {
           fut_turnover: fut ? fut.volume * futTurnoverPrice : lastDay.fut_turnover,
           fut_oi: fut?.oi ?? lastDay.fut_oi,
           fut_oi_change: fut ? Math.abs(fut.oi - lastDay.fut_oi) : lastDay.fut_oi_change,
-          // Options: proxy from yesterday (PCR coeff is only 0.077)
-          opt_volume: lastDay.opt_volume,
-          opt_oi: lastDay.opt_oi,
-          opt_turnover: lastDay.opt_turnover,
-          ce_volume: lastDay.ce_volume,
-          pe_volume: lastDay.pe_volume,
+          // Options: live from Dhan Option Chain if available, otherwise yesterday's proxy
+          opt_volume: oc ? oc.totalOptVolume : lastDay.opt_volume,
+          opt_oi: oc ? oc.totalOptOi : lastDay.opt_oi,
+          opt_turnover: lastDay.opt_turnover, // No turnover in OC response — proxy
+          ce_volume: oc ? oc.totalCeVolume : lastDay.ce_volume,
+          pe_volume: oc ? oc.totalPeVolume : lastDay.pe_volume,
         };
 
         // Replace last day with live-blended data
@@ -332,8 +405,11 @@ export class RFactorDataService {
         const current = factorData[factorData.length - 1];
         const historical = factorData.slice(0, -1);
 
-        // Use spread-quadratic model for live data (Dhan futures Z-scores are unreliable)
-        const signal = engine.calculateSignalLive(symbol, current, historical);
+        // Full OLS model when we have option chain data (all factors live from Dhan)
+        // Spread-quadratic fallback when option chain is missing
+        const signal = oc
+          ? engine.calculateSignal(symbol, current, historical)
+          : engine.calculateSignalLive(symbol, current, historical);
         const boost: BoostSignal = {
           ...signal,
           pctChange: eq ? ((eq.lastPrice - eq.close) / eq.close) * 100 : undefined,

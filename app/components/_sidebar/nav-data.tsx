@@ -1,28 +1,21 @@
 import {
   Activity,
   BarChart2,
-  BookOpen,
   Brain,
-  Calculator,
   CalendarDays,
   Clock,
   Compass,
-  Cpu,
   Database,
   Download,
   Flame,
   FlaskConical,
-  GraduationCap,
   HardDrive,
   Layers,
   LayoutGrid,
   LineChart,
   List,
-  Play,
   Settings,
-  ShieldCheck,
   Table2,
-  Target,
   TestTube2,
   Upload,
   Zap,
@@ -36,114 +29,6 @@ export interface NavItemType {
   badge?: string;
   children?: NavItemType[];
 }
-
-export const learningItems: NavItemType[] = [
-  {
-    label: 'Quant Foundations',
-    href: '/learning/foundations',
-    icon: <GraduationCap className="w-4 h-4" />,
-    children: [
-      {
-        label: 'Foundation of Flow',
-        href: '/learning/foundation-of-flow',
-        icon: <BookOpen className="w-3.5 h-3.5" />,
-      },
-      {
-        label: 'The 4-Factor Model',
-        href: '/learning/4-factor-model',
-        icon: <Layers className="w-3.5 h-3.5" />,
-      },
-      {
-        label: 'Market Regimes',
-        href: '/learning/market-regimes',
-        icon: <Brain className="w-3.5 h-3.5" />,
-      },
-      {
-        label: 'The Blast Protocol',
-        href: '/learning/blast-protocol',
-        icon: <Target className="w-3.5 h-3.5" />,
-      },
-    ],
-  },
-  {
-    label: 'Advanced Lab',
-    href: '/learning/advanced',
-    icon: <FlaskConical className="w-4 h-4" />,
-    badge: 'PRO',
-    children: [
-      {
-        label: 'Algo Implementation',
-        href: '/learning/algo-implementation',
-        icon: <Cpu className="w-3.5 h-3.5" />,
-      },
-      {
-        label: 'Advanced Factor Eng.',
-        href: '/learning/advanced-factors',
-        icon: <Activity className="w-3.5 h-3.5" />,
-      },
-      {
-        label: 'Quant Validation',
-        href: '/learning/quant-validation',
-        icon: <Calculator className="w-3.5 h-3.5" />,
-      },
-      {
-        label: 'OpenClaw Architecture',
-        href: '/learning/openclaw-arch',
-        icon: <Layers className="w-3.5 h-3.5" />,
-      },
-      {
-        label: 'Temporal Anomalies',
-        href: '/learning/temporal-anomalies',
-        icon: <LineChart className="w-3.5 h-3.5" />,
-      },
-      {
-        label: 'Execution Micro.',
-        href: '/learning/execution-microstructure',
-        icon: <Zap className="w-3.5 h-3.5" />,
-      },
-      {
-        label: 'System Sovereignty',
-        href: '/learning/system-sovereignty',
-        icon: <ShieldCheck className="w-3.5 h-3.5" />,
-      },
-    ],
-  },
-];
-
-export const liveTools: NavItemType[] = [
-  {
-    label: 'R-Factor Engine',
-    href: '/learning/r-factor-engine',
-    icon: <Activity className="w-4 h-4" />,
-    badge: 'LIVE',
-  },
-];
-
-export const backtestingItems: NavItemType[] = [
-  {
-    label: 'Backtesting',
-    href: '/backtesting',
-    icon: <FlaskConical className="w-4 h-4" />,
-    badge: 'LAB',
-    children: [
-      {
-        label: 'Strategy Backtest',
-        href: '/backtesting/playground',
-        icon: <LineChart className="w-3.5 h-3.5" />,
-      },
-      {
-        label: 'Live Scanner',
-        href: '/trading-lab/scanner',
-        icon: <Cpu className="w-3.5 h-3.5" />,
-      },
-      {
-        label: 'Algo Execute',
-        href: '/trading-lab/execute',
-        icon: <Play className="w-3.5 h-3.5" />,
-      },
-    ],
-  },
-];
 
 export const v1Items: NavItemType[] = [
   {
@@ -302,34 +187,6 @@ export const quantLabItems: NavItemType[] = [
         href: '/quant/backtester',
         icon: <FlaskConical className="w-4 h-4" />,
         badge: 'NEW',
-      },
-    ],
-  },
-];
-
-export const v01Items: NavItemType[] = [
-  {
-    label: 'v0.1 (Legacy)',
-    href: '/v0.1',
-    icon: <Layers className="w-4 h-4" />,
-    children: [
-      {
-        label: 'Learning Modules',
-        href: '/learning-group',
-        icon: <GraduationCap className="w-4 h-4" />,
-        children: learningItems,
-      },
-      {
-        label: 'Live Intelligence',
-        href: '/live-group',
-        icon: <Activity className="w-4 h-4" />,
-        children: liveTools,
-      },
-      {
-        label: 'Lab Environments',
-        href: '/lab-group',
-        icon: <FlaskConical className="w-4 h-4" />,
-        children: backtestingItems,
       },
     ],
   },

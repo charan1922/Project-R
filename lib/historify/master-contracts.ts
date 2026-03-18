@@ -269,10 +269,10 @@ export async function resolveFuturesSecurity(underlying: string): Promise<Future
  */
 export async function batchResolveFutures(
   underlyings: string[],
-): Promise<Map<string, { securityId: string; lotSize: number }>> {
+): Promise<Map<string, { securityId: string; lotSize: number; expiryDate: string }>> {
   await ensureSynced();
 
-  const result = new Map<string, { securityId: string; lotSize: number }>();
+  const result = new Map<string, { securityId: string; lotSize: number; expiryDate: string }>();
   if (underlyings.length === 0) return result;
 
   const rows = await prisma.masterContract.findMany({
@@ -288,7 +288,8 @@ export async function batchResolveFutures(
   // Pick nearest expiry per underlying
   for (const row of rows) {
     if (row.underlying && !result.has(row.underlying)) {
-      result.set(row.underlying, { securityId: row.securityId, lotSize: row.lotSize });
+      const expiry = row.expiryDate ? new Date(row.expiryDate).toISOString().split('T')[0] : '';
+      result.set(row.underlying, { securityId: row.securityId, lotSize: row.lotSize, expiryDate: expiry });
     }
   }
 

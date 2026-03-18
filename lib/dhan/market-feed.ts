@@ -86,3 +86,73 @@ export async function dhanMarketFeed(
   if (json.status !== 'success' || !json.data) return {};
   return json.data as MarketFeedResponse;
 }
+
+// ─── Option Chain ────────────────────────────────────────────────────────────
+
+/** Aggregated option chain data for a single underlying */
+export interface OptionChainSummary {
+  totalCeVolume: number;
+  totalPeVolume: number;
+  totalOptOi: number;
+  totalOptVolume: number;
+  pcr: number; // PE volume / CE volume
+}
+
+/**
+ * Fetch option chain for a single underlying and aggregate CE/PE volumes.
+ * Rate limit: 1 request per 3 seconds.
+ *
+ * @param underlyingSecId - Security ID of the underlying (equity)
+ * @param expiry - Expiry date in YYYY-MM-DD format (nearest F&O expiry)
+ */
+export async function fetchOptionChain(underlyingSecId: number, expiry: string): Promise<OptionChainSummary | null> {
+  if (!hasDhanAuth()) return null;
+  const token = await getDhanAccessToken();
+  const clientId = env.DHAN_CLIENT_ID!;
+
+  const resp = await fetch('https://api.dhan.co/v2/optionchain', {
+    method: 'POST',
+    headers: {
+      'access-token': token,
+      'client-id': clientId,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      UnderlyingScrip: underlyingSecId,
+      UnderlyingSeg: 'NSE_FNO',
+      Expiry: expiry,
+    }),
+  });
+
+  if (!resp.ok) {
+    console.warn(`[Dhan] optionchain HTTP ${resp.status} for secId=${underlyingSecId}`);
+    return null;
+  }
+
+  const json = (await resp.json()) as {
+    data?: { oc?: Record<string, { ce?: { volume?: number; oi?: number }; pe?: { volume?: number; oi?: number } }> };
+    status: string;
+  };
+
+  if (json.status !== 'success' || !json.data?.oc) return null;
+
+  let totalCeVolume = 0;
+  let totalPeVolume = 0;
+  let totalOptOi = 0;
+
+  for (const strike of Object.values(json.data.oc)) {
+    if (strike.ce) {
+      totalCeVolume += strike.ce.volume ?? 0;
+      totalOptOi += strike.ce.oi ?? 0;
+    }
+    if (strike.pe) {
+      totalPeVolume += strike.pe.volume ?? 0;
+      totalOptOi += strike.pe.oi ?? 0;
+    }
+  }
+
+  const totalOptVolume = totalCeVolume + totalPeVolume;
+  const pcr = totalCeVolume > 0 ? totalPeVolume / totalCeVolume : 0;
+
+  return { totalCeVolume, totalPeVolume, totalOptOi, totalOptVolume, pcr };
+}

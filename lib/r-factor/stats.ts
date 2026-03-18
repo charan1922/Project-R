@@ -19,7 +19,7 @@ export function calculateRollingStats(series: number[]): { mean: number; stdDev:
  */
 export function calculateZScore(value: number, series: number[]): number {
   const { mean: m, stdDev: s } = calculateRollingStats(series);
-  
+
   if (s === 0) {
     return value === m ? 0 : 0; // Avoid division by zero
   }

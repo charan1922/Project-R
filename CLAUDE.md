@@ -36,13 +36,28 @@ The codebase is organized by domain, not by type:
   - **`/lib/historify/`** — Data persistence, live WebSocket management, Dhan API client, scheduler. `master-contracts.ts` handles Dhan instrument lookup (Prisma-backed, daily sync).
   - **`/lib/quant/`** — Backtest engine, strategy implementations, data loader with 5-min TTL cache, math utils (EMA, RSI)
   - **`/lib/r-factor/`** — Market intelligence engine:
-    - `engine.ts` — OLS regression: `R = 1.11 + 0.625×spread + 0.077×pcr + 0.226×(spread×fut_turn) + 1.415×fut_turn - 1.733×fut_vol`
+    - `engine.ts` — Dual-model R-Factor computation:
+      - **Full OLS** (for bhavcopy data): `R = 1.11 + 0.625×spread + 0.077×pcr + 0.226×(spread×fut_turn) + 1.415×fut_turn - 1.733×fut_vol` (LOO Pearson 0.60)
+      - **Spread-quadratic** (for live Dhan data): piecewise `R = 2.45 - 1.86×spread + 0.95×spread²` for spread ≥ 1.0, linear ramp below (Pearson 0.857 with TradeFinder)
+      - `calculateSignal()` = full OLS (bhavcopy path), `calculateSignalLive()` = spread-quad (Dhan path)
+      - `SignalOutput.modelUsed` field indicates which model was used ('ols' | 'spread-quad')
     - `bhavcopy-service.ts` — NSE bhavcopy sync + DB reads. Data stored in `bhavcopy_days` Prisma table. Sync is user-triggered only (never auto-downloads). NSE requires session cookie — `getNSECookie()` visits nseindia.com first.
-    - `data-service.ts` — Orchestrator: resolves security IDs → fetches Dhan live data → blends with bhavcopy history → runs engine. Returns `{ signals, dataSource: 'live' | 'bhavcopy' }`.
+    - `data-service.ts` — Orchestrator with smart data source selection:
+      - Market hours + Dhan → `computeLiveSignals()` with spread-quad model → `dataSource: 'live'`
+      - Post-market + today's bhavcopy synced → `computeBhavcopySignals()` with full OLS → `dataSource: 'bhavcopy-today'`
+      - Post-market + no bhavcopy → Dhan closing data (cached) → `dataSource: 'live'`
+      - Non-trading day → latest bhavcopy → `dataSource: 'bhavcopy'`
+      - Dhan response cache: per-day, only used when `!isMarketHours()` (fresh during market hours)
+      - Retry logic: 2 attempts with 2s delay before bhavcopy fallback
+      - Sector attachment: reads `lib/data/fno_sectors.json`, attaches `sector` to each signal
+      - Lot value: computes `lotSize × lastPrice` for margin estimation
     - `types.ts` — DailyStockData, FactorData, SignalOutput types + `transformToFactorData()`
   - **`/lib/dhan/`** — Dhan API utilities:
-    - `auth.ts` — Auto-generates access tokens via TOTP (`otpauth` library). Priority: cached token → renew existing → generate via TOTP → fallback to static `DHAN_ACCESS_TOKEN`. Token cached in memory with 1hr refresh buffer.
-    - `market-feed.ts` — Raw Dhan V2 market feed calls (`dhanMarketFeed()`). Uses `getDhanAccessToken()` from auth.ts. Also exports `isMarketHours()` for IST 9:15–15:30 check.
+    - `auth.ts` — Auto-generates access tokens via TOTP (`otpauth` library). Priority: disk-cached token → renew existing → generate via TOTP → fallback to static `DHAN_ACCESS_TOKEN`. Token persisted to `data/.dhan-token.json` (gitignored) to survive hot reloads. 24hr token with 1hr refresh buffer.
+    - `market-feed.ts` — Raw Dhan V2 market feed calls (`dhanMarketFeed()`). Uses `getDhanAccessToken()` from auth.ts. Exports: `isMarketHours()` (9:15-15:30 IST), `isTradingDay()` (weekday after 9:15), `todayIST()` (YYYY-MM-DD in IST). Dhan API endpoints used:
+      - `POST /v2/marketfeed/quote` — equity OHLC + volume + VWAP; futures volume + OI + VWAP
+      - `POST /v2/optionchain` — per-strike CE/PE volume, OI, greeks (rate limit: 1 req / 3s)
+      - `POST /v2/charts/intraday` — 5-min candle data for backtesting/analysis
 - **`/dhanv2`** — Standalone TypeScript SDK for Dhan V2 API (separate pnpm package `dhanhq-ts`). REST clients, WebSocket handlers, binary protocol parser. Rate-limited to 4 req/sec.
 - **`/components`** — shadcn/ui components (Radix UI + Tailwind + CVA)
 
@@ -75,17 +90,42 @@ Data sync is **user-triggered only** — no page auto-downloads external data. E
 
 Raw API calls bypass the SDK (SDK sends string IDs, API needs numbers). `dhanMarketFeed()` in `lib/dhan/market-feed.ts` calls `POST /v2/marketfeed/ohlc` (equity OHLC) and `POST /v2/marketfeed/quote` (futures depth with volume + OI). Response is nested: `data.SEGMENT.securityId.{last_price, ohlc, volume?, oi?}`.
 
-**Volume unit mismatch:** Dhan reports futures volume in **shares**, NSE bhavcopy reports in **contracts/lots**. `data-service.ts` divides Dhan volume by `lotSize` (from `master_contracts` table) before computing Z-scores.
+**Volume unit mismatch:** Dhan reports futures volume in **shares**, NSE bhavcopy reports in **contracts/lots**. `data-service.ts` divides Dhan volume by `lotSize` (from `master_contracts` table) before computing Z-scores. Futures turnover uses `average_price` (VWAP) instead of `last_price` to match NSE's `TtlTrfVal` methodology.
 
 ### Dhan Authentication
 
 `lib/dhan/auth.ts` manages access tokens automatically:
 
-1. **TOTP auto-generation** (preferred): Uses `otpauth` library to generate TOTP codes, calls `POST https://auth.dhan.co/app/generateAccessToken` with clientId + PIN + TOTP. Token cached 24hrs with 1hr refresh buffer.
+1. **TOTP auto-generation** (preferred): Uses `otpauth` library to generate TOTP codes, calls `POST https://auth.dhan.co/app/generateAccessToken` with clientId + PIN + TOTP. Token persisted to `data/.dhan-token.json` (gitignored) to survive Turbopack hot reloads. 24hr token with 1hr refresh buffer.
 2. **Token renewal**: Calls `POST /v2/RenewToken` if existing token is still valid but near expiry.
 3. **Static fallback**: Uses `DHAN_ACCESS_TOKEN` from `.env.local` if TOTP credentials not configured.
 
 Rate limit: Dhan allows token generation once every 2 minutes. Concurrent calls are deduplicated via a promise lock.
+
+**Standalone scripts**: When running TypeScript outside Next.js (e.g., `npx tsx -e "..."`), env vars from `.env.local` are NOT auto-loaded. Use `import { config } from 'dotenv'; config({ path: '.env.local' });` at the top of the script.
+
+### Dhan API Endpoints Used
+
+| Endpoint | Segment | Returns | Rate Limit |
+|----------|---------|---------|-----------|
+| `POST /v2/marketfeed/quote` | NSE_EQ | OHLC, volume, average_price, last_price | 4 req/sec |
+| `POST /v2/marketfeed/quote` | NSE_FNO | volume, OI, average_price, last_price, depth | 4 req/sec |
+| `POST /v2/optionchain` | NSE_FNO | Per-strike CE/PE: volume, OI, greeks, IV | 1 req/3sec |
+| `POST /v2/charts/intraday` | Any | 5-min OHLCV candles for current day | 4 req/sec |
+| `POST /v2/charts/historical` | Any | Daily OHLCV candles | 4 req/sec |
+
+### R-Factor Model Architecture
+
+**Dual-model system** — different models for different data sources:
+
+| Data Source | Model | Pearson with TF | When Used |
+|-------------|-------|----------------|-----------|
+| Dhan live | Spread-quadratic (piecewise) | 0.857 | Market hours, or post-market without bhavcopy |
+| NSE bhavcopy | Full 5-factor OLS | 0.60 (LOO) | After syncing today's bhavcopy, or historical |
+
+**Why dual models**: Dhan's futures volume/turnover/OI values don't align with NSE bhavcopy units for Z-score computation. Spread (equity OHLC) is the only factor Dhan reports accurately enough for Z-scoring against bhavcopy historical baselines. The spread-quadratic captures the non-linear amplification TradeFinder uses for extreme activity levels.
+
+**Next step**: Integrate Dhan's Option Chain API (`/v2/optionchain`) to get live CE/PE volume → live PCR, enabling the full OLS model with all-Dhan data during market hours. Requires verifying unit alignment between Dhan option chain volume and bhavcopy `ce_volume`/`pe_volume`.
 
 ### State Management
 
@@ -135,10 +175,26 @@ SENTRY_ORG=<org>                          # Optional: source maps
 SENTRY_PROJECT=<project>                  # Optional: source maps
 ```
 
+## Intraday Boost Page Architecture
+
+The main trading page (`/trading-lab/intraday-boost`) is modular:
+- `_hooks/use-boost-data.ts` — data fetching hook (auto-refresh 60s, sync error handling)
+- `_lib/sector-stats.ts` — per-sector average spread Z-score computation
+- `page.tsx` — thin render layer with sub-components: `SyncModal`, `DataSourceBadge`, `SortButton`, `StockRow`
+- `app/trading-lab/_lib/r-factor-ui.ts` — shared display helpers (colors, badges, date formatting) used by both Intraday Boost and R-Factor History pages
+
+### R-Factor History Page
+
+`/trading-lab/r-factor-history` — two tabs:
+- **Stock History**: per-symbol R-Factor trend over 25 days (Recharts line chart + table)
+- **Daily Leaderboard**: per-date top stocks ranked by R-Factor (date selector from available bhavcopy dates)
+
+API: `GET /api/r-factor-history?symbol=X&days=25` | `?date=YYYY-MM-DD&limit=20` | `?dates=true`
+
 ## Specs & Design Docs
 
-- `/specs/002-r-factor-v3/` — R-Factor V3 engine spec (OLS model, data model, architecture, API reference)
-- `/specs/001-r-factor-engine/` — V1 spec (superseded)
-- `/strategy/` — Strategy guides (Intraday Boost beginner's guide)
+- `/openspec/specs/r-factor-v3-engine/` — R-Factor V3 OLS model spec (coefficients, data model, architecture)
+- `/openspec/changes/r-factor-enhancements/` — Current enhancement: sector integration, post-market data, history page, dual model, data consistency
 - `/openspec/` — OpenSpec design documents with proposal → design → spec → tasks workflow
 - `/derive-r/R_FACTOR_JOURNEY.md` — Complete validation journey (Python scripts, LOO CV, 80-stock validation)
+- `/document.json` — Dhan V2 OpenAPI spec (full API reference)
