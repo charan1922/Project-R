@@ -49,6 +49,7 @@ export interface SignalOutput {
   compositeRFactor: number;
   regime: MarketRegime;
   isBlastTrade: boolean;
+  modelUsed: 'ols' | 'spread-quad'; // Which model computed compositeRFactor
 }
 
 export interface EngineConfig {

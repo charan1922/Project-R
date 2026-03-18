@@ -176,6 +176,11 @@ export const v1Items: NavItemType[] = [
         badge: 'NEW',
       },
       {
+        label: 'R-Factor History',
+        href: '/trading-lab/r-factor-history',
+        icon: <Clock className="w-4 h-4" />,
+      },
+      {
         label: 'Master Contracts',
         href: '/trading-lab/master-contracts',
         icon: <Database className="w-4 h-4" />,

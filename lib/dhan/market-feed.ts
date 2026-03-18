@@ -6,6 +6,7 @@ export interface MarketFeedQuote {
   ohlc: { open: number; close: number; high: number; low: number };
   volume?: number;
   oi?: number;
+  average_price?: number; // VWAP — available from Quote endpoint, not OHLC
 }
 
 export type MarketFeedResponse = Record<string, Record<string, MarketFeedQuote>>;
@@ -15,15 +16,40 @@ export type MarketFeedResponse = Record<string, Record<string, MarketFeedQuote>>
  * IST = UTC+5:30, market hours 9:15–15:30.
  */
 export function isMarketHours(): boolean {
-  const now = new Date();
-  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
-  const ist = new Date(utcMs + 5.5 * 3600000);
+  const ist = getIST();
   const day = ist.getDay();
   if (day === 0 || day === 6) return false;
-  const hours = ist.getHours();
-  const mins = ist.getMinutes();
-  const time = hours * 60 + mins;
+  const time = ist.getHours() * 60 + ist.getMinutes();
   return time >= 9 * 60 + 15 && time <= 15 * 60 + 30;
+}
+
+/**
+ * Check if today is a trading day (weekday) AND market has opened at least once today.
+ * Dhan OHLC data remains valid after 15:30 — it holds the day's closing prices.
+ * Use this to decide whether Dhan data represents "today" vs stale weekend data.
+ */
+export function isTradingDay(): boolean {
+  const ist = getIST();
+  const day = ist.getDay();
+  if (day === 0 || day === 6) return false;
+  // After 9:15 IST on a weekday, Dhan has today's data
+  const time = ist.getHours() * 60 + ist.getMinutes();
+  return time >= 9 * 60 + 15;
+}
+
+/** Current IST date as YYYY-MM-DD string */
+export function todayIST(): string {
+  const d = getIST();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function getIST(): Date {
+  const now = new Date();
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  return new Date(utcMs + 5.5 * 3600000);
 }
 
 /**

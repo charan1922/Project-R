@@ -1,7 +1,8 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { prisma } from '@/lib/db';
 import { hasDhanAuth } from '@/lib/dhan/auth';
-import { dhanMarketFeed, isMarketHours } from '@/lib/dhan/market-feed';
+import { dhanMarketFeed, todayIST as getTodayIST, isMarketHours, isTradingDay } from '@/lib/dhan/market-feed';
 import {
   batchResolveFutures,
   ensureSynced,
@@ -15,30 +16,46 @@ import { type DailyStockData, type SignalOutput, transformToFactorData } from '.
 /** Extended signal with live price data */
 export interface BoostSignal extends SignalOutput {
   pctChange?: number; // Live % change from Dhan
+  sector?: string; // F&O sector classification
+  lotValue?: number; // lotSize × lastPrice in ₹ (notional value per lot for margin estimation)
 }
 
 /** Result of scanning all symbols */
 export interface ScanResult {
   signals: BoostSignal[];
-  dataSource: 'live' | 'bhavcopy';
+  dataSource: 'live' | 'bhavcopy' | 'bhavcopy-today';
+  latestDate: string; // YYYY-MM-DD of the data being shown
+  marketOpen: boolean; // Whether IST market was open when this was computed
 }
 
-/** Live equity OHLC from Dhan */
-interface LiveEqOHLC {
+/** Live equity data from Dhan Quote endpoint */
+interface LiveEqData {
   high: number;
   low: number;
   close: number; // Previous day close
   lastPrice: number;
+  volume: number; // Today's traded volume (from Quote, not available in OHLC)
+  averagePrice: number; // VWAP (from Quote endpoint)
 }
 
-/** Live futures depth from Dhan */
+/** Live futures data from Dhan Quote endpoint */
 interface LiveFutData {
   volume: number;
   oi: number;
   lastPrice: number;
+  averagePrice: number; // VWAP — closer to NSE's TtlTrfVal when computing turnover
+  ohlcHigh: number;
+  ohlcLow: number;
 }
 
 export class RFactorDataService {
+  // Cache Dhan API responses per trading day — Dhan returns unstable OHLC after market close
+  private dhanCache: {
+    date: string;
+    liveEq: Map<string, LiveEqData>;
+    liveFut: Map<string, LiveFutData>;
+  } | null = null;
+
   async getFnOStocks(): Promise<string[]> {
     try {
       const filePath = path.join(process.cwd(), 'lib', 'data', 'fno_stocks_list.json');
@@ -75,27 +92,84 @@ export class RFactorDataService {
   async scanAllSymbols(limit: number = 206): Promise<ScanResult> {
     const symbols = await this.getFnOStocks();
     const targetSymbols = symbols.slice(0, limit);
+    const sectorMap = await this.getSectorMap();
 
     const hasDhan = hasDhanAuth();
     const marketOpen = isMarketHours();
+    const tradingDay = isTradingDay();
 
-    if (hasDhan) {
-      try {
-        console.log(`[Boost] Dhan available, market ${marketOpen ? 'OPEN' : 'closed'} → computing LIVE R-Factor`);
-        const signals = await this.computeLiveSignals(targetSymbols);
-        return { signals, dataSource: 'live' };
-      } catch (e) {
-        // Re-throw sync errors — these need user action, not silent fallback
-        if (e instanceof MasterContractsNotSyncedError || e instanceof BhavcopyNotSyncedError) throw e;
-        console.warn('[Boost] Live data failed, falling back to bhavcopy:', e);
-        const signals = await this.computeBhavcopySignals(targetSymbols);
-        return { signals, dataSource: 'bhavcopy' };
+    const todayIST = getTodayIST();
+
+    // Decision matrix:
+    // 1. Market hours + Dhan → live signals from Dhan
+    // 2. Post-market + today's bhavcopy synced → pure bhavcopy (matches TradeFinder exactly)
+    // 3. Post-market + no bhavcopy + Dhan → Dhan closing data (cached for consistency)
+    // 4. Non-trading day / no Dhan → latest bhavcopy
+
+    if (hasDhan && tradingDay) {
+      // Post-market: prefer today's bhavcopy if synced (same data source as TradeFinder)
+      if (!marketOpen && (await this.hasTodayBhavcopy())) {
+        console.log('[Boost] Post-market + today bhavcopy synced → using bhavcopy (matches TF)');
+        const signals = this.attachSectors(await this.computeBhavcopySignals(targetSymbols), sectorMap);
+        return { signals, dataSource: 'bhavcopy-today', latestDate: todayIST, marketOpen };
       }
+
+      // Live or Dhan closing — retry once before falling back
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const label = marketOpen ? 'OPEN' : 'closed (post-market, no bhavcopy)';
+          console.log(`[Boost] Market ${label} + Dhan → computing LIVE R-Factor (attempt ${attempt})`);
+          const signals = this.attachSectors(await this.computeLiveSignals(targetSymbols), sectorMap);
+          return { signals, dataSource: 'live', latestDate: todayIST, marketOpen };
+        } catch (e) {
+          if (e instanceof MasterContractsNotSyncedError || e instanceof BhavcopyNotSyncedError) throw e;
+          if (attempt === 1) {
+            console.warn('[Boost] Live attempt 1 failed, retrying in 2s:', e);
+            await new Promise((r) => setTimeout(r, 2000));
+          } else {
+            console.warn('[Boost] Live attempt 2 failed, falling back to bhavcopy:', e);
+          }
+        }
+      }
+      const latestDate = await this.getLatestBhavcopyDate();
+      const signals = this.attachSectors(await this.computeBhavcopySignals(targetSymbols), sectorMap);
+      return { signals, dataSource: 'bhavcopy', latestDate, marketOpen };
     }
 
-    console.log('[Boost] No Dhan credentials → bhavcopy-only signals');
-    const signals = await this.computeBhavcopySignals(targetSymbols);
-    return { signals, dataSource: 'bhavcopy' };
+    const reason = !hasDhan ? 'no Dhan credentials' : 'non-trading day';
+    console.log(`[Boost] ${reason} → bhavcopy-only signals`);
+    const latestDate = await this.getLatestBhavcopyDate();
+    const signals = this.attachSectors(await this.computeBhavcopySignals(targetSymbols), sectorMap);
+    return { signals, dataSource: 'bhavcopy', latestDate, marketOpen };
+  }
+
+  private async getSectorMap(): Promise<Record<string, string>> {
+    try {
+      const filePath = path.join(process.cwd(), 'lib', 'data', 'fno_sectors.json');
+      const data = await fs.readFile(filePath, 'utf8');
+      return JSON.parse(data);
+    } catch {
+      return {};
+    }
+  }
+
+  private attachSectors(signals: BoostSignal[], sectorMap: Record<string, string>): BoostSignal[] {
+    for (const signal of signals) {
+      signal.sector = sectorMap[signal.symbol] ?? undefined;
+    }
+    return signals;
+  }
+
+  private async getLatestBhavcopyDate(): Promise<string> {
+    const row = await prisma.bhavcopyDay.findFirst({ orderBy: { date: 'desc' }, select: { date: true } });
+    return row?.date ?? 'unknown';
+  }
+
+  /** Check if today's bhavcopy has been synced (any row with today's IST date) */
+  private async hasTodayBhavcopy(): Promise<boolean> {
+    const today = getTodayIST();
+    const row = await prisma.bhavcopyDay.findFirst({ where: { date: today }, select: { date: true } });
+    return row !== null;
   }
 
   private async computeBhavcopySignals(symbols: string[]): Promise<BoostSignal[]> {
@@ -140,73 +214,70 @@ export class RFactorDataService {
     console.log(`[Boost] Resolved ${eqIdMap.size} equity, ${futIdMap.size} futures IDs`);
 
     // Step 2: Batch-fetch live data (parallel equity OHLC + futures depth)
-    const liveEq = new Map<string, LiveEqOHLC>();
-    const liveFut = new Map<string, LiveFutData>();
+    // Dhan returns unstable OHLC after market close — cache per trading day for consistency
+    const todayCacheKey = getTodayIST();
+    let liveEq: Map<string, LiveEqData>;
+    let liveFut: Map<string, LiveFutData>;
 
-    // Build reverse lookups: numericId → symbol
-    const eqIdToSym = new Map<number, string>();
-    for (const [sym, id] of eqIdMap) eqIdToSym.set(id, sym);
-    const futIdToSym = new Map<number, string>();
-    for (const [sym, id] of futIdMap) futIdToSym.set(id, sym);
+    const marketOpen = isMarketHours();
+    const useCache = !marketOpen && this.dhanCache?.date === todayCacheKey;
 
-    const fetchPromises: Promise<void>[] = [];
+    if (useCache) {
+      console.log(`[Boost] Market closed — using cached Dhan data for ${todayCacheKey}`);
+      liveEq = this.dhanCache!.liveEq;
+      liveFut = this.dhanCache!.liveFut;
+    } else {
+      liveEq = new Map();
+      liveFut = new Map();
 
-    if (eqIdMap.size > 0) {
-      fetchPromises.push(
-        (async () => {
-          try {
-            const data = await dhanMarketFeed('ohlc', {
-              NSE_EQ: Array.from(eqIdMap.values()),
+      // Build reverse lookups: numericId → symbol
+      const eqIdToSym = new Map<number, string>();
+      for (const [sym, id] of eqIdMap) eqIdToSym.set(id, sym);
+      const futIdToSym = new Map<number, string>();
+      for (const [sym, id] of futIdMap) futIdToSym.set(id, sym);
+
+      // Fetch equity Quote (not OHLC — Quote includes volume + average_price) + futures depth.
+      // NO silent error swallowing — if Dhan fails, throw so retry/fallback kicks in.
+      const [eqData, futData] = await Promise.all([
+        eqIdMap.size > 0 ? dhanMarketFeed('quote', { NSE_EQ: Array.from(eqIdMap.values()) }) : Promise.resolve(null),
+        futIdMap.size > 0 ? dhanMarketFeed('quote', { NSE_FNO: Array.from(futIdMap.values()) }) : Promise.resolve(null),
+      ]);
+
+      if (eqData?.NSE_EQ) {
+        for (const [secIdStr, quote] of Object.entries(eqData.NSE_EQ)) {
+          const sym = eqIdToSym.get(parseInt(secIdStr, 10));
+          if (sym && quote.ohlc) {
+            liveEq.set(sym, {
+              high: quote.ohlc.high,
+              low: quote.ohlc.low,
+              close: quote.ohlc.close,
+              lastPrice: quote.last_price,
+              volume: quote.volume ?? 0,
+              averagePrice: quote.average_price ?? quote.last_price,
             });
-            const segment = data.NSE_EQ;
-            if (!segment) return;
-            for (const [secIdStr, quote] of Object.entries(segment)) {
-              const sym = eqIdToSym.get(parseInt(secIdStr, 10));
-              if (sym && quote.ohlc) {
-                liveEq.set(sym, {
-                  high: quote.ohlc.high,
-                  low: quote.ohlc.low,
-                  close: quote.ohlc.close,
-                  lastPrice: quote.last_price,
-                });
-              }
-            }
-            console.log(`[Boost] Got equity OHLC for ${liveEq.size} symbols`);
-          } catch (e) {
-            console.error('[Boost] Equity OHLC fetch failed:', e);
           }
-        })(),
-      );
-    }
+        }
+      }
 
-    if (futIdMap.size > 0) {
-      fetchPromises.push(
-        (async () => {
-          try {
-            const data = await dhanMarketFeed('quote', {
-              NSE_FNO: Array.from(futIdMap.values()),
+      if (futData?.NSE_FNO) {
+        for (const [secIdStr, quote] of Object.entries(futData.NSE_FNO)) {
+          const sym = futIdToSym.get(parseInt(secIdStr, 10));
+          if (sym) {
+            liveFut.set(sym, {
+              volume: quote.volume ?? 0,
+              oi: quote.oi ?? 0,
+              lastPrice: quote.last_price,
+              averagePrice: quote.average_price ?? quote.last_price,
+              ohlcHigh: quote.ohlc?.high ?? quote.last_price,
+              ohlcLow: quote.ohlc?.low ?? quote.last_price,
             });
-            const segment = data.NSE_FNO;
-            if (!segment) return;
-            for (const [secIdStr, quote] of Object.entries(segment)) {
-              const sym = futIdToSym.get(parseInt(secIdStr, 10));
-              if (sym) {
-                liveFut.set(sym, {
-                  volume: quote.volume ?? 0,
-                  oi: quote.oi ?? 0,
-                  lastPrice: quote.last_price,
-                });
-              }
-            }
-            console.log(`[Boost] Got futures depth for ${liveFut.size} symbols`);
-          } catch (e) {
-            console.error('[Boost] Futures depth fetch failed:', e);
           }
-        })(),
-      );
-    }
+        }
+      }
 
-    await Promise.all(fetchPromises);
+      console.log(`[Boost] Fetched Dhan data: ${liveEq.size} equity, ${liveFut.size} futures`);
+      this.dhanCache = { date: todayCacheKey, liveEq, liveFut };
+    }
 
     // Step 3: Compute R-Factor for each symbol with live blend
     const signalPromises = symbols.map(async (symbol) => {
@@ -223,19 +294,28 @@ export class RFactorDataService {
         // Convert Dhan volume to contracts for Z-score compatibility.
         const futVolumeContracts = fut ? Math.round(fut.volume / lotSize) : lastDay.fut_volume;
 
+        // Compute VWAP-aligned futures turnover to match NSE bhavcopy's TtlTrfVal.
+        // Bhavcopy uses official VWAP × volume. Dhan gives average_price (≈ VWAP).
+        // Fallback: (high + low) / 2 as VWAP proxy. Last resort: lastPrice.
+        const futTurnoverPrice = fut
+          ? fut.averagePrice > 0
+            ? fut.averagePrice
+            : (fut.ohlcHigh + fut.ohlcLow) / 2 || fut.lastPrice
+          : 0;
+
         // Build today's DailyStockData from live + proxy
         const liveDay: DailyStockData = {
-          // Equity: live from Dhan
+          // Equity: live from Dhan Quote (includes volume + VWAP)
           eq_high: eq?.high ?? lastDay.eq_high,
           eq_low: eq?.low ?? lastDay.eq_low,
-          eq_close: eq?.lastPrice ?? lastDay.eq_close, // Use LTP (not yesterday's close) for live spread
-          eq_volume: lastDay.eq_volume,
-          eq_turnover: lastDay.eq_turnover,
-          // Futures: live from Dhan
+          eq_close: eq?.lastPrice ?? lastDay.eq_close, // Use LTP for live spread
+          eq_volume: eq?.volume ?? lastDay.eq_volume, // Today's volume from Quote endpoint
+          eq_turnover: eq ? eq.volume * eq.averagePrice : lastDay.eq_turnover, // VWAP-based turnover
+          // Futures: live from Dhan Quote
           // Volume: shares → contracts (÷ lotSize) for Z-score compatibility with bhavcopy
-          // Turnover: shares × price = ₹ value (same unit as bhavcopy TtlTrfVal)
+          // Turnover: VWAP × volume (matches NSE bhavcopy TtlTrfVal methodology)
           fut_volume: futVolumeContracts,
-          fut_turnover: fut ? fut.volume * fut.lastPrice : lastDay.fut_turnover,
+          fut_turnover: fut ? fut.volume * futTurnoverPrice : lastDay.fut_turnover,
           fut_oi: fut?.oi ?? lastDay.fut_oi,
           fut_oi_change: fut ? Math.abs(fut.oi - lastDay.fut_oi) : lastDay.fut_oi_change,
           // Options: proxy from yesterday (PCR coeff is only 0.077)
@@ -252,10 +332,12 @@ export class RFactorDataService {
         const current = factorData[factorData.length - 1];
         const historical = factorData.slice(0, -1);
 
-        const signal = engine.calculateSignal(symbol, current, historical);
+        // Use spread-quadratic model for live data (Dhan futures Z-scores are unreliable)
+        const signal = engine.calculateSignalLive(symbol, current, historical);
         const boost: BoostSignal = {
           ...signal,
           pctChange: eq ? ((eq.lastPrice - eq.close) / eq.close) * 100 : undefined,
+          lotValue: eq ? lotSize * eq.lastPrice : undefined,
         };
         return boost;
       } catch {

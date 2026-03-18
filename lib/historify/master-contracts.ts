@@ -30,10 +30,7 @@ export type FuturesEntry = SecurityEntry & {
 // Process-level flag — skip even the DB check once synced
 let synced = false;
 
-/** Today's date in IST (YYYY-MM-DD) */
-function todayIST(): string {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-}
+import { todayIST } from '@/lib/dhan/market-feed';
 
 /**
  * Check if master contracts are synced for today.

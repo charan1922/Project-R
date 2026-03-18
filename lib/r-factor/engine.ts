@@ -1,11 +1,5 @@
 import { calculateZScore } from './stats';
-import {
-  FactorData,
-  SignalOutput,
-  MarketRegime,
-  EngineConfig,
-  DEFAULT_CONFIG
-} from './types';
+import { DEFAULT_CONFIG, type EngineConfig, type FactorData, type MarketRegime, type SignalOutput } from './types';
 
 /**
  * OLS regression coefficients from 80-stock validation (March 13, 2026).
@@ -20,11 +14,26 @@ import {
  */
 const OLS_INTERCEPT = 1.108614;
 const OLS_COEFFICIENTS = {
-  spread_r: 0.624570,
+  spread_r: 0.62457,
   pcr_z: 0.076682,
   spread_x_fut_turn: 0.226081,
   fut_turn_z: 1.414904,
-  fut_vol_z: -1.733390,
+  fut_vol_z: -1.73339,
+};
+
+/**
+ * Spread-quadratic model for LIVE (Dhan) data.
+ * Fitted from 59 stocks, Mar 18 2026 TF pairwise data.
+ * Pearson 0.845 — outperforms full OLS (0.683) on Dhan data because
+ * Dhan's futures Z-scores add noise (data source mismatch with bhavcopy baseline).
+ * Spread is the only factor Dhan reports accurately (equity OHLC).
+ *
+ * R = a + b×spread_r + c×spread_r²
+ */
+const SPREAD_QUAD = {
+  a: 2.4491,
+  b: -1.8553,
+  c: 0.949,
 };
 
 export class RFactorEngine {
@@ -45,18 +54,14 @@ export class RFactorEngine {
    *
    * LOO Pearson 0.60 on 80 F&O stocks, Top 10 overlap 7/10.
    */
-  public calculateSignal(
-    symbol: string,
-    current: FactorData,
-    historical: FactorData[]
-  ): SignalOutput {
+  public calculateSignal(symbol: string, current: FactorData, historical: FactorData[]): SignalOutput {
     // Extract series for each factor from historical data
-    const futTurnoverSeries = historical.map(h => h.fut_turnover);
-    const futVolumeSeries = historical.map(h => h.fut_volume);
-    const optVolumeSeries = historical.map(h => h.opt_volume);
-    const eqTradeSizeSeries = historical.map(h => h.eq_trade_size);
-    const oiChangeSeries = historical.map(h => h.oi_change);
-    const pcrSeries = historical.map(h => h.pcr);
+    const futTurnoverSeries = historical.map((h) => h.fut_turnover);
+    const futVolumeSeries = historical.map((h) => h.fut_volume);
+    const optVolumeSeries = historical.map((h) => h.opt_volume);
+    const eqTradeSizeSeries = historical.map((h) => h.eq_trade_size);
+    const oiChangeSeries = historical.map((h) => h.oi_change);
+    const pcrSeries = historical.map((h) => h.pcr);
 
     // Calculate Z-scores for all factors (used in display + composite)
     const zScores = {
@@ -65,17 +70,17 @@ export class RFactorEngine {
       opt_volume: calculateZScore(current.opt_volume, optVolumeSeries),
       eq_trade_size: calculateZScore(current.eq_trade_size, eqTradeSizeSeries),
       oi_change: calculateZScore(current.oi_change, oiChangeSeries),
-      spread: current.spread,  // Already a ratio from transformToFactorData
-      pcr: current.pcr,        // Raw PCR (displayed in UI)
+      spread: current.spread, // Already a ratio from transformToFactorData
+      pcr: current.pcr, // Raw PCR (displayed in UI)
     };
 
     // OLS composite uses specific features with signed coefficients
     const pcrZ = calculateZScore(current.pcr, pcrSeries);
     const compositeRFactor = this.calculateCompositeOLS(
-      zScores.spread,           // spread_r
-      pcrZ,                     // pcr_z
-      zScores.fut_turnover,     // fut_turn_z
-      zScores.fut_volume,       // fut_vol_z
+      zScores.spread, // spread_r
+      pcrZ, // pcr_z
+      zScores.fut_turnover, // fut_turn_z
+      zScores.fut_volume, // fut_vol_z
     );
 
     const regime = this.classifyRegime(zScores);
@@ -87,7 +92,49 @@ export class RFactorEngine {
       zScores,
       compositeRFactor,
       regime,
-      isBlastTrade
+      isBlastTrade,
+      modelUsed: 'ols' as const,
+    };
+  }
+
+  /**
+   * Live signal using spread-quadratic model (for Dhan data).
+   * Uses only equity spread ratio — the only reliable factor from Dhan's API.
+   * Futures Z-scores are still computed for display but don't affect R-Factor.
+   * Pearson 0.845 with TradeFinder (vs 0.683 for full OLS on Dhan data).
+   */
+  public calculateSignalLive(symbol: string, current: FactorData, historical: FactorData[]): SignalOutput {
+    // Compute all Z-scores for display (regime classification, UI)
+    const futTurnoverSeries = historical.map((h) => h.fut_turnover);
+    const futVolumeSeries = historical.map((h) => h.fut_volume);
+    const optVolumeSeries = historical.map((h) => h.opt_volume);
+    const eqTradeSizeSeries = historical.map((h) => h.eq_trade_size);
+    const oiChangeSeries = historical.map((h) => h.oi_change);
+
+    const zScores = {
+      fut_turnover: calculateZScore(current.fut_turnover, futTurnoverSeries),
+      fut_volume: calculateZScore(current.fut_volume, futVolumeSeries),
+      opt_volume: calculateZScore(current.opt_volume, optVolumeSeries),
+      eq_trade_size: calculateZScore(current.eq_trade_size, eqTradeSizeSeries),
+      oi_change: calculateZScore(current.oi_change, oiChangeSeries),
+      spread: current.spread,
+      pcr: current.pcr,
+    };
+
+    // R-Factor from spread-quadratic (Dhan equity OHLC is accurate, futures Z-scores are not)
+    const compositeRFactor = this.calculateSpreadQuadratic(current.spread);
+
+    const regime = this.classifyRegime(zScores);
+    const isBlastTrade = compositeRFactor >= this.config.thresholds.blastTrade;
+
+    return {
+      symbol,
+      timestamp: new Date().toISOString(),
+      zScores,
+      compositeRFactor,
+      regime,
+      isBlastTrade,
+      modelUsed: 'spread-quad' as const,
     };
   }
 
@@ -99,12 +146,7 @@ export class RFactorEngine {
    *   + 0.226*(spread_r × fut_turn_z)
    *   + 1.415*fut_turn_z - 1.733*fut_vol_z
    */
-  private calculateCompositeOLS(
-    spreadR: number,
-    pcrZ: number,
-    futTurnZ: number,
-    futVolZ: number,
-  ): number {
+  private calculateCompositeOLS(spreadR: number, pcrZ: number, futTurnZ: number, futVolZ: number): number {
     return (
       OLS_INTERCEPT +
       OLS_COEFFICIENTS.spread_r * spreadR +
@@ -116,6 +158,27 @@ export class RFactorEngine {
   }
 
   /**
+   * Spread-quadratic model (piecewise):
+   * - spread ≤ 0: R = 1.0 (data error, neutral)
+   * - spread < 1.0: linear ramp from 1.0 → ~1.54 (below-average activity)
+   * - spread ≥ 1.0: quadratic R = a + b×spread + c×spread² (amplifies extremes)
+   *
+   * The quadratic alone is U-shaped (minimum at spread≈0.98, intercept at 2.45).
+   * Without the piecewise fix, spread=0 incorrectly gives R=2.45.
+   * Fitted on 59 TF pairwise data points (Mar 18, 2026).
+   */
+  private calculateSpreadQuadratic(spreadR: number): number {
+    if (spreadR <= 0) return 1.0;
+    // Value at spread=1.0 (junction point)
+    const atOne = SPREAD_QUAD.a + SPREAD_QUAD.b + SPREAD_QUAD.c; // ≈1.543
+    if (spreadR < 1.0) {
+      // Linear ramp: R = 1.0 at spread=0, smoothly meets quadratic at spread=1.0
+      return 1.0 + (atOne - 1.0) * spreadR;
+    }
+    return SPREAD_QUAD.a + SPREAD_QUAD.b * spreadR + SPREAD_QUAD.c * spreadR * spreadR;
+  }
+
+  /**
    * Classifies market regime based on factor patterns:
    * - Elephant: heavy accumulation (high OI change + moderate turnover)
    * - Cheetah: momentum with urgency (high spread ratio + high futures volume)
@@ -123,10 +186,8 @@ export class RFactorEngine {
    * - Defensive: low activity across the board
    */
   private classifyRegime(zScores: SignalOutput['zScores']): MarketRegime {
-    const isCheetah = zScores.spread > this.config.thresholds.regimeSwitch
-      && zScores.fut_volume > 1.0;
-    const isElephant = zScores.oi_change > 1.0
-      && zScores.fut_turnover > 0.5;
+    const isCheetah = zScores.spread > this.config.thresholds.regimeSwitch && zScores.fut_volume > 1.0;
+    const isElephant = zScores.oi_change > 1.0 && zScores.fut_turnover > 0.5;
 
     if (isCheetah && isElephant) return 'Hybrid';
     if (isCheetah) return 'Cheetah';

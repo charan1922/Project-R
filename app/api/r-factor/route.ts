@@ -31,6 +31,8 @@ export async function GET(req: NextRequest) {
       count: result.signals.length,
       data: result.signals,
       dataSource: result.dataSource,
+      latestDate: result.latestDate,
+      marketOpen: result.marketOpen,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
