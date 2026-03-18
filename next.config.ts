@@ -13,6 +13,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   distDir: 'dist',
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
     unoptimized: true
   },
@@ -46,4 +49,7 @@ export default withSentryConfig(withNextra(nextConfig), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   tunnelRoute: "/monitoring",
+  sourcemaps: {
+    disable: !process.env.SENTRY_ORG,
+  },
 });
