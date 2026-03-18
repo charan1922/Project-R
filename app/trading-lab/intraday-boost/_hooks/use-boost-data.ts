@@ -33,7 +33,15 @@ export interface BoostData {
   dismissSync: () => void;
 }
 
-export function useBoostData(): BoostData {
+/**
+ * Data fetching hook for Intraday Boost page.
+ *
+ * - Debounces toggle changes (150ms) to prevent multi-fetch from nuqs re-renders
+ * - AbortController cancels stale in-flight requests
+ * - Keeps showing old data while new data loads (no flash-to-empty)
+ * - Auto-refresh every 60s
+ */
+export function useBoostData(useOC = true, tfOnly = false): BoostData {
   const [stocks, setStocks] = useState<BoostStock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,14 +52,30 @@ export function useBoostData(): BoostData {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const mountedRef = useRef(true);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const fetchBoostData = useCallback(async () => {
+  // Build URL from current toggle state
+  const buildUrl = useCallback(() => {
+    let url = '/api/r-factor?limit=206';
+    if (!useOC) url += '&useOC=false';
+    if (tfOnly) url += '&stockList=tf';
+    return url;
+  }, [useOC, tfOnly]);
+
+  const doFetch = useCallback(async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setError(null);
+    // Don't setLoading(true) on toggle — keeps old data visible (no flash)
+    // Only show spinner on initial load (stocks.length === 0)
     try {
-      const res = await fetch('/api/r-factor?limit=206');
-      if (!mountedRef.current) return;
+      const res = await fetch(buildUrl(), { signal: controller.signal });
+      if (!mountedRef.current || controller.signal.aborted) return;
       const result = await res.json();
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || controller.signal.aborted) return;
+
       if (result.code === 'SYNC_REQUIRED') {
         setSyncRequired(result.syncTarget || 'master-contracts');
       } else if (result.success) {
@@ -64,23 +88,27 @@ export function useBoostData(): BoostData {
       } else {
         setError(result.error || 'Failed to fetch data');
       }
-    } catch {
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return;
       if (mountedRef.current) setError('Network error. Is the server running?');
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, []);
+  }, [buildUrl]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchBoostData is stable via useCallback with empty deps
+  // Debounced fetch — consolidates rapid nuqs re-renders into single API call
+  // biome-ignore lint/correctness/useExhaustiveDependencies: doFetch changes when toggles change
   useEffect(() => {
     mountedRef.current = true;
-    fetchBoostData();
-    const interval = setInterval(fetchBoostData, 60_000);
+    const debounce = setTimeout(() => doFetch(), 150);
+    const interval = setInterval(() => doFetch(), 60_000);
     return () => {
       mountedRef.current = false;
+      clearTimeout(debounce);
       clearInterval(interval);
+      abortRef.current?.abort();
     };
-  }, []);
+  }, [doFetch]);
 
   return {
     stocks,
@@ -91,7 +119,7 @@ export function useBoostData(): BoostData {
     latestDate,
     marketOpen,
     lastRefresh,
-    refresh: fetchBoostData,
+    refresh: doFetch,
     dismissSync: () => setSyncRequired(false),
   };
 }

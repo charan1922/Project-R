@@ -102,8 +102,12 @@ export class RFactorDataService {
    *
    * After hours / no Dhan → pure bhavcopy signals
    */
-  async scanAllSymbols(limit: number = 206): Promise<ScanResult> {
-    const symbols = await this.getFnOStocks();
+  async scanAllSymbols(
+    limit = 206,
+    opts?: { useOptionChain?: boolean; stockList?: 'all' | 'tf' },
+  ): Promise<ScanResult> {
+    const allSymbols = await this.getFnOStocks();
+    const symbols = opts?.stockList === 'tf' ? await this.getTfTradedStocks(allSymbols) : allSymbols;
     const targetSymbols = symbols.slice(0, limit);
     const sectorMap = await this.getSectorMap();
 
@@ -132,7 +136,8 @@ export class RFactorDataService {
         try {
           const label = marketOpen ? 'OPEN' : tradingDay ? 'closed (post-market)' : 'pre-market/non-trading';
           console.log(`[Boost] ${label} + Dhan → computing LIVE R-Factor (attempt ${attempt})`);
-          const signals = this.attachSectors(await this.computeLiveSignals(targetSymbols), sectorMap);
+          const useOC = opts?.useOptionChain !== false;
+          const signals = this.attachSectors(await this.computeLiveSignals(targetSymbols, useOC), sectorMap);
           // latestDate: use today if trading day, otherwise Dhan cache date (yesterday's data)
           const latestDate = tradingDay ? todayIST : (this.dhanCache?.date ?? todayIST);
           return { signals, dataSource: 'live', latestDate, marketOpen };
@@ -154,6 +159,18 @@ export class RFactorDataService {
     console.log(`[Boost] ${reason} → bhavcopy-only signals (${latestBhavDate})`);
     const signals = this.attachSectors(await this.computeBhavcopySignals(targetSymbols), sectorMap);
     return { signals, dataSource: 'bhavcopy', latestDate: latestBhavDate, marketOpen };
+  }
+
+  /** Get TradeFinder-traded stocks (intersection with official F&O list) */
+  private async getTfTradedStocks(allFno: string[]): Promise<string[]> {
+    try {
+      const filePath = path.join(process.cwd(), 'lib', 'data', 'tf_traded_stocks.json');
+      const data = await fs.readFile(filePath, 'utf8');
+      const json = JSON.parse(data);
+      return json.stocks;
+    } catch {
+      return allFno; // Fallback to full list if file missing
+    }
   }
 
   private async getSectorMap(): Promise<Record<string, string>> {
@@ -186,27 +203,34 @@ export class RFactorDataService {
   }
 
   private ocFetchInProgress = false;
+  private ocFetchedAt = 0; // timestamp of last fetch completion
 
   /**
    * Non-blocking option chain access. Returns cached data immediately.
-   * If cache is stale, triggers background fetch — results available on next scan (60s auto-refresh).
-   * Page loads instantly with spread-quad model, upgrades to full OLS on subsequent refreshes.
+   * Cache TTL:
+   *   - Market hours: 15 min (OI/volume change constantly)
+   *   - After close: full day (data is frozen)
+   * Triggers background re-fetch when stale.
    */
   private getOptionChains(
     eqIdMap: Map<string, number>,
     expiries: Map<string, string>,
   ): Map<string, OptionChainSummary> {
     const todayCacheKey = getTodayIST();
+    const marketOpen = isMarketHours();
+    const cacheTtlMs = marketOpen ? 15 * 60 * 1000 : 24 * 60 * 60 * 1000; // 15 min live, 24h post-market
+    const isFresh = this.optionChainCache?.date === todayCacheKey && Date.now() - this.ocFetchedAt < cacheTtlMs;
 
-    if (this.optionChainCache?.date === todayCacheKey) {
-      return this.optionChainCache.data;
+    if (isFresh) {
+      return this.optionChainCache!.data;
     }
 
-    // Fire-and-forget background fetch
+    // Fire-and-forget background fetch (or re-fetch if stale)
     if (!this.ocFetchInProgress) {
       this.ocFetchInProgress = true;
       this.fetchOptionChainsBackground(eqIdMap, expiries, todayCacheKey).finally(() => {
         this.ocFetchInProgress = false;
+        this.ocFetchedAt = Date.now();
       });
     }
 
@@ -255,7 +279,7 @@ export class RFactorDataService {
    * 3. For each symbol: build synthetic "today" from live data + yesterday's F&O proxy
    * 4. Run engine with live current vs 20-day historical baseline
    */
-  private async computeLiveSignals(symbols: string[]): Promise<BoostSignal[]> {
+  private async computeLiveSignals(symbols: string[], useOptionChain = true): Promise<BoostSignal[]> {
     // Step 0: Verify master contracts are synced (throws MasterContractsNotSyncedError if not)
     await ensureSynced();
 
@@ -349,7 +373,9 @@ export class RFactorDataService {
 
     // Step 2.5: Option chain data (CE/PE volume → live PCR)
     // Non-blocking: returns cached data or empty map. Background fetch populates cache for next refresh.
-    const optChainData = this.getOptionChains(eqIdMap, expiryMap);
+    const optChainData = useOptionChain
+      ? this.getOptionChains(eqIdMap, expiryMap)
+      : new Map<string, OptionChainSummary>();
 
     // Step 3: Compute R-Factor for each symbol with live blend
     const signalPromises = symbols.map(async (symbol) => {

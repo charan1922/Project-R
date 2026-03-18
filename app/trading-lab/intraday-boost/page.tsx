@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowUpDown, Filter, Flame, Info, RefreshCw, Search, TrendingDown, TrendingUp, Zap } from 'lucide-react';
+import { parseAsBoolean, useQueryState } from 'nuqs';
 import { useMemo, useState } from 'react';
 
 import { getRegimeBadgeClass, getRFactorColor, shortDate } from '@/app/trading-lab/_lib/r-factor-ui';
@@ -11,7 +12,9 @@ type SignalFilter = 'ALL' | 'UP' | 'DOWN';
 type SortField = 'rfactor' | 'symbol' | 'spread' | 'pcr' | 'pctChange';
 
 export default function IntradayBoostPage() {
-  const data = useBoostData();
+  const [useOC, setUseOC] = useQueryState('oc', parseAsBoolean.withDefault(true));
+  const [tfOnly, setTfOnly] = useQueryState('tf', parseAsBoolean.withDefault(true));
+  const data = useBoostData(useOC, tfOnly);
   const [searchQuery, setSearchQuery] = useState('');
   const [signalFilter, setSignalFilter] = useState<SignalFilter>('ALL');
   const [sectorFilter, setSectorFilter] = useState('ALL');
@@ -83,6 +86,30 @@ export default function IntradayBoostPage() {
               <p className="text-[10px] text-slate-700">Auto-refresh 60s</p>
             </div>
           )}
+          <label
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-slate-400 cursor-pointer select-none hover:bg-slate-700 transition-colors"
+            title="When ON: uses Dhan Option Chain for live PCR → full OLS model. When OFF: spread-only quadratic model."
+          >
+            <input
+              type="checkbox"
+              checked={useOC}
+              onChange={(e) => setUseOC(e.target.checked)}
+              className="w-3 h-3 rounded accent-sky-500"
+            />
+            Option Chain
+          </label>
+          <label
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs text-slate-400 cursor-pointer select-none hover:bg-slate-700 transition-colors"
+            title="ON (default): 136 TradeFinder-traded stocks. OFF: full 206 F&O universe."
+          >
+            <input
+              type="checkbox"
+              checked={!tfOnly}
+              onChange={(e) => setTfOnly(!e.target.checked)}
+              className="w-3 h-3 rounded accent-amber-500"
+            />
+            All 206 F&O
+          </label>
           <button
             type="button"
             onClick={data.refresh}

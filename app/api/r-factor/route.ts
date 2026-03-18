@@ -24,7 +24,9 @@ export async function GET(req: NextRequest) {
     // If no symbol, run a bulk scan
     console.log('Running bulk R-Factor scan...');
     const limit = parseInt(searchParams.get('limit') || '15', 10);
-    const result = await rFactorService.scanAllSymbols(limit);
+    const useOC = searchParams.get('useOC') !== 'false';
+    const stockList = searchParams.get('stockList') === 'tf' ? ('tf' as const) : ('all' as const);
+    const result = await rFactorService.scanAllSymbols(limit, { useOptionChain: useOC, stockList });
 
     return NextResponse.json({
       success: true,
