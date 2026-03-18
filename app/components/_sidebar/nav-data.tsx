@@ -43,6 +43,12 @@ export const v1Items: NavItemType[] = [
         badge: 'LIVE',
       },
       {
+        label: 'Option Chain',
+        href: '/trading-lab/option-chain',
+        icon: <Activity className="w-4 h-4" />,
+        badge: 'NEW',
+      },
+      {
         label: 'Market Intelligence',
         href: '/trading-lab/intelligence',
         icon: <Brain className="w-4 h-4" />,
