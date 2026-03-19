@@ -52,6 +52,7 @@ export class NseService {
       opt_volume: 0,
       eq_trade_size: p.chTotTradedQty > 0 ? (p.chTotTradedVal || 0) / p.chTotTradedQty : 0,
       oi_change: 0,
+      oi_level: 0,
       spread: (p.chTradeHighPrice - p.chTradeLowPrice) / p.chClosingPrice || 0,
       pcr: 0,
     }));
@@ -82,6 +83,7 @@ export class NseService {
       opt_volume: 0,
       eq_trade_size: vol > 0 ? turnover / vol : 0,
       oi_change: 0,
+      oi_level: 0,
       spread: (p?.intraDayHighLow?.max - p?.intraDayHighLow?.min) / p?.lastPrice || 0,
       pcr: 0,
     };

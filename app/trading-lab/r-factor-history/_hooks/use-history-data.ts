@@ -9,6 +9,7 @@ export interface ZScores {
   opt_volume: number;
   eq_trade_size: number;
   oi_change: number;
+  oi_level: number;
 }
 
 export interface RawData {
@@ -28,6 +29,9 @@ export interface RawData {
 export interface StockHistoryEntry {
   date: string;
   compositeRFactor: number;
+  rawRFactor?: number;
+  scaledRFactor?: number;
+  confidence?: number;
   delta: number | null;
   zScores: ZScores;
   regime: Regime;
@@ -53,9 +57,13 @@ export interface LeaderEntry {
   symbol: string;
   sector: string | null;
   compositeRFactor: number;
+  rawRFactor?: number;
+  scaledRFactor?: number;
+  confidence?: number;
   zScores: ZScores;
   regime: Regime;
   isBlastTrade: boolean;
+  modelUsed?: string;
 }
 
 export interface StockHistoryData {

@@ -7,6 +7,8 @@ import { getDuckDb, resolveParquetSource, ensureHttpfs } from "@/lib/historify/d
 
 export const dynamic = "force-dynamic";
 
+const VALID_INTERVALS = new Set(["Daily", "5min", "15min", "30min", "60min", "1min"]);
+
 function getDateRange(preset: string): { startTs: number; endTs: number } {
     const now = Math.floor(Date.now() / 1000);
     const day = 86400;
@@ -40,6 +42,9 @@ export async function GET(req: NextRequest) {
         const symbols = symbolsParam.split(",").map(s => s.trim()).filter(Boolean);
         if (symbols.length === 0) {
             return NextResponse.json({ error: "No symbols provided" }, { status: 400 });
+        }
+        if (!VALID_INTERVALS.has(interval)) {
+            return NextResponse.json({ error: `Invalid interval: ${interval}` }, { status: 400 });
         }
 
         const { startTs, endTs } = getDateRange(preset);

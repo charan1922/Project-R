@@ -1,5 +1,17 @@
 import { calculateZScore } from './stats';
-import { DEFAULT_CONFIG, type EngineConfig, type FactorData, type MarketRegime, type SignalOutput } from './types';
+import {
+  DEFAULT_CONFIG,
+  type EngineConfig,
+  type EnhancedFactorData,
+  type FactorData,
+  type MarketContext,
+  type MarketRegime,
+  type SignalOutput,
+  transformToEnhancedFactorData,
+  transformToFactorData,
+} from './types';
+import { predictEnsemble } from './ensemble';
+import { adjustForMarketContext, getMarketContext } from './market-context';
 
 /**
  * OLS regression coefficients from 80-stock validation (March 13, 2026).
@@ -22,19 +34,10 @@ const OLS_COEFFICIENTS = {
 };
 
 /**
- * Spread-quadratic model for LIVE (Dhan) data.
- * Fitted from 59 stocks, Mar 18 2026 TF pairwise data.
- * Pearson 0.845 — outperforms full OLS (0.683) on Dhan data because
- * Dhan's futures Z-scores add noise (data source mismatch with bhavcopy baseline).
- * Spread is the only factor Dhan reports accurately (equity OHLC).
- *
- * R = a + b×spread_r + c×spread_r²
+ * Huber loss threshold for robust regression.
+ * Values beyond this get linear penalty instead of quadratic.
  */
-const SPREAD_QUAD = {
-  a: 2.4491,
-  b: -1.8553,
-  c: 0.949,
-};
+const HUBER_EPSILON = 1.35;
 
 export class RFactorEngine {
   private config: EngineConfig;
@@ -45,84 +48,218 @@ export class RFactorEngine {
 
   /**
    * Calculates market signal output for a given symbol.
-   * Uses 5-feature OLS regression model with:
-   *   - spread_r: spread ratio (today/20d avg) — dominant predictor
-   *   - pcr_z: Z-score of put-call ratio
-   *   - spread_r × fut_turn_z: interaction term
-   *   - fut_turn_z: futures turnover Z-score
-   *   - fut_vol_z: futures volume Z-score (NEGATIVE — suppressor)
-   *
-   * LOO Pearson 0.60 on 80 F&O stocks, Top 10 overlap 7/10.
+   * Uses ensemble model by default, with OLS and spread-quadratic as fallbacks.
    */
-  public calculateSignal(symbol: string, current: FactorData, historical: FactorData[]): SignalOutput {
-    // Extract series for each factor from historical data
-    const futTurnoverSeries = historical.map((h) => h.fut_turnover);
-    const futVolumeSeries = historical.map((h) => h.fut_volume);
-    const optVolumeSeries = historical.map((h) => h.opt_volume);
-    const eqTradeSizeSeries = historical.map((h) => h.eq_trade_size);
-    const oiChangeSeries = historical.map((h) => h.oi_change);
-    const pcrSeries = historical.map((h) => h.pcr);
+  public calculateSignal(
+    symbol: string,
+    current: FactorData,
+    historical: FactorData[],
+    opts?: { hasOptionChain?: boolean; marketContext?: MarketContext },
+  ): SignalOutput {
+    // Compute Z-scores for all factors
+    const zScores = this.computeZScores(current, historical);
 
-    // Calculate Z-scores for all factors (used in display + composite)
-    const zScores = {
-      fut_turnover: calculateZScore(current.fut_turnover, futTurnoverSeries),
-      fut_volume: calculateZScore(current.fut_volume, futVolumeSeries),
-      opt_volume: calculateZScore(current.opt_volume, optVolumeSeries),
-      eq_trade_size: calculateZScore(current.eq_trade_size, eqTradeSizeSeries),
-      oi_change: calculateZScore(current.oi_change, oiChangeSeries),
-      spread: current.spread, // Already a ratio from transformToFactorData
-      pcr: current.pcr, // Raw PCR (displayed in UI)
-    };
+    // Use ensemble model
+    const ensembleResult = predictEnsemble(current, historical, this.config);
+    let rawRFactor = ensembleResult.prediction.value;
 
-    // OLS composite uses specific features with signed coefficients
-    const pcrZ = calculateZScore(current.pcr, pcrSeries);
-    const compositeRFactor = this.calculateCompositeOLS(
-      zScores.spread, // spread_r
-      pcrZ, // pcr_z
-      zScores.fut_turnover, // fut_turn_z
-      zScores.fut_volume, // fut_vol_z
-    );
+    // Apply robust regression adjustment for outliers
+    if (this.config.robustRegression.enabled) {
+      rawRFactor = this.applyRobustAdjustment(rawRFactor, zScores);
+    }
+
+    // Apply scale correction for extreme values
+    const { scaledRFactor } = this.applyScaleCorrection(rawRFactor);
+
+    // Apply market context adjustment
+    let marketAdjustment = 0;
+    let finalRFactor = scaledRFactor;
+
+    if (opts?.marketContext) {
+      const marketResult = adjustForMarketContext(scaledRFactor, opts.marketContext, {
+        highVix: this.config.thresholds.highVix,
+        strongMarketMove: this.config.thresholds.strongMarketMove,
+      });
+      finalRFactor = marketResult.adjustedRFactor;
+      marketAdjustment = marketResult.adjustment;
+    }
 
     const regime = this.classifyRegime(zScores);
-    const isBlastTrade = compositeRFactor >= this.config.thresholds.blastTrade;
+    const isBlastTrade = finalRFactor >= this.config.thresholds.blastTrade;
+    const confidence = this.calculateConfidence(zScores, historical.length);
 
     return {
       symbol,
       timestamp: new Date().toISOString(),
       zScores,
-      compositeRFactor,
+      compositeRFactor: finalRFactor,
+      rawRFactor,
+      scaledRFactor,
       regime,
       isBlastTrade,
-      modelUsed: 'ols' as const,
+      modelUsed: 'ensemble',
+      confidence,
+      marketAdjustment,
+      ensembleWeights: {
+        ols: ensembleResult.weights.ols,
+        'spread-quad': ensembleResult.weights['spread-quad'],
+        momentum: ensembleResult.weights.momentum,
+        ensemble: 0,
+      },
     };
   }
 
   /**
-   * Live signal using spread-quadratic model (for Dhan data).
-   * Uses only equity spread ratio — the only reliable factor from Dhan's API.
-   * Futures Z-scores are still computed for display but don't affect R-Factor.
-   * Pearson 0.845 with TradeFinder (vs 0.683 for full OLS on Dhan data).
+   * Calculate signal using enhanced factor data (with momentum/acceleration features).
    */
-  public calculateSignalLive(symbol: string, current: FactorData, historical: FactorData[]): SignalOutput {
-    // Compute all Z-scores for display (regime classification, UI)
-    const futTurnoverSeries = historical.map((h) => h.fut_turnover);
-    const futVolumeSeries = historical.map((h) => h.fut_volume);
-    const optVolumeSeries = historical.map((h) => h.opt_volume);
-    const eqTradeSizeSeries = historical.map((h) => h.eq_trade_size);
-    const oiChangeSeries = historical.map((h) => h.oi_change);
+  public calculateEnhancedSignal(
+    symbol: string,
+    current: EnhancedFactorData,
+    historical: EnhancedFactorData[],
+    opts?: { hasOptionChain?: boolean; marketContext?: MarketContext },
+  ): SignalOutput {
+    // Base calculation
+    const baseSignal = this.calculateSignal(symbol, current, historical, opts);
 
-    const zScores = {
-      fut_turnover: calculateZScore(current.fut_turnover, futTurnoverSeries),
-      fut_volume: calculateZScore(current.fut_volume, futVolumeSeries),
-      opt_volume: calculateZScore(current.opt_volume, optVolumeSeries),
-      eq_trade_size: calculateZScore(current.eq_trade_size, eqTradeSizeSeries),
-      oi_change: calculateZScore(current.oi_change, oiChangeSeries),
-      spread: current.spread,
-      pcr: current.pcr,
+    // Add momentum adjustment
+    let momentumAdj = 0;
+    if (current.momentum_signal > 0) {
+      momentumAdj = 0.1 * current.momentum_signal;
+    } else if (current.momentum_signal < 0) {
+      momentumAdj = 0.15 * current.momentum_signal; // Deteriorating has larger impact
+    }
+
+    // Close position adjustment
+    if (current.close_position > 0.8) {
+      momentumAdj += 0.05; // Closing near high is bullish
+    } else if (current.close_position < 0.2) {
+      momentumAdj -= 0.05; // Closing near low is bearish
+    }
+
+    const adjustedRFactor = Math.max(1.0, baseSignal.compositeRFactor + momentumAdj);
+
+    return {
+      ...baseSignal,
+      compositeRFactor: adjustedRFactor,
+      isBlastTrade: adjustedRFactor >= this.config.thresholds.blastTrade,
     };
+  }
 
-    // R-Factor from spread-quadratic (Dhan equity OHLC is accurate, futures Z-scores are not)
-    const compositeRFactor = this.calculateSpreadQuadratic(current.spread);
+  /**
+   * Live signal for Dhan data — uses all available factors.
+   *
+   * Dhan-live coefficients fitted from 79 TF-paired stocks (Mar 19, 2026).
+   * Key finding: on Dhan live data, OI change and options volume are the
+   * strongest predictors (Pearson 0.47, 0.39), while spread has NEGATIVE
+   * correlation at certain times of day. This is the opposite of bhavcopy OLS.
+   *
+   * Features use max(0, z) to only reward above-average activity (not penalize below).
+   * Pearson 0.55 with TradeFinder, Top-10 overlap 6/10.
+   */
+  public calculateSignalLive(
+    symbol: string,
+    current: FactorData,
+    historical: FactorData[],
+    opts?: { marketContext?: MarketContext },
+  ): SignalOutput {
+    // Compute all Z-scores
+    const zScores = this.computeZScores(current, historical);
+
+    // Dhan-live model: uses positive Z-scores (above-average activity signals)
+    const rawRFactor = this.calculateDhanLiveComposite(zScores);
+
+    // No scale correction for Dhan-live model — already calibrated to TF range.
+    // The output cap in calculateDhanLiveComposite handles extreme values.
+    const scaledRFactor = rawRFactor;
+
+    // Apply market context
+    let finalRFactor = scaledRFactor;
+    let marketAdjustment = 0;
+
+    if (opts?.marketContext) {
+      const marketResult = adjustForMarketContext(scaledRFactor, opts.marketContext, {
+        highVix: this.config.thresholds.highVix,
+        strongMarketMove: this.config.thresholds.strongMarketMove,
+      });
+      finalRFactor = marketResult.adjustedRFactor;
+      marketAdjustment = marketResult.adjustment;
+    }
+
+    const regime = this.classifyRegime(zScores);
+    const isBlastTrade = finalRFactor >= this.config.thresholds.blastTrade;
+
+    // Confidence based on how many factors agree
+    const activeFactors = [
+      zScores.oi_change > 0.5,
+      zScores.opt_volume > 0.5,
+      zScores.fut_volume > 0.5,
+      zScores.spread > 1.0,
+    ].filter(Boolean).length;
+    const confidence = Math.min(1.0, 0.4 + activeFactors * 0.15);
+
+    return {
+      symbol,
+      timestamp: new Date().toISOString(),
+      zScores,
+      compositeRFactor: finalRFactor,
+      rawRFactor,
+      scaledRFactor,
+      regime,
+      isBlastTrade,
+      modelUsed: 'spread-quad',
+      confidence,
+      marketAdjustment,
+    };
+  }
+
+  /**
+   * Dhan-live composite using OI LEVEL ratio as primary signal.
+   *
+   * Key insight: TF's top stocks all have 20-35% OI buildup above 20d average.
+   * oi_level (absolute OI / 20d avg OI) captures sustained accumulation that
+   * daily oi_change misses. A stock at 1.25× average OI = institutional accumulation.
+   *
+   * Formula: R = base + oi_level_boost + opt_volume_boost + fut_volume_boost + spread_boost
+   * All boosts are bounded and only reward above-average activity.
+   * Output capped at [1.0, 6.0].
+   */
+  private calculateDhanLiveComposite(zScores: SignalOutput['zScores']): number {
+    // OI level ratio: 1.0 = average, 1.25 = 25% above average (accumulation)
+    // Subtract 1.0 so only above-average contributes, cap at 0.5 (50% above avg)
+    const oiExcess = Math.max(0, Math.min(zScores.oi_level - 1.0, 0.5));
+
+    // Options volume Z-score: high = unusual hedging/speculation activity
+    const optVolBoost = Math.max(0, Math.min(zScores.opt_volume, 3.0));
+
+    // Futures volume Z-score: high = momentum/urgency
+    const futVolBoost = Math.max(0, Math.min(zScores.fut_volume, 3.0));
+
+    // Spread ratio: above 1.0 = above-average intraday range
+    const spreadBoost = Math.max(0, Math.min(zScores.spread - 0.8, 2.5));
+
+    const r =
+      1.5 + // Base R for average-activity stock
+      oiExcess * 4.0 + // OI 25% above avg → +1.0, 50%+ → +2.0
+      optVolBoost * 0.25 + // High options volume → up to +0.75
+      futVolBoost * 0.20 + // High futures volume → up to +0.60
+      spreadBoost * 0.30; // Above-average spread → up to +0.75
+
+    // Clamp to [1.0, 6.0]
+    return Math.max(1.0, Math.min(6.0, r));
+  }
+
+  /**
+   * Legacy OLS-only calculation for backward compatibility.
+   */
+  public calculateSignalOLS(symbol: string, current: FactorData, historical: FactorData[]): SignalOutput {
+    const zScores = this.computeZScores(current, historical);
+
+    // OLS formula
+    const pcrZ = calculateZScore(
+      current.pcr,
+      historical.map((h) => h.pcr),
+    );
+    const compositeRFactor = this.calculateCompositeOLS(zScores.spread, pcrZ, zScores.fut_turnover, zScores.fut_volume);
 
     const regime = this.classifyRegime(zScores);
     const isBlastTrade = compositeRFactor >= this.config.thresholds.blastTrade;
@@ -132,19 +269,50 @@ export class RFactorEngine {
       timestamp: new Date().toISOString(),
       zScores,
       compositeRFactor,
+      rawRFactor: compositeRFactor,
+      scaledRFactor: compositeRFactor,
       regime,
       isBlastTrade,
-      modelUsed: 'spread-quad' as const,
+      modelUsed: 'ols',
+      confidence: this.calculateConfidence(zScores, historical.length),
+      marketAdjustment: 0,
+    };
+  }
+
+  /**
+   * Compute Z-scores for all factors.
+   */
+  private computeZScores(current: FactorData, historical: FactorData[]): SignalOutput['zScores'] {
+    return {
+      fut_turnover: calculateZScore(
+        current.fut_turnover,
+        historical.map((h) => h.fut_turnover),
+      ),
+      fut_volume: calculateZScore(
+        current.fut_volume,
+        historical.map((h) => h.fut_volume),
+      ),
+      opt_volume: calculateZScore(
+        current.opt_volume,
+        historical.map((h) => h.opt_volume),
+      ),
+      eq_trade_size: calculateZScore(
+        current.eq_trade_size,
+        historical.map((h) => h.eq_trade_size),
+      ),
+      oi_change: calculateZScore(
+        current.oi_change,
+        historical.map((h) => h.oi_change),
+      ),
+      oi_level: current.oi_level, // Already a ratio (today OI / 20d avg OI)
+      spread: current.spread, // Already a ratio
+      pcr: current.pcr, // Raw PCR (displayed in UI)
     };
   }
 
   /**
    * OLS regression composite with intercept, signed coefficients,
    * and spread × fut_turnover interaction term.
-   *
-   * R = 1.11 + 0.625*spread_r + 0.077*pcr_z
-   *   + 0.226*(spread_r × fut_turn_z)
-   *   + 1.415*fut_turn_z - 1.733*fut_vol_z
    */
   private calculateCompositeOLS(spreadR: number, pcrZ: number, futTurnZ: number, futVolZ: number): number {
     return (
@@ -158,24 +326,90 @@ export class RFactorEngine {
   }
 
   /**
-   * Spread-quadratic model (piecewise):
-   * - spread ≤ 0: R = 1.0 (data error, neutral)
-   * - spread < 1.0: linear ramp from 1.0 → ~1.54 (below-average activity)
-   * - spread ≥ 1.0: quadratic R = a + b×spread + c×spread² (amplifies extremes)
-   *
-   * The quadratic alone is U-shaped (minimum at spread≈0.98, intercept at 2.45).
-   * Without the piecewise fix, spread=0 incorrectly gives R=2.45.
-   * Fitted on 59 TF pairwise data points (Mar 18, 2026).
+   * Apply scale correction to match TradeFinder's distribution.
+   * TradeFinder shows values up to 5.0+, while our model caps around 3.5.
+   * This expands extreme values to match the expected range.
    */
-  private calculateSpreadQuadratic(spreadR: number): number {
-    if (spreadR <= 0) return 1.0;
-    // Value at spread=1.0 (junction point)
-    const atOne = SPREAD_QUAD.a + SPREAD_QUAD.b + SPREAD_QUAD.c; // ≈1.543
-    if (spreadR < 1.0) {
-      // Linear ramp: R = 1.0 at spread=0, smoothly meets quadratic at spread=1.0
-      return 1.0 + (atOne - 1.0) * spreadR;
+  private applyScaleCorrection(rawRFactor: number): { scaledRFactor: number; adjustment: number } {
+    if (!this.config.scaleCorrection.enabled) {
+      return { scaledRFactor: rawRFactor, adjustment: 0 };
     }
-    return SPREAD_QUAD.a + SPREAD_QUAD.b * spreadR + SPREAD_QUAD.c * spreadR * spreadR;
+
+    const threshold = this.config.scaleCorrection.expansionThreshold;
+    const factor = this.config.scaleCorrection.expansionFactor;
+
+    if (rawRFactor <= threshold) {
+      return { scaledRFactor: rawRFactor, adjustment: 0 };
+    }
+
+    // Apply non-linear expansion for extreme values
+    // Formula: threshold + (excess) × (1 + factor × tanh(excess))
+    const excess = rawRFactor - threshold;
+    const expansion = 1 + (factor - 1) * Math.tanh(excess);
+    const scaledRFactor = threshold + excess * expansion;
+
+    return {
+      scaledRFactor,
+      adjustment: scaledRFactor - rawRFactor,
+    };
+  }
+
+  /**
+   * Apply robust regression adjustment using Huber-like penalty.
+   * This reduces the impact of outliers on the final prediction.
+   */
+  private applyRobustAdjustment(rFactor: number, zScores: SignalOutput['zScores']): number {
+    // Identify extreme Z-scores that might indicate outliers
+    const extremeScores = Object.values(zScores).filter((z) => Math.abs(z) > 3);
+
+    if (extremeScores.length === 0) {
+      return rFactor; // No adjustment needed
+    }
+
+    // Apply Huber-like penalty: reduce impact of extreme values
+    const penaltyFactor = extremeScores.reduce((penFactor, z) => {
+      const absZ = Math.abs(z);
+      if (absZ > HUBER_EPSILON) {
+        // Linear penalty beyond epsilon
+        return penFactor * (HUBER_EPSILON / absZ);
+      }
+      return penFactor;
+    }, 1.0);
+
+    // Blend: 70% original + 30% robust-adjusted
+    const robustRFactor = rFactor * (0.7 + 0.3 * penaltyFactor);
+
+    return robustRFactor;
+  }
+
+  /**
+   * Calculate adaptive lookback period based on volatility.
+   */
+  public calculateAdaptiveLookback(historical: FactorData[]): number {
+    if (historical.length < this.config.minLookback) {
+      return Math.max(5, historical.length);
+    }
+
+    // Calculate spread volatility over recent period
+    const recentSpreads = historical.slice(-10).map((h) => h.spread);
+    const avgSpread = recentSpreads.reduce((a, b) => a + b, 0) / recentSpreads.length;
+    const variance = recentSpreads.reduce((sum, s) => sum + (s - avgSpread) ** 2, 0) / recentSpreads.length;
+    const volatility = Math.sqrt(variance);
+
+    // High volatility → shorter lookback (more responsive)
+    // Low volatility → longer lookback (more stable)
+    const baseLookback = this.config.lookbackPeriod;
+
+    if (volatility > 1.0) {
+      // High volatility: use shorter lookback
+      return Math.max(this.config.minLookback, Math.floor(baseLookback * 0.7));
+    }
+    if (volatility < 0.3) {
+      // Low volatility: use longer lookback
+      return Math.min(this.config.maxLookback, Math.floor(baseLookback * 1.3));
+    }
+
+    return baseLookback;
   }
 
   /**
@@ -194,7 +428,68 @@ export class RFactorEngine {
     if (isElephant) return 'Elephant';
     return 'Defensive';
   }
+
+  /**
+   * Calculate confidence score based on factor agreement and data quality.
+   */
+  private calculateConfidence(zScores: SignalOutput['zScores'], historyLength: number): number {
+    let confidence = 0.5; // Base confidence
+
+    // Data quality factor
+    if (historyLength >= 20) {
+      confidence += 0.2;
+    } else if (historyLength >= 15) {
+      confidence += 0.1;
+    }
+
+    // Factor agreement: check if multiple factors point in same direction
+    const positiveSignals = [
+      zScores.spread > 1.0,
+      zScores.fut_turnover > 0.5,
+      zScores.oi_change > 0.5,
+      zScores.pcr > 0.5, // High PCR = unusual hedging
+    ].filter(Boolean).length;
+
+    const negativeSignals = [
+      zScores.spread < 0.8,
+      zScores.fut_turnover < -0.5,
+      zScores.fut_volume > 2.0, // High volume with low turnover = retail noise
+    ].filter(Boolean).length;
+
+    // High agreement = higher confidence
+    if (positiveSignals >= 3) {
+      confidence += 0.2;
+    } else if (positiveSignals >= 2) {
+      confidence += 0.1;
+    }
+
+    // Conflicting signals = lower confidence
+    if (positiveSignals >= 2 && negativeSignals >= 2) {
+      confidence -= 0.15;
+    }
+
+    return Math.max(0.1, Math.min(1.0, confidence));
+  }
+
+  /**
+   * Get market context and include in signal calculation.
+   */
+  public async calculateSignalWithContext(
+    symbol: string,
+    current: FactorData,
+    historical: FactorData[],
+    opts?: { hasOptionChain?: boolean },
+  ): Promise<SignalOutput> {
+    const marketContext = await getMarketContext();
+    return this.calculateSignal(symbol, current, historical, {
+      ...opts,
+      marketContext,
+    });
+  }
 }
 
 // Export default singleton instance with default config
 export const engine = new RFactorEngine();
+
+// Re-export types and functions
+export { transformToFactorData, transformToEnhancedFactorData };

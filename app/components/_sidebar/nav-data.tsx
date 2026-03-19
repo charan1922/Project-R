@@ -37,10 +37,16 @@ export const v1Items: NavItemType[] = [
     icon: <Zap className="w-4 h-4" />,
     children: [
       {
-        label: 'Intraday Boost',
-        href: '/trading-lab/intraday-boost',
+        label: 'Intraday Boost Live',
+        href: '/trading-lab/intraday-boost?tab=live',
         icon: <Flame className="w-4 h-4" />,
         badge: 'LIVE',
+      },
+      {
+        label: 'Intraday Boost Past',
+        href: '/trading-lab/intraday-boost?tab=past',
+        icon: <Flame className="w-4 h-4" />,
+        badge: 'EOD',
       },
       {
         label: 'Option Chain',

@@ -3,7 +3,14 @@ import { syncBhavcopy } from '@/lib/r-factor/bhavcopy-service';
 
 export const dynamic = 'force-dynamic';
 
+let syncing = false;
+
 export async function POST(req: NextRequest) {
+  if (syncing) {
+    return NextResponse.json({ success: false, error: 'Sync already in progress' }, { status: 409 });
+  }
+
+  syncing = true;
   try {
     const { searchParams } = new URL(req.url);
     const days = Math.min(Number.parseInt(searchParams.get('days') || '25', 10), 60);
@@ -14,5 +21,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Bhavcopy Sync Error:', error);
     return NextResponse.json({ success: false, error: (error as Error).message }, { status: 500 });
+  } finally {
+    syncing = false;
   }
 }

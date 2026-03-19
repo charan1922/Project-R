@@ -63,3 +63,4 @@ data/historify-settings.json
 # Vercel
 .vercel
 data/.dhan-token.json
+data/.dhan-market-cache.json

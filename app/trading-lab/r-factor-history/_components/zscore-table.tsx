@@ -2,7 +2,7 @@ import { Zap } from 'lucide-react';
 import { getRFactorColor, REGIME_BADGE, shortDate } from '@/app/trading-lab/_lib/r-factor-ui';
 import type { StockHistoryEntry } from '../_hooks/use-history-data';
 
-const COLS = 'grid-cols-[90px_70px_55px_55px_55px_55px_55px_55px_70px_50px]';
+const COLS = 'grid-cols-[90px_70px_55px_55px_55px_55px_55px_55px_55px_70px_50px_45px]';
 
 export function ZScoreTable({ data }: { data: StockHistoryEntry[] }) {
   return (
@@ -13,6 +13,7 @@ export function ZScoreTable({ data }: { data: StockHistoryEntry[] }) {
         <span>Date</span>
         <span>R-Factor</span>
         <span>Spread</span>
+        <span>OI Lvl</span>
         <span>PCR</span>
         <span>FutTrn</span>
         <span>FutVol</span>
@@ -20,6 +21,7 @@ export function ZScoreTable({ data }: { data: StockHistoryEntry[] }) {
         <span>OptVol</span>
         <span>Regime</span>
         <span>Blast</span>
+        <span>Conf</span>
       </div>
       {[...data].reverse().map((entry) => (
         <ZScoreRow key={entry.date} entry={entry} />
@@ -49,6 +51,7 @@ function ZScoreRow({ entry }: { entry: StockHistoryEntry }) {
         )}
       </span>
       <ZCell value={z.spread} threshold={1.5} color="text-emerald-400" />
+      <ZCell value={z.oi_level} threshold={1.15} color="text-violet-400" />
       <ZCell value={z.pcr} threshold={1.5} color="text-amber-400" />
       <ZCell value={z.fut_turnover} threshold={1} color="text-sky-400" />
       <ZCell value={z.fut_volume} threshold={1} color="text-sky-400" />
@@ -66,10 +69,13 @@ function ZScoreRow({ entry }: { entry: StockHistoryEntry }) {
           <span className="text-slate-700">—</span>
         )}
       </span>
+      <span className={`text-[9px] ${(entry.confidence ?? 0) > 0.7 ? 'text-emerald-400' : (entry.confidence ?? 0) > 0.5 ? 'text-amber-400' : 'text-slate-500'}`}>
+        {entry.confidence != null ? (entry.confidence * 100).toFixed(0) + '%' : '—'}
+      </span>
     </div>
   );
 }
 
 function ZCell({ value, threshold, color }: { value: number; threshold: number; color: string }) {
-  return <span className={value > threshold ? color : 'text-slate-500'}>{value.toFixed(1)}</span>;
+  return <span className={value > threshold ? color : 'text-slate-500'}>{value.toFixed(2)}</span>;
 }

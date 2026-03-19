@@ -17,8 +17,18 @@ import {
   resolveSymbol,
 } from '../historify/master-contracts';
 import { BhavcopyNotSyncedError, getHistoricalData } from './bhavcopy-service';
-import { engine } from './engine';
+import { RFactorEngine, engine } from './engine';
 import { type DailyStockData, type SignalOutput, transformToFactorData } from './types';
+
+/**
+ * Dhan-adapted engine for live data with option chain.
+ * When option chain provides live PCR, the ensemble can use it.
+ * Spread-quad dominant (60%) — proven Pearson 0.845 on Dhan data.
+ * OLS at 20% weight — contributes when option chain PCR is available.
+ */
+const liveEnsembleEngine = new RFactorEngine({
+  ensembleWeights: { ols: 0.20, spreadQuad: 0.60, momentum: 0.20 },
+});
 
 /** Extended signal with live price data */
 export interface BoostSignal extends SignalOutput {
@@ -55,19 +65,96 @@ interface LiveFutData {
   ohlcLow: number;
 }
 
-export class RFactorDataService {
-  // Cache Dhan API responses per trading day — Dhan returns unstable OHLC after market close
-  private dhanCache: {
-    date: string;
-    liveEq: Map<string, LiveEqData>;
-    liveFut: Map<string, LiveFutData>;
-  } | null = null;
+// Disk-based Dhan market cache — survives Turbopack HMR and server restarts (same pattern as auth.ts)
+const DHAN_CACHE_FILE = path.join(process.cwd(), 'data', '.dhan-market-cache.json');
 
-  // Cache option chain summaries per trading day (rate limit: 1 req / 3s, so cache aggressively)
-  private optionChainCache: {
-    date: string;
-    data: Map<string, OptionChainSummary>;
-  } | null = null;
+type DhanCacheData = {
+  date: string;
+  liveEq: Record<string, LiveEqData>;
+  liveFut: Record<string, LiveFutData>;
+};
+
+async function loadDhanCacheFromDisk(): Promise<{
+  date: string;
+  liveEq: Map<string, LiveEqData>;
+  liveFut: Map<string, LiveFutData>;
+} | null> {
+  try {
+    const raw = await fs.readFile(DHAN_CACHE_FILE, 'utf8');
+    const data = JSON.parse(raw) as DhanCacheData;
+    return {
+      date: data.date,
+      liveEq: new Map(Object.entries(data.liveEq)),
+      liveFut: new Map(Object.entries(data.liveFut)),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function saveDhanCacheToDisk(cache: {
+  date: string;
+  liveEq: Map<string, LiveEqData>;
+  liveFut: Map<string, LiveFutData>;
+}): Promise<void> {
+  const data: DhanCacheData = {
+    date: cache.date,
+    liveEq: Object.fromEntries(cache.liveEq),
+    liveFut: Object.fromEntries(cache.liveFut),
+  };
+  await fs.writeFile(DHAN_CACHE_FILE, JSON.stringify(data)).catch(() => {});
+}
+
+// In-memory + disk cache for option chains (not persisted to disk — too large, background fetched)
+const g = globalThis as unknown as {
+  __dhanMarketCache?: { date: string; liveEq: Map<string, LiveEqData>; liveFut: Map<string, LiveFutData> };
+  __optionChainCache?: { date: string; data: Map<string, OptionChainSummary>; fetchedAt: number };
+  __ocFetchInProgress?: boolean;
+};
+
+export class RFactorDataService {
+  private _overrideEngine: RFactorEngine | null = null;
+
+  /** Override engine config for this request (preset/robust toggles from UI) */
+  setEngineOverrides(overrides: Record<string, unknown>): void {
+    this._overrideEngine = new RFactorEngine(overrides as Partial<import('./types').EngineConfig>);
+  }
+
+  clearEngineOverrides(): void {
+    this._overrideEngine = null;
+  }
+
+  /** Get active engine — override if set, otherwise default */
+  private get activeEngine(): RFactorEngine {
+    return this._overrideEngine ?? engine;
+  }
+
+  // Dhan cache: always disk-first. Multiple Turbopack isolates share the same file.
+  // In-memory globalThis is only used within a single request to avoid duplicate disk reads.
+  private get dhanCache() {
+    return g.__dhanMarketCache ?? null;
+  }
+  private set dhanCache(v) {
+    g.__dhanMarketCache = v ?? undefined;
+    if (v) saveDhanCacheToDisk(v);
+  }
+
+  /** Load Dhan cache from disk. ALWAYS reads disk — never trusts in-memory
+   *  because Turbopack runs multiple workers with separate globalThis. */
+  private async ensureDhanCache(todayKey: string): Promise<boolean> {
+    const diskCache = await loadDhanCacheFromDisk();
+    if (diskCache?.date === todayKey) {
+      g.__dhanMarketCache = diskCache; // populate in-memory for this request's computations
+      return true;
+    }
+    return false;
+  }
+  private get optionChainCache() {
+    return g.__optionChainCache ?? null;
+  }
+  private set optionChainCache(v) {
+    g.__optionChainCache = v ?? undefined;
+  }
 
   async getFnOStocks(): Promise<string[]> {
     try {
@@ -88,7 +175,7 @@ export class RFactorDataService {
     const factorData = transformToFactorData(dailyData);
     const current = factorData[factorData.length - 1];
     const historical = factorData.slice(0, -1);
-    return engine.calculateSignal(symbol, current, historical);
+    return this.activeEngine.calculateSignal(symbol, current, historical);
   }
 
   /**
@@ -103,12 +190,11 @@ export class RFactorDataService {
    * After hours / no Dhan → pure bhavcopy signals
    */
   async scanAllSymbols(
-    limit = 206,
+    _limit = 206,
     opts?: { useOptionChain?: boolean; stockList?: 'all' | 'tf' },
   ): Promise<ScanResult> {
     const allSymbols = await this.getFnOStocks();
-    const symbols = opts?.stockList === 'tf' ? await this.getTfTradedStocks(allSymbols) : allSymbols;
-    const targetSymbols = symbols.slice(0, limit);
+    const targetSymbols = opts?.stockList === 'tf' ? await this.getTfTradedStocks(allSymbols) : allSymbols;
     const sectorMap = await this.getSectorMap();
 
     const hasDhan = hasDhanAuth();
@@ -161,6 +247,71 @@ export class RFactorDataService {
     return { signals, dataSource: 'bhavcopy', latestDate: latestBhavDate, marketOpen };
   }
 
+  /**
+   * LIVE mode: Dhan-only data, fresh on every call.
+   * Use during market hours. Outside hours returns marketClosed flag.
+   */
+  async scanLive(opts?: { useOptionChain?: boolean; stockList?: 'all' | 'tf' }): Promise<ScanResult> {
+    const allSymbols = await this.getFnOStocks();
+    const targetSymbols = opts?.stockList === 'tf' ? await this.getTfTradedStocks(allSymbols) : allSymbols;
+    const sectorMap = await this.getSectorMap();
+    const marketOpen = isMarketHours();
+
+    if (!marketOpen) {
+      return { signals: [], dataSource: 'live', latestDate: getTodayIST(), marketOpen: false };
+    }
+
+    if (!hasDhanAuth()) {
+      throw new Error('Dhan credentials not configured');
+    }
+
+    const useOC = opts?.useOptionChain !== false;
+    const signals = this.attachSectors(await this.computeLiveSignals(targetSymbols, useOC), sectorMap);
+    return { signals, dataSource: 'live', latestDate: getTodayIST(), marketOpen: true };
+  }
+
+  /**
+   * PAST mode: Bhavcopy-only, 100% deterministic.
+   * Same date = same results always. No Dhan dependency.
+   */
+  async scanPast(opts?: {
+    date?: string;
+    stockList?: 'all' | 'tf';
+  }): Promise<ScanResult & { availableDates: string[] }> {
+    const allSymbols = await this.getFnOStocks();
+    const targetSymbols = opts?.stockList === 'tf' ? await this.getTfTradedStocks(allSymbols) : allSymbols;
+    const sectorMap = await this.getSectorMap();
+
+    // Get available dates
+    const dateRows = await prisma.bhavcopyDay.findMany({
+      select: { date: true },
+      distinct: ['date'],
+      orderBy: { date: 'desc' },
+    });
+    const availableDates = dateRows.map((r) => r.date);
+
+    // Use requested date or latest
+    const date = opts?.date ?? availableDates[0];
+    if (!date) throw new BhavcopyNotSyncedError();
+
+    // Filter symbols that have data for this date
+    const dateSymbols = await prisma.bhavcopyDay.findMany({
+      where: { date },
+      select: { symbol: true },
+    });
+    const dateSymbolSet = new Set(dateSymbols.map((r) => r.symbol));
+    const filteredSymbols = targetSymbols.filter((s) => dateSymbolSet.has(s));
+
+    const signals = this.attachSectors(await this.computeBhavcopySignals(filteredSymbols), sectorMap);
+    return {
+      signals,
+      dataSource: 'bhavcopy',
+      latestDate: date,
+      marketOpen: isMarketHours(),
+      availableDates,
+    };
+  }
+
   /** Get TradeFinder-traded stocks (intersection with official F&O list) */
   private async getTfTradedStocks(allFno: string[]): Promise<string[]> {
     try {
@@ -202,8 +353,12 @@ export class RFactorDataService {
     return row !== null;
   }
 
-  private ocFetchInProgress = false;
-  private ocFetchedAt = 0; // timestamp of last fetch completion
+  private get ocFetchInProgress() {
+    return g.__ocFetchInProgress ?? false;
+  }
+  private set ocFetchInProgress(v: boolean) {
+    g.__ocFetchInProgress = v;
+  }
 
   /**
    * Non-blocking option chain access. Returns cached data immediately.
@@ -219,7 +374,9 @@ export class RFactorDataService {
     const todayCacheKey = getTodayIST();
     const marketOpen = isMarketHours();
     const cacheTtlMs = marketOpen ? 15 * 60 * 1000 : 24 * 60 * 60 * 1000; // 15 min live, 24h post-market
-    const isFresh = this.optionChainCache?.date === todayCacheKey && Date.now() - this.ocFetchedAt < cacheTtlMs;
+    const isFresh =
+      this.optionChainCache?.date === todayCacheKey &&
+      Date.now() - (this.optionChainCache?.fetchedAt ?? 0) < cacheTtlMs;
 
     if (isFresh) {
       return this.optionChainCache!.data;
@@ -230,7 +387,6 @@ export class RFactorDataService {
       this.ocFetchInProgress = true;
       this.fetchOptionChainsBackground(eqIdMap, expiries, todayCacheKey).finally(() => {
         this.ocFetchInProgress = false;
-        this.ocFetchedAt = Date.now();
       });
     }
 
@@ -259,7 +415,7 @@ export class RFactorDataService {
     }
 
     console.log(`[Boost] Background: option chain done — ${result.size}/${symbols.length} cached`);
-    this.optionChainCache = { date: cacheKey, data: result };
+    this.optionChainCache = { date: cacheKey, data: result, fetchedAt: Date.now() };
   }
 
   private async computeBhavcopySignals(symbols: string[]): Promise<BoostSignal[]> {
@@ -312,7 +468,10 @@ export class RFactorDataService {
     let liveFut: Map<string, LiveFutData>;
 
     const marketOpen = isMarketHours();
-    const useCache = !marketOpen && this.dhanCache?.date === todayCacheKey;
+
+    // Disk is source of truth — load on every request to handle multiple Turbopack isolates
+    const hasCached = !marketOpen && (await this.ensureDhanCache(todayCacheKey));
+    const useCache = hasCached;
 
     if (useCache) {
       console.log(`[Boost] Market closed — using cached Dhan data for ${todayCacheKey}`);
@@ -368,7 +527,15 @@ export class RFactorDataService {
       }
 
       console.log(`[Boost] Fetched Dhan data: ${liveEq.size} equity, ${liveFut.size} futures`);
-      this.dhanCache = { date: todayCacheKey, liveEq, liveFut };
+      // Only cache if we got meaningful data (both equity AND futures)
+      // Partial data (equity empty, futures present) causes inconsistent R-Factor between requests
+      if (liveEq.size > 0 && liveFut.size > 0) {
+        const cacheObj = { date: todayCacheKey, liveEq, liveFut };
+        g.__dhanMarketCache = cacheObj;
+        await saveDhanCacheToDisk(cacheObj);
+      } else {
+        console.warn(`[Boost] Partial Dhan data — eq=${liveEq.size} fut=${liveFut.size}, NOT caching`);
+      }
     }
 
     // Step 2.5: Option chain data (CE/PE volume → live PCR)
@@ -407,7 +574,7 @@ export class RFactorDataService {
           // Equity: live from Dhan Quote (includes volume + VWAP)
           eq_high: eq?.high ?? lastDay.eq_high,
           eq_low: eq?.low ?? lastDay.eq_low,
-          eq_close: eq?.lastPrice ?? lastDay.eq_close, // Use LTP for live spread
+          eq_close: eq?.close ?? lastDay.eq_close, // Use previous close (stable) — R only changes on new H/L, like TF
           eq_volume: eq?.volume ?? lastDay.eq_volume, // Today's volume from Quote endpoint
           eq_turnover: eq ? eq.volume * eq.averagePrice : lastDay.eq_turnover, // VWAP-based turnover
           // Futures: live from Dhan Quote
@@ -425,17 +592,21 @@ export class RFactorDataService {
           pe_volume: oc ? oc.totalPeVolume : lastDay.pe_volume,
         };
 
-        // Replace last day with live-blended data
+        // Replace last bhavcopy day with today's live data.
+        // The last bhavcopy day becomes part of the 20-day historical baseline,
+        // and today's live data is the "current" day being scored.
         const blendedData = [...dailyData.slice(0, -1), liveDay];
         const factorData = transformToFactorData(blendedData);
         const current = factorData[factorData.length - 1];
         const historical = factorData.slice(0, -1);
 
-        // Full OLS model when we have option chain data (all factors live from Dhan)
-        // Spread-quadratic fallback when option chain is missing
+        // V4 Dhan-live model: uses OI change, options volume, futures volume
+        // (fitted on 79 TF-paired stocks, Pearson 0.55, Top-10 6/10).
+        // With option chain: ensemble with live PCR.
+        // Without option chain: Dhan-live composite (all Dhan quote factors).
         const signal = oc
-          ? engine.calculateSignal(symbol, current, historical)
-          : engine.calculateSignalLive(symbol, current, historical);
+          ? this.activeEngine.calculateSignal(symbol, current, historical)
+          : this.activeEngine.calculateSignalLive(symbol, current, historical);
         const boost: BoostSignal = {
           ...signal,
           pctChange: eq ? ((eq.lastPrice - eq.close) / eq.close) * 100 : undefined,

@@ -2,7 +2,7 @@ import { Zap } from 'lucide-react';
 import { getRFactorColor, REGIME_BADGE } from '@/app/trading-lab/_lib/r-factor-ui';
 import type { LeaderEntry } from '../_hooks/use-history-data';
 
-const COLS = 'grid-cols-[35px_2fr_80px_65px_55px_55px_55px_55px_80px_50px]';
+const COLS = 'grid-cols-[35px_2fr_80px_65px_55px_55px_55px_55px_55px_55px_80px_50px]';
 
 export function LeaderboardTable({ data }: { data: LeaderEntry[] }) {
   return (
@@ -15,9 +15,11 @@ export function LeaderboardTable({ data }: { data: LeaderEntry[] }) {
         <span>Sector</span>
         <span>R-Factor</span>
         <span>Spread</span>
+        <span>OI Lvl</span>
         <span>PCR</span>
         <span>FutTrn</span>
         <span>FutVol</span>
+        <span>OptVol</span>
         <span>Regime</span>
         <span>Blast</span>
       </div>
@@ -41,9 +43,11 @@ function LeaderRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
         {entry.compositeRFactor.toFixed(2)}
       </span>
       <ZCell value={z.spread} threshold={1.5} color="text-emerald-400" />
+      <ZCell value={z.oi_level} threshold={1.15} color="text-violet-400" />
       <ZCell value={z.pcr} threshold={1.5} color="text-amber-400" />
       <ZCell value={z.fut_turnover} threshold={1} color="text-sky-400" />
       <ZCell value={z.fut_volume} threshold={1} color="text-sky-400" />
+      <ZCell value={z.opt_volume} threshold={1} color="text-amber-400" />
       <span
         className={`text-[9px] px-1 py-0.5 rounded border w-fit ${REGIME_BADGE[entry.regime] ?? REGIME_BADGE.Defensive}`}
       >
@@ -61,5 +65,5 @@ function LeaderRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
 }
 
 function ZCell({ value, threshold, color }: { value: number; threshold: number; color: string }) {
-  return <span className={`font-mono ${value > threshold ? color : 'text-slate-500'}`}>{value.toFixed(1)}</span>;
+  return <span className={`font-mono ${value > threshold ? color : 'text-slate-500'}`}>{value.toFixed(2)}</span>;
 }

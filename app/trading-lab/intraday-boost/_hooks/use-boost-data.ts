@@ -18,6 +18,8 @@ export interface BoostStock {
   sector?: string;
   lotValue?: number;
   timestamp: string;
+  modelUsed?: string;
+  confidence?: number;
 }
 
 export interface BoostData {
@@ -29,49 +31,62 @@ export interface BoostData {
   latestDate: string | null;
   marketOpen: boolean | null;
   lastRefresh: Date | null;
+  availableDates: string[];
   refresh: () => void;
   dismissSync: () => void;
 }
 
+export type BoostMode = 'live' | 'past';
+
 /**
- * Data fetching hook for Intraday Boost page.
- *
- * - Debounces toggle changes (150ms) to prevent multi-fetch from nuqs re-renders
- * - AbortController cancels stale in-flight requests
- * - Keeps showing old data while new data loads (no flash-to-empty)
- * - Auto-refresh every 60s
+ * Data hook for Intraday Boost — split into Live (Dhan) and Past (bhavcopy) modes.
+ * Each mode uses a single data source — no mixing, no caching complexity.
  */
-export function useBoostData(useOC = true, tfOnly = false): BoostData {
+export type EnginePreset = 'sq-dominant' | 'balanced';
+
+export function useBoostData(
+  mode: BoostMode,
+  opts: { useOC?: boolean; tfOnly?: boolean; date?: string; preset?: EnginePreset; robust?: boolean } = {},
+): BoostData {
   const [stocks, setStocks] = useState<BoostStock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncRequired, setSyncRequired] = useState<string | false>(false);
-  const [dataSource, setDataSource] = useState<'live' | 'bhavcopy' | 'bhavcopy-today' | null>(null);
+  const [dataSource, setDataSource] = useState<BoostData['dataSource']>(null);
   const [latestDate, setLatestDate] = useState<string | null>(null);
   const [marketOpen, setMarketOpen] = useState<boolean | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
 
   const mountedRef = useRef(true);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Build URL from current toggle state
-  const buildUrl = useCallback(() => {
-    let url = '/api/r-factor?limit=206';
-    if (!useOC) url += '&useOC=false';
-    if (tfOnly) url += '&stockList=tf';
-    return url;
-  }, [useOC, tfOnly]);
+  // Refs for stable fetch
+  const modeRef = useRef(mode);
+  const optsRef = useRef(opts);
+  modeRef.current = mode;
+  optsRef.current = opts;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reads from refs
   const doFetch = useCallback(async () => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
     setError(null);
-    // Don't setLoading(true) on toggle — keeps old data visible (no flash)
-    // Only show spinner on initial load (stocks.length === 0)
     try {
-      const res = await fetch(buildUrl(), { signal: controller.signal });
+      const m = modeRef.current;
+      const o = optsRef.current;
+
+      let url = `/api/r-factor?mode=${m}`;
+      if (m === 'live' && !o.useOC) url += '&useOC=false';
+      if (o.tfOnly) url += '&stockList=tf';
+      if (m === 'past' && o.date) url += `&date=${o.date}`;
+      if (o.preset) url += `&preset=${o.preset}`;
+      if (o.robust === true) url += '&robust=true';
+      if (o.robust === false) url += '&robust=false';
+
+      const res = await fetch(url, { signal: controller.signal });
       if (!mountedRef.current || controller.signal.aborted) return;
       const result = await res.json();
       if (!mountedRef.current || controller.signal.aborted) return;
@@ -85,6 +100,7 @@ export function useBoostData(useOC = true, tfOnly = false): BoostData {
         setLatestDate(result.latestDate || null);
         setMarketOpen(result.marketOpen ?? null);
         setLastRefresh(new Date());
+        if (result.availableDates) setAvailableDates(result.availableDates);
       } else {
         setError(result.error || 'Failed to fetch data');
       }
@@ -94,21 +110,31 @@ export function useBoostData(useOC = true, tfOnly = false): BoostData {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [buildUrl]);
+  }, []);
 
-  // Debounced fetch — consolidates rapid nuqs re-renders into single API call
-  // biome-ignore lint/correctness/useExhaustiveDependencies: doFetch changes when toggles change
+  // Mount + auto-refresh (Live: 60s, Past: no auto-refresh)
   useEffect(() => {
     mountedRef.current = true;
-    const debounce = setTimeout(() => doFetch(), 150);
-    const interval = setInterval(() => doFetch(), 60_000);
+    doFetch();
+    const interval = mode === 'live' ? setInterval(doFetch, 60_000) : null;
     return () => {
       mountedRef.current = false;
-      clearTimeout(debounce);
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
       abortRef.current?.abort();
     };
-  }, [doFetch]);
+  }, [doFetch, mode]);
+
+  // Re-fetch on param changes (skip initial)
+  const isInitial = useRef(true);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: triggers re-fetch on param change
+  useEffect(() => {
+    if (isInitial.current) {
+      isInitial.current = false;
+      return;
+    }
+    setLoading(true);
+    doFetch();
+  }, [mode, opts.useOC, opts.tfOnly, opts.date, opts.preset, opts.robust]);
 
   return {
     stocks,
@@ -119,6 +145,7 @@ export function useBoostData(useOC = true, tfOnly = false): BoostData {
     latestDate,
     marketOpen,
     lastRefresh,
+    availableDates,
     refresh: doFetch,
     dismissSync: () => setSyncRequired(false),
   };

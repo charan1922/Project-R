@@ -9,6 +9,18 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  {
+    key: 'Content-Security-Policy',
+    value: [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "connect-src 'self' wss: https://auth.dhan.co https://*.dhan.co https://*.sentry.io",
+      "font-src 'self'",
+      "frame-ancestors 'self'",
+    ].join('; '),
+  },
 ];
 
 const nextConfig: NextConfig = {
