@@ -282,7 +282,7 @@ export class RFactorDataService {
     const targetSymbols = opts?.stockList === 'tf' ? await this.getTfTradedStocks(allSymbols) : allSymbols;
     const sectorMap = await this.getSectorMap();
 
-    // Get available dates
+    // Get available dates from bhavcopy
     const dateRows = await prisma.bhavcopyDay.findMany({
       select: { date: true },
       distinct: ['date'],
@@ -290,9 +290,29 @@ export class RFactorDataService {
     });
     const availableDates = dateRows.map((r) => r.date);
 
+    // Add today if Dhan cache exists and today isn't in bhavcopy yet
+    const todayIST = getTodayIST();
+    const hasTodayBhavcopy = availableDates.includes(todayIST);
+    const hasTodayDhan = !hasTodayBhavcopy && (await this.ensureDhanCache(todayIST));
+    if (hasTodayDhan) {
+      availableDates.unshift(todayIST); // Add today at the top
+    }
+
     // Use requested date or latest
     const date = opts?.date ?? availableDates[0];
     if (!date) throw new BhavcopyNotSyncedError();
+
+    // If requesting today and only Dhan cache is available, use live signals
+    if (date === todayIST && !hasTodayBhavcopy && hasTodayDhan) {
+      const signals = this.attachSectors(await this.computeLiveSignals(targetSymbols, false), sectorMap);
+      return {
+        signals,
+        dataSource: 'live',
+        latestDate: todayIST,
+        marketOpen: isMarketHours(),
+        availableDates,
+      };
+    }
 
     // Filter symbols that have data for this date
     const dateSymbols = await prisma.bhavcopyDay.findMany({

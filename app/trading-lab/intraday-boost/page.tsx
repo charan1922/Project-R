@@ -527,14 +527,15 @@ function StockRow({ stock, isLast }: { stock: BoostStock; isLast: boolean }) {
   const isUp = stock.zScores.spread > 1.2;
   return (
     <div
-      className={`grid grid-cols-[2fr_90px_80px_1fr_1fr_1fr_80px] gap-2 px-5 py-3 items-center transition-colors hover:bg-slate-800/40 ${
+      className={`grid grid-cols-[2fr_90px_80px_1fr_1fr_1fr_80px] gap-2 px-5 py-3 items-center transition-colors hover:bg-slate-800/40 cursor-pointer ${
         !isLast ? 'border-b border-slate-800/50' : ''
       }`}
+      onClick={() => window.open(`https://www.tradingview.com/chart/?symbol=NSE%3A${stock.symbol}`, '_blank')}
     >
       {/* Symbol + Regime */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-white">{stock.symbol}</span>
+          <span className="text-sm font-semibold text-white hover:text-sky-400 transition-colors">{stock.symbol}</span>
           {stock.isBlastTrade && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded">
               <Zap className="w-2.5 h-2.5" />

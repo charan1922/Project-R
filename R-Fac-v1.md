@@ -544,38 +544,172 @@ Delivery %          -0.12     Rejected
 
 ---
 
-## 11. Limitations & Known Gaps
+## 11. V4 Ensemble & Dhan-Live Model
 
-1. **Single-day training data**: OLS coefficients were fit on March 13, 2026 TradeFinder data (80 stocks). Multi-day training would improve robustness.
+### 11.1 V4 Architecture (March 19, 2026)
 
-2. **Scale compression**: Full OLS model compresses extreme R-Factor values. TradeFinder shows 5.0+ for top stocks; our OLS caps around 3.5. The spread-quadratic addresses this for live data.
+V4 transforms the engine from single-model to a configurable ensemble with 3 data paths:
 
-3. **No market holidays**: `isTradingDay()` checks weekday + time only, not NSE holiday calendar. On holidays falling on weekdays, Dhan returns previous trading day's data.
+| Data Path | Model | TF Top-10 Match | Notes |
+|-----------|-------|-----------------|-------|
+| Bhavcopy (Past tab) | Spread-quad dominant ensemble (90/5/5) | **8/10** | Best TF match. Scale correction expands extreme values. |
+| Dhan live + option chain | Ensemble with live PCR | — | Uses all available data |
+| Dhan live, no option chain | Dhan-live composite | **4-5/10** | OI level + opt vol + fut vol |
 
-4. **Option chain latency**: 206 stocks × 3s rate limit = ~10 minutes for full scan. Data is 10 minutes stale by the time the last stock is fetched.
+### 11.2 Key V4 Discovery: OI Level
 
-5. **Bhavcopy sync is manual**: User must explicitly trigger NSE bhavcopy download after market close. No auto-sync (by design — prevents accidental NSE scraping).
+**Daily `oi_change` misses sustained accumulation.** All TF top-5 stocks on Mar 19 had 25-35% OI above their 20-day average, but daily `oi_change_z` was near zero for most.
 
-6. **TradeFinder as ground truth**: We reverse-engineered TradeFinder's model. If TradeFinder changes their algorithm, our correlation degrades. The OLS captures the general institutional activity pattern, not TradeFinder's exact formula.
+New factor: `oi_level = today's_OI / mean(20-day_OI)`
+
+| Stock | TF Rank | OI vs 20d Avg | Daily oi_change_z |
+|-------|---------|---------------|-------------------|
+| WAAREEENER | #1 | **+25%** | 0.15 (missed!) |
+| SBICARD | #3 | **+33%** | -0.37 (negative!) |
+| PREMIERENE | #5 | **+35%** | -0.45 (negative!) |
+
+### 11.3 Dhan-Live Composite Formula
+
+For live data without option chain (`calculateSignalLive`):
+
+```
+R = 1.5
+  + clamp(oi_level - 1.0, 0, 0.5) × 4.0     // OI accumulation
+  + clamp(opt_volume_z, 0, 3.0) × 0.25        // Options activity
+  + clamp(fut_volume_z, 0, 3.0) × 0.20        // Futures momentum
+  + clamp(spread_r - 0.8, 0, 2.5) × 0.30      // Above-average spread
+```
+
+Output clamped to [1.0, 6.0]. No scale correction (already calibrated to TF range).
+
+### 11.4 Why Spread-Quad Dominates (Not OLS)
+
+**Testing on Mar 19, 2026:** Spread-quad-only gives 8/10 top-10, but OLS at 50% weight gives only 5/10. Root causes:
+
+1. **OLS suppressor effect**: `fut_vol_z = -1.733` amplifies Dhan Z-score mismatches
+2. **Robust regression backfires**: Penalizes stocks with |Z| > 3 — but TF's top stocks ARE the extreme ones (WAAREEENER opt_vol Z=3.26)
+3. **TF uses previous close for spread**: `(H-L)/prev_close` is stable (only changes on new H/L). We were using LTP which fluctuated every tick.
+4. **TF computes from stable data**: R-Factor values didn't change across 4 snapshots despite LTP moving. Formula only updates when intraday high or low expands.
+
+### 11.5 Default Configuration
+
+```typescript
+ensembleWeights: { ols: 0.05, spreadQuad: 0.90, momentum: 0.05 }
+robustRegression: { enabled: false }
+scaleCorrection: { enabled: true, expansionThreshold: 2.5, expansionFactor: 1.5 }
+```
+
+### 11.6 UI-Configurable Presets
+
+The Intraday Boost page has radio buttons and checkbox to switch between:
+
+| Preset | Weights | Robust | TF Match |
+|--------|---------|--------|----------|
+| **Spread-Quad 90%** (default) | OLS 5%, SQ 90%, Mom 5% | OFF | 8/10 |
+| Balanced OLS 50% | OLS 50%, SQ 30%, Mom 20% | ON | 5/10 |
+
+API: `?preset=sq-dominant&robust=false` or `?preset=balanced&robust=true`
+
+### 11.7 Scale Correction
+
+Non-linear expansion for R > 2.5 to match TF's 1.0-5.0+ range:
+
+```
+excess = R - 2.5
+expansion = 1 + 0.5 × tanh(excess)
+R_scaled = 2.5 + excess × expansion
+```
+
+| Raw R | Scaled R | Delta |
+|-------|----------|-------|
+| 2.5 | 2.50 | 0.00 |
+| 3.0 | 3.12 | +0.12 |
+| 3.5 | 3.88 | +0.38 |
+| 4.0 | 4.68 | +0.68 |
+| 4.5 | 5.46 | +0.96 |
+
+### 11.8 TradeFinder Ground Truth Collection
+
+Ground truth stored in `derive-r/ground_truth/YYYYMMDD.json` (TradeFinder API format).
+
+Multi-day training infrastructure: `derive-r/multi_day_training.py` — builds panel dataset, time-series cross-validation, regime-specific models.
+
+Current: 1 day captured (Mar 19, 2026). Target: 5+ days for stable coefficient retraining.
 
 ---
 
-## 12. Glossary
+## 12. Eight Factors (V4)
+
+R-Factor V4 uses **8 market microstructure factors**:
+
+| # | Factor | How Computed | Role |
+|---|--------|-------------|------|
+| 1 | `spread` | (H-L)/close RATIO vs 20d avg | Dominant predictor (OLS coeff +0.625) |
+| 2 | `oi_level` | Absolute OI / 20d avg OI | **V4 addition** — sustained accumulation |
+| 3 | `pcr` | Put volume / Call volume | Institutional hedging signal |
+| 4 | `fut_turnover` | Futures traded value (₹) | Institutional money flow |
+| 5 | `fut_volume` | Futures contracts traded | Suppressor (OLS coeff -1.733) |
+| 6 | `opt_volume` | Total options volume | Hedging/speculation activity |
+| 7 | `oi_change` | |today OI - yesterday OI| | Daily position changes |
+| 8 | `eq_trade_size` | Equity turnover / volume | Block trade indicator |
+
+### Dhan-Live Feature Correlations (79 stocks, Mar 19, 2026)
+
+| Feature | Pearson with TF R | Note |
+|---------|-------------------|------|
+| `opt_volume_z` | **0.47** | Strongest on live data |
+| `fut_volume_z` | 0.39 | |
+| `fut_turnover_z` | 0.39 | |
+| `oi_change_z` | 0.27 | Daily change — misses accumulation |
+| `spread_r` | **-0.15** | Negative intraday! Reverses from bhavcopy |
+| `pcr` | -0.14 | |
+
+**Key insight**: Spread has NEGATIVE correlation with TF during afternoon trading — stocks that already moved (high spread) are "priced in." OI and options volume predict better intraday.
+
+---
+
+## 13. Limitations & Known Gaps
+
+1. **Single-day Dhan model**: Dhan-live coefficients fit on Mar 19 only. May overfit. Multi-day training needed.
+
+2. **OLS suppressor on Dhan data**: `fut_vol_z = -1.733` destroys predictions when Z-scores from Dhan don't match bhavcopy baselines. Mitigated by reducing OLS weight to 5%.
+
+3. **Robust regression counterproductive**: Penalizes TF's top stocks. Disabled by default.
+
+4. **No market holidays**: `isTradingDay()` checks weekday + time only, not NSE holiday calendar.
+
+5. **Option chain latency**: 206 stocks × 3s rate limit = ~10 minutes for full scan.
+
+6. **Bhavcopy sync is manual**: User must explicitly trigger NSE bhavcopy download after market close.
+
+7. **TF as ground truth**: We reverse-engineered TradeFinder's model. Their algorithm may change.
+
+8. **Spread instability (fixed)**: Now uses previous close instead of LTP for spread denominator. R only changes when new intraday high/low is set.
+
+9. **Dhan-live false positives**: Stocks with high OI level but low TF rank (LODHA, PFC) inflate our scores. More training data needed.
+
+---
+
+## 14. Glossary
 
 | Term | Definition |
 |------|-----------|
 | **Bhavcopy** | NSE's daily official market data CSV files (equity + F&O) |
 | **Blast Trade** | Stock with R-Factor >= 2.8 (extreme institutional activity) |
 | **Dhan** | Indian discount broker with V2 API for market data |
+| **Dhan-Live Model** | V4 composite formula using OI level + opt volume + fut volume + spread for live data |
+| **Ensemble** | V4 confidence-weighted blend of OLS + spread-quad + momentum models |
 | **F&O** | Futures & Options derivatives segment on NSE |
 | **FII** | Foreign Institutional Investor |
 | **DII** | Domestic Institutional Investor |
 | **LOO CV** | Leave-One-Out Cross-Validation |
 | **Lot Size** | Number of shares per futures/options contract |
 | **OI** | Open Interest (total outstanding futures/options contracts) |
+| **OI Level** | V4 factor: absolute OI / 20-day average OI. Values > 1.0 = accumulation, < 1.0 = distribution |
 | **OLS** | Ordinary Least Squares regression |
 | **PCR** | Put-Call Ratio (put volume / call volume) |
 | **Spread Ratio** | Today's (high-low)/close divided by 20-day average of same |
+| **Scale Correction** | V4 non-linear expansion for R > 2.5 to match TF's 1.0-5.0+ range |
 | **Suppressor Variable** | A variable with negative coefficient that improves other variables' predictive power |
 | **TradeFinder** | Benchmark algorithmic trading platform used for validation |
 | **VWAP** | Volume-Weighted Average Price |
