@@ -17,6 +17,7 @@ import {
   resolveSymbol,
 } from '../historify/master-contracts';
 import { BhavcopyNotSyncedError, getHistoricalData } from './bhavcopy-service';
+import { ADX } from 'trading-signals';
 import { RFactorEngine, engine } from './engine';
 import { type DailyStockData, type SignalOutput, transformToFactorData } from './types';
 
@@ -35,6 +36,9 @@ export interface BoostSignal extends SignalOutput {
   pctChange?: number; // Live % change from Dhan
   sector?: string; // F&O sector classification
   lotValue?: number; // lotSize × lastPrice in ₹ (notional value per lot for margin estimation)
+  adx?: number; // ADX trend strength (14-period)
+  plusDI?: number; // +DI (bullish directional)
+  minusDI?: number; // -DI (bearish directional)
 }
 
 /** Result of scanning all symbols */
@@ -176,6 +180,29 @@ export class RFactorDataService {
     const current = factorData[factorData.length - 1];
     const historical = factorData.slice(0, -1);
     return this.activeEngine.calculateSignal(symbol, current, historical);
+  }
+
+  /** Compute latest ADX values from daily OHLC history */
+  private computeADX(dailyData: DailyStockData[]): { adx: number | null; plusDI: number | null; minusDI: number | null } {
+    if (dailyData.length < 28) return { adx: null, plusDI: null, minusDI: null };
+    const indicator = new ADX(14);
+    let result: { adx: number | null; plusDI: number | null; minusDI: number | null } = { adx: null, plusDI: null, minusDI: null };
+    for (const d of dailyData) {
+      indicator.update({ high: d.eq_high, low: d.eq_low, close: d.eq_close }, false);
+      try {
+        const adxVal = Number(indicator.getResult());
+        const pdi = Number(indicator.pdi);
+        const mdi = Number(indicator.mdi);
+        result = {
+          adx: Math.round(adxVal * 10) / 10,
+          plusDI: Math.round(pdi * 1000) / 10,
+          minusDI: Math.round(mdi * 1000) / 10,
+        };
+      } catch {
+        // Not enough data yet
+      }
+    }
+    return result;
   }
 
   /**
@@ -439,10 +466,21 @@ export class RFactorDataService {
   }
 
   private async computeBhavcopySignals(symbols: string[]): Promise<BoostSignal[]> {
-    const results = await Promise.allSettled(symbols.map((s) => this.getRFactorSignal(s)));
+    const results = await Promise.allSettled(
+      symbols.map(async (s) => {
+        const dailyData = await getHistoricalData(s, 40);
+        if (dailyData.length < 15) return null;
+        const factorData = transformToFactorData(dailyData);
+        const current = factorData[factorData.length - 1];
+        const historical = factorData.slice(0, -1);
+        const signal = this.activeEngine.calculateSignal(s, current, historical);
+        const { adx, plusDI, minusDI } = this.computeADX(dailyData);
+        return { ...signal, adx, plusDI, minusDI } as BoostSignal;
+      }),
+    );
     return results
-      .filter((r): r is PromiseFulfilledResult<SignalOutput> => r.status === 'fulfilled')
-      .map((r) => ({ ...r.value }))
+      .filter((r): r is PromiseFulfilledResult<BoostSignal> => r.status === 'fulfilled' && r.value !== null)
+      .map((r) => r.value)
       .sort((a, b) => b.compositeRFactor - a.compositeRFactor);
   }
 
@@ -627,10 +665,15 @@ export class RFactorDataService {
         const signal = oc
           ? this.activeEngine.calculateSignal(symbol, current, historical)
           : this.activeEngine.calculateSignalLive(symbol, current, historical);
+        // ADX from bhavcopy history (blended with live day)
+        const { adx: adxVal, plusDI, minusDI } = this.computeADX(blendedData);
         const boost: BoostSignal = {
           ...signal,
           pctChange: eq ? ((eq.lastPrice - eq.close) / eq.close) * 100 : undefined,
           lotValue: eq ? lotSize * eq.lastPrice : undefined,
+          adx: adxVal ?? undefined,
+          plusDI: plusDI ?? undefined,
+          minusDI: minusDI ?? undefined,
         };
         return boost;
       } catch {

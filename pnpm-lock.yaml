@@ -104,6 +104,9 @@ importers:
       tailwind-merge:
         specifier: ^3.4.1
         version: 3.4.1
+      trading-signals:
+        specifier: ^7.4.3
+        version: 7.4.3
       ws:
         specifier: ^8.19.0
         version: 8.19.0
@@ -6419,6 +6422,9 @@ packages:
 
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+
+  trading-signals@7.4.3:
+    resolution: {integrity: sha512-kOyzd85qhuhU7yGkB5z74MVP6j30xBCfZy5+bgBnvfxY1ZdvaQsdD+C5j+CoIRtCAgSOuxB7jmPpBrqO6h17sQ==}
 
   trim-lines@3.0.1:
     resolution: {integrity: sha512-kRj8B+YHZCc9kQYdWfJB2/oUl9rA99qbowYYBtr4ui4mZyAQ2JpvVBd/6U2YloATfqBhBTSMhTpgBHtU0Mf3Rg==}
@@ -14116,6 +14122,8 @@ snapshots:
       tldts: 7.0.23
 
   tr46@0.0.3: {}
+
+  trading-signals@7.4.3: {}
 
   trim-lines@3.0.1: {}
 

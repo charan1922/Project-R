@@ -20,6 +20,9 @@ export interface BoostStock {
   timestamp: string;
   modelUsed?: string;
   confidence?: number;
+  adx?: number;
+  plusDI?: number;
+  minusDI?: number;
 }
 
 export interface BoostData {

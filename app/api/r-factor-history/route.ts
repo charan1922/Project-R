@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { prisma } from '@/lib/db';
+import { ADX } from 'trading-signals';
 import { engine } from '@/lib/r-factor/engine';
 import { type DailyStockData, transformToFactorData } from '@/lib/r-factor/types';
 
@@ -67,6 +68,25 @@ async function getSymbolHistory(symbol: string, days: number) {
   const sectorMap = await getSectorMap();
   const sector = sectorMap[symbol] ?? null;
 
+  // Compute ADX from full price history using trading-signals library
+  const adxIndicator = new ADX(14);
+  const adxValues: { adx: number | null; plusDI: number | null; minusDI: number | null }[] = [];
+  for (const r of rows) {
+    adxIndicator.update({ high: r.eqHigh, low: r.eqLow, close: r.eqClose }, false);
+    try {
+      const adxVal = Number(adxIndicator.getResult());
+      const pdi = Number(adxIndicator.pdi);
+      const mdi = Number(adxIndicator.mdi);
+      adxValues.push({
+        adx: Math.round(adxVal * 10) / 10,
+        plusDI: Math.round(pdi * 1000) / 10, // Convert ratio to percentage
+        minusDI: Math.round(mdi * 1000) / 10,
+      });
+    } catch {
+      adxValues.push({ adx: null, plusDI: null, minusDI: null });
+    }
+  }
+
   // Compute rolling R-Factor for the last `days` dates
   const results: Record<string, unknown>[] = [];
   const startIdx = Math.max(14, rows.length - days);
@@ -93,6 +113,10 @@ async function getSymbolHistory(symbol: string, days: number) {
         regime: signal.regime,
         isBlastTrade: signal.isBlastTrade,
         modelUsed: signal.modelUsed,
+        // ADX trend strength (14-period, from trading-signals library)
+        adx: adxValues[i]?.adx ?? null,
+        plusDI: adxValues[i]?.plusDI ?? null,
+        minusDI: adxValues[i]?.minusDI ?? null,
         // Raw bhavcopy values for context
         raw: {
           eqHigh: raw.eqHigh,

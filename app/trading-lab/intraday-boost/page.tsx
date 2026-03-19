@@ -342,7 +342,7 @@ export default function IntradayBoostPage() {
 
       {/* Table */}
       <div className="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden">
-        <div className="grid grid-cols-[2fr_90px_80px_1fr_1fr_1fr_80px] gap-2 px-5 py-3 bg-slate-800/50 text-xs text-slate-500 uppercase tracking-wider font-medium">
+        <div className="grid grid-cols-[2fr_90px_80px_1fr_1fr_1fr_65px_80px] gap-2 px-5 py-3 bg-slate-800/50 text-xs text-slate-500 uppercase tracking-wider font-medium">
           <SortButton field="symbol" current={sortField} onSort={handleSort}>
             Symbol
           </SortButton>
@@ -359,6 +359,7 @@ export default function IntradayBoostPage() {
           <SortButton field="rfactor" current={sortField} onSort={handleSort}>
             R.Factor
           </SortButton>
+          <span>ADX</span>
           <span className="text-center">Signal</span>
         </div>
 
@@ -527,7 +528,7 @@ function StockRow({ stock, isLast }: { stock: BoostStock; isLast: boolean }) {
   const isUp = stock.zScores.spread > 1.2;
   return (
     <div
-      className={`grid grid-cols-[2fr_90px_80px_1fr_1fr_1fr_80px] gap-2 px-5 py-3 items-center transition-colors hover:bg-slate-800/40 cursor-pointer ${
+      className={`grid grid-cols-[2fr_90px_80px_1fr_1fr_1fr_65px_80px] gap-2 px-5 py-3 items-center transition-colors hover:bg-slate-800/40 cursor-pointer ${
         !isLast ? 'border-b border-slate-800/50' : ''
       }`}
       onClick={() => window.open(`https://www.tradingview.com/chart/?symbol=NSE%3A${stock.symbol}`, '_blank')}
@@ -614,6 +615,18 @@ function StockRow({ stock, isLast }: { stock: BoostStock; isLast: boolean }) {
         <span className={`text-sm font-bold font-mono ${getRFactorColor(stock.compositeRFactor)}`}>
           {stock.compositeRFactor.toFixed(2)}
         </span>
+      </div>
+
+      {/* ADX */}
+      <div>
+        {stock.adx != null ? (
+          <span className={`text-xs font-mono ${stock.adx >= 28 ? 'text-amber-400 font-bold' : stock.adx >= 20 ? 'text-slate-300' : 'text-slate-600'}`}>
+            {stock.adx.toFixed(0)}
+            {stock.adx >= 28 && <span className="text-[8px] text-amber-500 ml-0.5">T</span>}
+          </span>
+        ) : (
+          <span className="text-xs text-slate-700">—</span>
+        )}
       </div>
 
       {/* Signal */}
