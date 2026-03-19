@@ -732,7 +732,7 @@ The +DI/-DI crossover on Mar 17 preceded the R-Factor spike on Mar 18. ADX was s
 
 ---
 
-## 14. Limitations & Known Gaps
+## 14.1 Limitations & Known Gaps
 
 1. **Single-day Dhan model**: Dhan-live coefficients fit on Mar 19 only. May overfit. Multi-day training needed.
 
@@ -758,6 +758,7 @@ The +DI/-DI crossover on Mar 17 preceded the R-Factor spike on Mar 18. ADX was s
 
 | Term | Definition |
 |------|-----------|
+| **ADX** | Average Directional Index — measures trend strength (0-100). >28 = strong trend. Computed from +DI/-DI with Wilder smoothing. |
 | **Bhavcopy** | NSE's daily official market data CSV files (equity + F&O) |
 | **Blast Trade** | Stock with R-Factor >= 2.8 (extreme institutional activity) |
 | **Dhan** | Indian discount broker with V2 API for market data |
