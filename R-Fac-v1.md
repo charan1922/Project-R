@@ -668,7 +668,71 @@ R-Factor V4 uses **8 market microstructure factors**:
 
 ---
 
-## 13. Limitations & Known Gaps
+## 13. ADX Trend Strength Indicator
+
+### 13.1 What is ADX?
+
+ADX (Average Directional Index) measures **trend strength** — not direction. A high ADX means the stock is trending strongly (up OR down). Combined with R-Factor, it confirms whether institutional activity is driving a sustained move or just noise.
+
+| ADX Value | Interpretation | UI Display |
+|-----------|---------------|------------|
+| **>= 28** | **Strong trend** — institutional momentum confirmed | **Amber/gold bold + "T" badge** |
+| 20-28 | Moderate trend — developing or fading | Normal white text |
+| < 20 | Weak/no trend — choppy, range-bound | Dimmed gray |
+
+### 13.2 ADX Components
+
+ADX is computed from three components using 14-period Wilder smoothing:
+
+| Component | What It Measures | Trading Signal |
+|-----------|-----------------|----------------|
+| **ADX** | Trend strength (0-100) | >28 = strong trend |
+| **+DI** | Bullish directional movement | +DI > -DI = bullish trend |
+| **-DI** | Bearish directional movement | -DI > +DI = bearish trend |
+
+**Crossover signals:**
+- +DI crosses above -DI → bullish trend beginning
+- -DI crosses above +DI → bearish trend beginning
+- ADX rising + crossover → high-conviction signal
+
+### 13.3 ADX + R-Factor Combined Signals
+
+| R-Factor | ADX | +DI vs -DI | Signal |
+|----------|-----|-----------|--------|
+| >= 2.8 (Blast) | >= 28 | +DI > -DI | **Strongest buy signal** — institutional activity + confirmed bullish trend |
+| >= 2.8 (Blast) | >= 28 | -DI > +DI | **Caution** — institutions active but trend is bearish (possible short) |
+| >= 2.8 (Blast) | < 20 | — | R-Factor spike without trend confirmation — may be noise or start of new move |
+| < 1.5 | >= 28 | — | Strong trend but low institutional activity — likely retail-driven |
+
+### 13.4 Implementation
+
+**Library**: `trading-signals` (npm, v7.4.3, Jan 2026, TypeScript native)
+
+**Computation**: Uses 14-period Wilder smoothing on daily equity OHLC from bhavcopy history. Requires 27+ days of data to produce first ADX value.
+
+**Data sources**:
+- Past tab: computed from bhavcopy `eqHigh`, `eqLow`, `eqClose`
+- Live tab: computed from bhavcopy history + today's Dhan OHLC (blended)
+- R-Factor History: computed per date in the rolling window
+
+**API fields**: `adx`, `plusDI`, `minusDI` — included in both `/api/r-factor` and `/api/r-factor-history` responses.
+
+### 13.5 Example: WAAREEENER (Mar 6-19, 2026)
+
+```
+Date          R     ADX   +DI   -DI   Trend
+Mar 06      1.47   27.5  19.8  30.2   STRONG BEAR  ← downtrend
+Mar 11      1.40   25.8  25.0  30.5   STRONG BEAR
+Mar 17      2.16   22.0  29.2  23.7   WEAK BULL    ← +DI crossed above -DI (reversal!)
+Mar 18      5.87   22.8  37.7  19.4   WEAK BULL    ← R-Factor spike + bullish DI
+Mar 19      1.51   23.4  35.4  18.2   WEAK BULL    ← R dropped but trend holding
+```
+
+The +DI/-DI crossover on Mar 17 preceded the R-Factor spike on Mar 18. ADX was still moderate (22.8) — the trend was developing, not yet confirmed. A trader watching both signals would have caught the early reversal.
+
+---
+
+## 14. Limitations & Known Gaps
 
 1. **Single-day Dhan model**: Dhan-live coefficients fit on Mar 19 only. May overfit. Multi-day training needed.
 
@@ -690,7 +754,7 @@ R-Factor V4 uses **8 market microstructure factors**:
 
 ---
 
-## 14. Glossary
+## 15. Glossary
 
 | Term | Definition |
 |------|-----------|
