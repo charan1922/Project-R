@@ -35,6 +35,11 @@ type Stats = {
   bhavcopyDaysCount: number;
   storageMb: number;
   lastMasterSync: string | null;
+  optionContractsCount?: number;
+  backtestEquity?: number;
+  backtestFutures?: number;
+  backtestOptions?: number;
+  backtestTotal?: number;
 };
 
 type ConnectionResult = {
@@ -336,6 +341,25 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
+            {/* Extended stats */}
+            {(stats?.optionContractsCount ?? 0) > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-slate-800/60">
+                {[
+                  { label: 'Option Contracts', value: (stats?.optionContractsCount ?? 0).toLocaleString(), icon: <BarChart2 className="w-5 h-5 text-orange-400" />, color: 'from-orange-500/10 to-orange-600/5 border-orange-500/20' },
+                  { label: 'Backtest Equity', value: (stats?.backtestEquity ?? 0).toLocaleString(), icon: <Clock className="w-5 h-5 text-violet-400" />, color: 'from-violet-500/10 to-violet-600/5 border-violet-500/20' },
+                  { label: 'Backtest Futures', value: (stats?.backtestFutures ?? 0).toLocaleString(), icon: <Clock className="w-5 h-5 text-sky-400" />, color: 'from-sky-500/10 to-sky-600/5 border-sky-500/20' },
+                  { label: 'Backtest Options', value: (stats?.backtestOptions ?? 0).toLocaleString(), icon: <Clock className="w-5 h-5 text-emerald-400" />, color: 'from-emerald-500/10 to-emerald-600/5 border-emerald-500/20' },
+                ].map((c) => (
+                  <div key={c.label} className={`bg-gradient-to-br ${c.color} border rounded-lg p-4 flex items-center gap-3`}>
+                    {c.icon}
+                    <div>
+                      <p className="text-xs text-slate-500">{c.label}</p>
+                      <p className="text-sm font-bold text-white">{c.value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             {stats?.lastMasterSync && (
               <p className="text-xs text-slate-600 mt-3">Last master contracts sync: {stats.lastMasterSync}</p>
             )}

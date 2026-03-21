@@ -67,6 +67,39 @@ export default function BacktestPage() {
     finally { setDownloading(false); }
   };
 
+  const [downloadingAll, setDownloadingAll] = useState(false);
+  const [allTfInfo, setAllTfInfo] = useState<{ totalSymbols: number; downloadedSymbols: number; missingSymbols: number } | null>(null);
+
+  const loadAllTfInfo = useCallback(async () => {
+    try {
+      const res = await fetch('/api/backtest/tf-validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'all-tf-trades' }),
+      });
+      const data = await res.json();
+      if (data.success) setAllTfInfo({ totalSymbols: data.totalSymbols, downloadedSymbols: data.downloadedSymbols, missingSymbols: data.missingSymbols });
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => { loadAllTfInfo(); }, [loadAllTfInfo]);
+
+  const downloadAllTF = async () => {
+    setDownloadingAll(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/backtest/tf-validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'download-all-tf' }),
+      });
+      const data = await res.json();
+      if (data.success) { setDownloadLog(data.logs || []); fetchStatus(); loadAllTfInfo(); }
+      else setError(data.error);
+    } catch (e) { setError((e as Error).message); }
+    finally { setDownloadingAll(false); }
+  };
+
   const runBacktest = async () => {
     setBacktesting(true);
     setError(null);
@@ -112,15 +145,24 @@ export default function BacktestPage() {
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <button type="button" onClick={startDownload} disabled={downloading}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-sm font-medium disabled:opacity-50">
-          <Download className="w-4 h-4" /> {downloading ? 'Downloading...' : 'Download Data'}
+          <Download className="w-4 h-4" /> {downloading ? 'Downloading...' : 'Download Top 20'}
+        </button>
+        <button type="button" onClick={downloadAllTF} disabled={downloadingAll}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border border-orange-500/30 text-sm font-medium disabled:opacity-50">
+          <Download className="w-4 h-4" /> {downloadingAll ? 'Downloading All...' : `Download All TF (${allTfInfo ? `${allTfInfo.missingSymbols} missing` : '...'})`}
         </button>
         <button type="button" onClick={runBacktest} disabled={backtesting || !status?.hasData}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-400 border border-violet-500/30 text-sm font-medium disabled:opacity-50">
           <Play className="w-4 h-4" /> {backtesting ? 'Running...' : 'Run Backtest'}
         </button>
+        {allTfInfo && (
+          <span className="text-xs text-slate-600">
+            {allTfInfo.downloadedSymbols}/{allTfInfo.totalSymbols} symbols downloaded
+          </span>
+        )}
       </div>
 
       {error && <div className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">{error}</div>}

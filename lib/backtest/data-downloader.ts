@@ -215,6 +215,95 @@ export interface TFTrade {
   pnl: number;
 }
 
+/**
+ * Load ALL trades from tradefinder_platform_trades.json.
+ * Returns unique stocks with their earliest/latest trade dates.
+ */
+export async function loadAllTFTrades(): Promise<{ trades: TFTrade[]; symbols: string[]; dateRange: { from: string; to: string } }> {
+  const { promises: fs } = await import('node:fs');
+  const path = await import('node:path');
+  const filePath = path.join(process.cwd(), 'tradefinder_platform_trades.json');
+  const raw = JSON.parse(await fs.readFile(filePath, 'utf8'));
+
+  const trades: TFTrade[] = [];
+  for (const t of raw.trades) {
+    if (t.trade_status !== 'Trade Taken' || !t.stock_name) continue;
+    // Parse date "17 Mar 2026" → "2026-03-17"
+    try {
+      const d = new Date(t.trade_date.replace(/(\d+)\s(\w+)\s(\d+)/, '$2 $1, $3'));
+      if (Number.isNaN(d.getTime())) continue;
+      trades.push({
+        date: d.toISOString().split('T')[0],
+        symbol: t.stock_name,
+        optionType: t.instrument_type ?? 'CE',
+        strike: t.strike_price ?? 0,
+        pnl: t.total_pnl ?? 0,
+      });
+    } catch {
+      continue;
+    }
+  }
+
+  const symbols = [...new Set(trades.map((t) => t.symbol))].sort();
+  const dates = trades.map((t) => t.date).sort();
+
+  return {
+    trades,
+    symbols,
+    dateRange: { from: dates[0] ?? '', to: dates[dates.length - 1] ?? '' },
+  };
+}
+
+/**
+ * Download data for specific symbols (not just the hardcoded 20).
+ * Downloads equity + futures 5-min. Options only if strike is provided.
+ */
+export async function downloadSymbols(
+  symbols: string[],
+  fromDate: string,
+  toDate: string,
+  includeOptions: { symbol: string; optionType: 'CE' | 'PE'; strike: number }[] = [],
+  onProgress?: (msg: string) => void,
+): Promise<{ total: number; errors: string[] }> {
+  const errors: string[] = [];
+  let total = 0;
+  const log = onProgress ?? console.log;
+
+  for (const sym of symbols) {
+    // Skip index symbols (NIFTY, BANKNIFTY)
+    if (sym === 'NIFTY' || sym === 'BANKNIFTY') {
+      log(`[${sym}] Skipping index symbol`);
+      continue;
+    }
+
+    log(`[${sym}] Equity 5-min...`);
+    const eq = await downloadEquity5min(sym, fromDate, toDate);
+    if (eq.error) errors.push(`${sym} equity: ${eq.error}`);
+    else total += eq.rows;
+    log(`[${sym}] Equity: ${eq.rows} rows${eq.error ? ` (ERROR: ${eq.error})` : ''}`);
+
+    log(`[${sym}] Futures 5-min...`);
+    const fut = await downloadFutures5min(sym, fromDate, toDate);
+    if (fut.error) errors.push(`${sym} futures: ${fut.error}`);
+    else total += fut.rows;
+    log(`[${sym}] Futures: ${fut.rows} rows${fut.error ? ` (ERROR: ${fut.error})` : ''}`);
+
+    // Options if specified
+    const optTrade = includeOptions.find((o) => o.symbol === sym);
+    if (optTrade && optTrade.strike > 0) {
+      log(`[${sym}] Option ${optTrade.optionType} ${optTrade.strike}...`);
+      const opt = await downloadOption5min(sym, optTrade.optionType, optTrade.strike, fromDate, toDate);
+      if (opt.error) errors.push(`${sym} option: ${opt.error}`);
+      else total += opt.rows;
+      log(`[${sym}] Option: ${opt.rows} rows${opt.error ? ` (ERROR: ${opt.error})` : ''}`);
+    }
+  }
+
+  await checkpoint();
+  log(`\nDone: ${total} rows, ${errors.length} errors`);
+  return { total, errors };
+}
+
 /** The last 20 TF trades from tradefinder_platform_trades.json */
 export const TF_TRADES: TFTrade[] = [
   { date: '2026-03-17', symbol: 'NATIONALUM', optionType: 'CE', strike: 390, pnl: 20250 },

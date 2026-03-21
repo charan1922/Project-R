@@ -38,8 +38,8 @@ export async function ensureBacktestTables(): Promise<void> {
 export async function getRowCount(table: string, symbol?: string): Promise<number> {
   await ensureBacktestTables();
   const where = symbol ? `WHERE symbol = '${symbol}'` : '';
-  const rows = await prisma.$queryRawUnsafe<{ cnt: number }[]>(`SELECT COUNT(*) as cnt FROM ${table} ${where}`);
-  return rows[0]?.cnt ?? 0;
+  const rows = await prisma.$queryRawUnsafe<{ cnt: bigint }[]>(`SELECT COUNT(*) as cnt FROM ${table} ${where}`);
+  return Number(rows[0]?.cnt ?? 0);
 }
 
 /** Query rows from a backtest table */

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-import { downloadAllTFData, TF_TRADES } from '@/lib/backtest/data-downloader';
+import { downloadAllTFData, downloadSymbols, loadAllTFTrades, TF_TRADES } from '@/lib/backtest/data-downloader';
 import { runFullBacktest } from '@/lib/backtest/backtest-evaluator';
 import { getRowCount } from '@/lib/backtest/duckdb-schema';
 
@@ -61,6 +61,82 @@ export async function POST(req: Request) {
         results,
         summary,
       });
+    }
+
+    if (action === 'all-tf-trades') {
+      // Load ALL trades from tradefinder_platform_trades.json
+      const allTF = await loadAllTFTrades();
+      // Check which symbols are already downloaded
+      const downloadedSymbols = new Set<string>();
+      for (const sym of allTF.symbols) {
+        const count = await getRowCount('backtest_equity', sym);
+        if (count > 0) downloadedSymbols.add(sym);
+      }
+      return NextResponse.json({
+        success: true,
+        totalTrades: allTF.trades.length,
+        totalSymbols: allTF.symbols.length,
+        downloadedSymbols: downloadedSymbols.size,
+        missingSymbols: allTF.symbols.filter((s) => !downloadedSymbols.has(s)).length,
+        dateRange: allTF.dateRange,
+        symbols: allTF.symbols.map((s) => ({
+          symbol: s,
+          downloaded: downloadedSymbols.has(s),
+          trades: allTF.trades.filter((t) => t.symbol === s).length,
+        })),
+      });
+    }
+
+    if (action === 'download-symbols') {
+      // Download specific symbols: { symbols: string[], fromDate, toDate, options?: [...] }
+      const symbols = body.symbols as string[];
+      const fromDate = body.fromDate ?? '2024-12-01';
+      const toDate = body.toDate ?? '2026-03-22';
+      const options = body.options ?? [];
+      if (!symbols || symbols.length === 0) {
+        return NextResponse.json({ success: false, error: 'No symbols provided' }, { status: 400 });
+      }
+      const logs: string[] = [];
+      const result = await downloadSymbols(symbols, fromDate, toDate, options, (msg) => {
+        logs.push(msg);
+        console.log(`[TF Download] ${msg}`);
+      });
+      return NextResponse.json({ success: true, ...result, logs });
+    }
+
+    if (action === 'download-all-tf') {
+      // Download ALL 158 TF symbols (equity + futures)
+      const allTF = await loadAllTFTrades();
+      // Filter out already downloaded
+      const downloadedSymbols = new Set<string>();
+      for (const sym of allTF.symbols) {
+        const count = await getRowCount('backtest_equity', sym);
+        if (count > 0) downloadedSymbols.add(sym);
+      }
+      const missing = allTF.symbols.filter((s) => !downloadedSymbols.has(s));
+      if (missing.length === 0) {
+        return NextResponse.json({ success: true, message: 'All symbols already downloaded', totalRows: 0 });
+      }
+
+      // Build options list from trades
+      const optionsList = allTF.trades
+        .filter((t) => t.strike > 0 && missing.includes(t.symbol))
+        .map((t) => ({ symbol: t.symbol, optionType: t.optionType, strike: t.strike }));
+      // Dedupe — one option per symbol
+      const optionsMap = new Map<string, typeof optionsList[0]>();
+      for (const o of optionsList) {
+        if (!optionsMap.has(o.symbol)) optionsMap.set(o.symbol, o);
+      }
+
+      const logs: string[] = [];
+      const result = await downloadSymbols(
+        missing,
+        allTF.dateRange.from,
+        allTF.dateRange.to,
+        Array.from(optionsMap.values()),
+        (msg) => { logs.push(msg); console.log(`[TF Download] ${msg}`); },
+      );
+      return NextResponse.json({ success: true, downloaded: missing.length, ...result, logs });
     }
 
     if (action === 'debug') {
