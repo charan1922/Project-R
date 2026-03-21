@@ -349,19 +349,18 @@ export async function resolveOptionSecurity(
 
   const minExpiry = new Date();
   minExpiry.setDate(minExpiry.getDate() + minDTE);
+  const minExpiryStr = minExpiry.toISOString();
 
-  const rows = await prisma.masterContract.findMany({
-    where: {
-      underlying,
-      instrument: 'OPTSTK',
-      segment: 'NSE_FNO',
-      optionType,
-      strikePrice,
-      expiryDate: { gte: minExpiry },
-    },
-    orderBy: { expiryDate: 'asc' },
-    take: 1,
-  });
+  // Use raw SQL to avoid Prisma client cache issues with new columns
+  // Cast strikePrice to REAL for SQLite type compatibility
+  const rows = await prisma.$queryRawUnsafe<
+    { securityId: string; symbol: string; lotSize: number; expiryDate: string }[]
+  >(
+    `SELECT securityId, symbol, lotSize, expiryDate FROM master_contracts
+     WHERE underlying = '${underlying.replace(/'/g, "''")}' AND instrument = 'OPTSTK' AND segment = 'NSE_FNO'
+     AND optionType = '${optionType}' AND CAST(strikePrice AS REAL) = ${strikePrice} AND expiryDate >= '${minExpiryStr}'
+     ORDER BY expiryDate ASC LIMIT 1`,
+  );
 
   if (rows.length === 0) return null;
   const row = rows[0];

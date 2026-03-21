@@ -237,6 +237,12 @@ export const aiTradingItems: NavItemType[] = [
         badge: 'NEW',
       },
       {
+        label: 'TF Backtest',
+        href: '/trading-lab/ai-autopilot/backtest',
+        icon: <FlaskConical className="w-4 h-4" />,
+        badge: 'NEW',
+      },
+      {
         label: 'Risk Manager',
         href: '/trading-lab/ai-autopilot/risk',
         icon: <Shield className="w-4 h-4" />,
