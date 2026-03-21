@@ -213,6 +213,15 @@ export interface TFTrade {
   optionType: 'CE' | 'PE';
   strike: number;
   pnl: number;
+  // Verified execution details (optional — user provides from broker screenshots)
+  entryTime?: string; // "10:17:46 AM"
+  entryPrice?: number; // Option premium at entry
+  exitTime?: string; // "03:25:32 PM"
+  exitPrice?: number; // Option premium at exit
+  quantity?: number; // Lots × lotSize
+  capitalUsed?: number; // Entry premium × quantity
+  spotPrice?: number;
+  expiry?: string;
 }
 
 /**
@@ -228,16 +237,31 @@ export async function loadAllTFTrades(): Promise<{ trades: TFTrade[]; symbols: s
   const trades: TFTrade[] = [];
   for (const t of raw.trades) {
     if (t.trade_status !== 'Trade Taken' || !t.stock_name) continue;
-    // Parse date "17 Mar 2026" → "2026-03-17"
+    // Parse date "17 Mar 2026" → "2026-03-17" (IST-safe)
     try {
-      const d = new Date(t.trade_date.replace(/(\d+)\s(\w+)\s(\d+)/, '$2 $1, $3'));
+      const match = t.trade_date.match(/(\d+)\s(\w+)\s(\d+)/);
+      if (!match) continue;
+      const months: Record<string, string> = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
+      const day = match[1].padStart(2, '0');
+      const mon = months[match[2]] ?? '01';
+      const year = match[3];
+      const dateStr = `${year}-${mon}-${day}`;
+      const d = new Date(`${dateStr}T00:00:00`);
       if (Number.isNaN(d.getTime())) continue;
       trades.push({
-        date: d.toISOString().split('T')[0],
+        date: dateStr, // "2026-03-17" — timezone-safe
         symbol: t.stock_name,
         optionType: t.instrument_type ?? 'CE',
         strike: t.strike_price ?? 0,
         pnl: t.total_pnl ?? 0,
+        entryTime: t.entry_time ?? undefined,
+        entryPrice: t.entry_price ?? undefined,
+        exitTime: t.exit_time ?? undefined,
+        exitPrice: t.exit_price ?? undefined,
+        quantity: t.quantity ?? undefined,
+        capitalUsed: t.capital_used ?? undefined,
+        spotPrice: t.spot_price ?? undefined,
+        expiry: t.expiry_date ?? undefined,
       });
     } catch {
       continue;

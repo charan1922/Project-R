@@ -12,7 +12,8 @@
 import { ADX } from 'trading-signals';
 import { queryRows } from './duckdb-schema';
 import { TF_TRADES, type TFTrade } from './data-downloader';
-import { calculateOptionCharges } from '@/lib/ai-trading/commissions';
+import { calculateOptionCharges, type ChargesBreakdown } from '@/lib/ai-trading/commissions';
+import { batchResolveFutures } from '@/lib/historify/master-contracts';
 
 export interface BacktestResult {
   date: string;
@@ -64,6 +65,46 @@ function unixToIST(unix: number): Date {
   return new Date((unix + IST_OFFSET) * 1000);
 }
 
+/**
+ * Parse "10:17:46 AM" or "03:25:32 PM" → minutes since midnight in IST.
+ * Then find the 5-min bar whose IST time range contains this time.
+ */
+function findBarByTime(bars: { timestamp: number }[], timeStr: string): number {
+  // Parse "10:17:46 AM" → 24h minutes
+  const match = timeStr.match(/(\d+):(\d+):?(\d+)?\s*(AM|PM)/i);
+  if (!match) return -1;
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const ampm = match[4].toUpperCase();
+  if (ampm === 'PM' && hours !== 12) hours += 12;
+  if (ampm === 'AM' && hours === 12) hours = 0;
+  const targetMinutes = hours * 60 + minutes; // e.g., 10:17 AM = 617
+
+  // Find bar where target time falls within [barTime, barTime+5min)
+  for (let i = 0; i < bars.length; i++) {
+    const barIST = unixToIST(bars[i].timestamp);
+    const barMinutes = barIST.getUTCHours() * 60 + barIST.getUTCMinutes();
+    // Bar covers [barMinutes, barMinutes+5)
+    if (targetMinutes >= barMinutes && targetMinutes < barMinutes + 5) {
+      return i;
+    }
+  }
+
+  // Fallback: find closest bar
+  let bestIdx = 0;
+  let bestDiff = Infinity;
+  for (let i = 0; i < bars.length; i++) {
+    const barIST = unixToIST(bars[i].timestamp);
+    const barMinutes = barIST.getUTCHours() * 60 + barIST.getUTCMinutes();
+    const diff = Math.abs(targetMinutes - barMinutes);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestIdx = i;
+    }
+  }
+  return bestIdx;
+}
+
 function formatTime(unix: number): string {
   const d = unixToIST(unix);
   return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}`;
@@ -98,19 +139,20 @@ async function getDailySpreadHistory(symbol: string, beforeDate: string, days = 
 /**
  * Get all 5-min equity bars for a stock on a specific date.
  */
-async function getEquityBars(symbol: string, date: string): Promise<{ timestamp: number; open: number; high: number; low: number; close: number }[]> {
+async function getEquityBars(symbol: string, date: string): Promise<{ timestamp: number; open: number; high: number; low: number; close: number; volume: number }[]> {
   const rows = await queryRows(`
-    SELECT timestamp, open, high, low, close
+    SELECT timestamp, open, high, low, close, volume
     FROM backtest_equity
     WHERE symbol = '${symbol}' AND date = '${date}'
     ORDER BY timestamp ASC
-  `) as { timestamp: number; open: number; high: number; low: number; close: number }[];
+  `) as { timestamp: number; open: number; high: number; low: number; close: number; volume: number }[];
   return rows.map((r) => ({
     timestamp: Number(r.timestamp),
     open: Number(r.open),
     high: Number(r.high),
     low: Number(r.low),
     close: Number(r.close),
+    volume: Number(r.volume),
   }));
 }
 
@@ -343,5 +385,329 @@ async function evaluateSingleTrade(trade: TFTrade, allSymbols: string[]): Promis
     charges: Math.round(charges),
     netPnl,
     profitable: netPnl > 0,
+  };
+}
+
+// ─── Trade Detail API (for real-data backtesting) ────────────────────────────
+
+export interface TradeDetailSignal {
+  timestamp: number;
+  time: string;
+  spreadRatio: number;
+  rFactor: number;
+  adx: number;
+  plusDI: number;
+  minusDI: number;
+  direction: 'CE' | 'PE';
+  isHot: boolean;
+  optionClose: number;
+  equityClose: number;
+}
+
+export interface TradeDetail {
+  optionBars: { timestamp: number; time: string; open: number; high: number; low: number; close: number; volume: number; oi: number }[];
+  equityBars: { timestamp: number; time: string; open: number; high: number; low: number; close: number }[];
+  futuresBars: { timestamp: number; time: string; close: number; oi: number }[];
+  signals: TradeDetailSignal[];
+  tf: { spotPrice: number | null; pnl: number; strike: number; optionType: string; expiry: string | null };
+  estimatedEntry: { barIndex: number; timestamp: number; time: string; optionPrice: number; method: string } | null;
+  estimatedExit: { barIndex: number; timestamp: number; time: string; optionPrice: number; method: string } | null;
+  pnlCurve: { timestamp: number; time: string; optionPrice: number; pnl: number; pnlPct: number }[];
+  lotSize: number;
+  symbol: string;
+  date: string;
+  dataAvailable: boolean;
+}
+
+export interface SimulationResult {
+  entryPrice: number;
+  exitPrice: number;
+  lotSize: number;
+  grossPnl: number;
+  charges: ChargesBreakdown;
+  netPnl: number;
+  pnlPct: number;
+  tfPnl: number;
+  pnlDifference: number;
+}
+
+/** Get option bars WITH strike filter (fixes existing bug) */
+async function getFullOptionBars(symbol: string, optionType: string, strike: number, date: string) {
+  const rows = await queryRows(`
+    SELECT timestamp, open, high, low, close, volume, oi
+    FROM backtest_options
+    WHERE symbol = '${symbol}' AND option_type = '${optionType}' AND CAST(strike AS REAL) = ${strike} AND date = '${date}'
+    ORDER BY timestamp ASC
+  `) as { timestamp: number; open: number; high: number; low: number; close: number; volume: number; oi: number }[];
+  return rows.map((r) => ({
+    timestamp: Number(r.timestamp),
+    time: formatTime(Number(r.timestamp)),
+    open: Number(r.open),
+    high: Number(r.high),
+    low: Number(r.low),
+    close: Number(r.close),
+    volume: Number(r.volume),
+    oi: Number(r.oi),
+  }));
+}
+
+/** Get futures bars with OI */
+async function getFullFuturesBars(symbol: string, date: string) {
+  const rows = await queryRows(`
+    SELECT timestamp, open, high, low, close, volume, oi
+    FROM backtest_futures
+    WHERE symbol = '${symbol}' AND date = '${date}'
+    ORDER BY timestamp ASC
+  `) as { timestamp: number; open: number; high: number; low: number; close: number; volume: number; oi: number }[];
+  return rows.map((r) => ({
+    timestamp: Number(r.timestamp),
+    time: formatTime(Number(r.timestamp)),
+    close: Number(r.close),
+    oi: Number(r.oi),
+  }));
+}
+
+/** Get lot size from master_contracts */
+async function getLotSize(symbol: string): Promise<number> {
+  try {
+    const map = await batchResolveFutures([symbol]);
+    const fut = map.get(symbol);
+    return fut?.lotSize ?? 1000;
+  } catch {
+    return 1000;
+  }
+}
+
+/**
+ * Get full trade detail — bar-by-bar data, signals, P&L curve.
+ * This is the core function for the real-data backtest view.
+ */
+export async function getTradeDetail(params: {
+  symbol: string;
+  date: string;
+  optionType: 'CE' | 'PE';
+  strike: number;
+  spotPrice?: number | null;
+  tfPnl?: number;
+  tfExpiry?: string | null;
+  // Verified execution data (from broker screenshots)
+  tfEntryTime?: string; // "10:17:46 AM"
+  tfEntryPrice?: number; // Option premium at entry
+  tfExitTime?: string; // "03:25:32 PM"
+  tfExitPrice?: number; // Option premium at exit
+  tfQuantity?: number;
+}): Promise<TradeDetail> {
+  const { symbol, date, optionType, strike } = params;
+
+  // Load bars
+  const equityBarsRaw = await getEquityBars(symbol, date);
+  const optionBarsRaw = await getFullOptionBars(symbol, optionType, strike, date);
+  const futuresBarsRaw = await getFullFuturesBars(symbol, date);
+  const lotSize = await getLotSize(symbol);
+
+  const dataAvailable = equityBarsRaw.length > 0 && optionBarsRaw.length > 0;
+
+  // Format equity bars with time
+  const equityBars = equityBarsRaw.map((b) => ({ ...b, time: formatTime(b.timestamp) }));
+
+  // Get 20-day spread history for R-Factor baseline
+  const avgSpreadHistory = await getDailySpreadHistory(symbol, date, 20);
+  const avgDailySpread = avgSpreadHistory.length > 0
+    ? avgSpreadHistory.reduce((a, b) => a + b, 0) / avgSpreadHistory.length
+    : 0;
+
+  // Compute signals at EVERY equity bar
+  const signals: TradeDetailSignal[] = [];
+  for (let i = 0; i < equityBarsRaw.length; i++) {
+    const sig = computeSignals(equityBarsRaw, i, avgDailySpread);
+    const rFactor = Math.max(1.0, 1.5596 * sig.spreadRatio);
+    const direction: 'CE' | 'PE' = sig.plusDI > sig.minusDI ? 'CE' : 'PE';
+    const isHot = rFactor >= 2.0 && sig.adx >= 28;
+
+    // Find matching option bar (closest timestamp)
+    const optBar = optionBarsRaw.find((o) => o.timestamp === equityBarsRaw[i].timestamp);
+
+    signals.push({
+      timestamp: equityBarsRaw[i].timestamp,
+      time: formatTime(equityBarsRaw[i].timestamp),
+      spreadRatio: Math.round(sig.spreadRatio * 100) / 100,
+      rFactor: Math.round(rFactor * 100) / 100,
+      adx: Math.round(sig.adx),
+      plusDI: Math.round(sig.plusDI),
+      minusDI: Math.round(sig.minusDI),
+      direction,
+      isHot,
+      optionClose: optBar?.close ?? 0,
+      equityClose: equityBarsRaw[i].close,
+    });
+  }
+
+  // Determine entry bar — use verified data if available, else estimate
+  let estimatedEntry: TradeDetail['estimatedEntry'] = null;
+
+  if (params.tfEntryTime && params.tfEntryPrice && params.tfEntryPrice > 0) {
+    // VERIFIED: find bar by TIME, not by price
+    // Parse "10:17:46 AM" → hours:minutes in 24h format
+    const entryBarIdx = findBarByTime(optionBarsRaw, params.tfEntryTime);
+    const idx = entryBarIdx >= 0 ? entryBarIdx : 0;
+    estimatedEntry = {
+      barIndex: idx,
+      timestamp: optionBarsRaw[idx].timestamp,
+      time: formatTime(optionBarsRaw[idx].timestamp),
+      optionPrice: params.tfEntryPrice,
+      method: `verified (₹${params.tfEntryPrice} @ ${params.tfEntryTime})`,
+    };
+  } else if (params.spotPrice && params.spotPrice > 0 && equityBarsRaw.length > 0) {
+    // ESTIMATED: match equity price to TF's spot_price
+    let bestIdx = 0;
+    let bestDiff = Infinity;
+    for (let i = 0; i < equityBarsRaw.length; i++) {
+      const diff = Math.abs(equityBarsRaw[i].close - params.spotPrice);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestIdx = i;
+      }
+    }
+    const optBar = optionBarsRaw.find((o) => o.timestamp === equityBarsRaw[bestIdx].timestamp);
+    estimatedEntry = {
+      barIndex: bestIdx,
+      timestamp: equityBarsRaw[bestIdx].timestamp,
+      time: formatTime(equityBarsRaw[bestIdx].timestamp),
+      optionPrice: optBar?.close ?? 0,
+      method: `spot-match (₹${params.spotPrice})`,
+    };
+  } else if (equityBarsRaw.length > 6) {
+    const idx = 6;
+    const optBar = optionBarsRaw.find((o) => o.timestamp === equityBarsRaw[idx].timestamp);
+    estimatedEntry = {
+      barIndex: idx,
+      timestamp: equityBarsRaw[idx].timestamp,
+      time: formatTime(equityBarsRaw[idx].timestamp),
+      optionPrice: optBar?.close ?? 0,
+      method: 'default-945',
+    };
+  }
+
+  // Determine exit bar — use verified data if available, else estimate
+  let estimatedExit: TradeDetail['estimatedExit'] = null;
+
+  if (params.tfExitTime && params.tfExitPrice && params.tfExitPrice > 0 && optionBarsRaw.length > 0) {
+    // VERIFIED: find bar by TIME
+    const exitBarIdx = findBarByTime(optionBarsRaw, params.tfExitTime);
+    const idx = exitBarIdx >= 0 ? exitBarIdx : optionBarsRaw.length - 1;
+    estimatedExit = {
+      barIndex: idx,
+      timestamp: optionBarsRaw[idx].timestamp,
+      time: formatTime(optionBarsRaw[idx].timestamp),
+      optionPrice: params.tfExitPrice,
+      method: `verified (₹${params.tfExitPrice} @ ${params.tfExitTime})`,
+    };
+  } else if (estimatedEntry && params.tfPnl && lotSize > 0 && optionBarsRaw.length > 0) {
+    // ESTIMATED: reverse-engineer from P&L
+    const entryPrice = estimatedEntry.optionPrice;
+    if (entryPrice > 0) {
+      const impliedExitPrice = entryPrice + (params.tfPnl / lotSize);
+      let bestIdx = optionBarsRaw.length - 1;
+      let bestDiff = Infinity;
+      for (let i = estimatedEntry.barIndex + 1; i < optionBarsRaw.length; i++) {
+        const diff = Math.abs(optionBarsRaw[i].close - impliedExitPrice);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          bestIdx = i;
+        }
+      }
+      estimatedExit = {
+        barIndex: bestIdx,
+        timestamp: optionBarsRaw[bestIdx].timestamp,
+        time: formatTime(optionBarsRaw[bestIdx].timestamp),
+        optionPrice: optionBarsRaw[bestIdx].close,
+        method: `pnl-match (implied ₹${impliedExitPrice.toFixed(1)})`,
+      };
+    }
+  }
+
+  // P&L curve from entry to end of day
+  const pnlCurve: TradeDetail['pnlCurve'] = [];
+  if (estimatedEntry && estimatedEntry.optionPrice > 0) {
+    const entryPrice = estimatedEntry.optionPrice;
+    for (let i = estimatedEntry.barIndex; i < optionBarsRaw.length; i++) {
+      const price = optionBarsRaw[i].close;
+      const pnl = Math.round((price - entryPrice) * lotSize);
+      const pnlPct = entryPrice > 0 ? Math.round(((price - entryPrice) / entryPrice) * 10000) / 100 : 0;
+      pnlCurve.push({
+        timestamp: optionBarsRaw[i].timestamp,
+        time: formatTime(optionBarsRaw[i].timestamp),
+        optionPrice: price,
+        pnl,
+        pnlPct,
+      });
+    }
+  }
+
+  return {
+    optionBars: optionBarsRaw.map((b) => ({ ...b, time: formatTime(b.timestamp) })),
+    equityBars,
+    futuresBars: futuresBarsRaw,
+    signals,
+    tf: {
+      spotPrice: params.spotPrice ?? null,
+      pnl: params.tfPnl ?? 0,
+      strike,
+      optionType,
+      expiry: params.tfExpiry ?? null,
+    },
+    estimatedEntry,
+    estimatedExit,
+    pnlCurve,
+    lotSize,
+    symbol,
+    date,
+    dataAvailable,
+  };
+}
+
+/**
+ * Simulate a trade with custom entry/exit timestamps.
+ */
+export async function simulateTrade(params: {
+  symbol: string;
+  date: string;
+  optionType: 'CE' | 'PE';
+  strike: number;
+  entryTimestamp: number;
+  exitTimestamp: number;
+  tfPnl?: number;
+}): Promise<SimulationResult> {
+  const optBars = await getFullOptionBars(params.symbol, params.optionType, params.strike, params.date);
+  const lotSize = await getLotSize(params.symbol);
+
+  const entryBar = optBars.find((b) => b.timestamp === params.entryTimestamp) ?? optBars[0];
+  const exitBar = optBars.find((b) => b.timestamp === params.exitTimestamp) ?? optBars[optBars.length - 1];
+
+  if (!entryBar || !exitBar) {
+    return { entryPrice: 0, exitPrice: 0, lotSize, grossPnl: 0, charges: { brokerage: 0, stt: 0, exchangeTxn: 0, gst: 0, sebi: 0, stampDuty: 0, total: 0 }, netPnl: 0, pnlPct: 0, tfPnl: params.tfPnl ?? 0, pnlDifference: 0 };
+  }
+
+  const entryPrice = entryBar.close;
+  const exitPrice = exitBar.close;
+  const grossPnl = Math.round((exitPrice - entryPrice) * lotSize);
+  const charges = calculateOptionCharges({
+    numOrders: 2,
+    buyTurnover: entryPrice * lotSize,
+    sellTurnover: exitPrice * lotSize,
+  });
+  const netPnl = Math.round(grossPnl - charges.total);
+  const pnlPct = entryPrice > 0 ? Math.round(((exitPrice - entryPrice) / entryPrice) * 10000) / 100 : 0;
+
+  return {
+    entryPrice,
+    exitPrice,
+    lotSize,
+    grossPnl,
+    charges,
+    netPnl,
+    pnlPct,
+    tfPnl: params.tfPnl ?? 0,
+    pnlDifference: netPnl - (params.tfPnl ?? 0),
   };
 }

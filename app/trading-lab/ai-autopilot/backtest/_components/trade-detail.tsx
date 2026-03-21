@@ -1,0 +1,387 @@
+'use client';
+
+import { Download, Search } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { TFTradeItem, TradeDetailData } from '../_lib/types';
+import { OptionChart } from './option-chart';
+import { PnlChart } from './pnl-chart';
+import { SignalChart } from './signal-chart';
+import { TradeSearch } from './trade-search';
+
+export function TradeDetailSection() {
+  const [trades, setTrades] = useState<TFTradeItem[]>([]);
+  const [selectedIdx, setSelectedIdx] = useState(-1);
+  const [detail, setDetail] = useState<TradeDetailData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [downloadingTrade, setDownloadingTrade] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState('');
+  // Load trade list on mount
+  useEffect(() => {
+    fetch('/api/backtest/tf-validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'tf-trades-list' }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) setTrades(d.trades);
+      })
+      .catch(() => {});
+  }, []);
+
+  const loadDetail = useCallback(
+    async (idx: number) => {
+      const t = trades[idx];
+      if (!t) return;
+      setSelectedIdx(idx);
+      setDetail(null);
+      // Skip API call if no data — show download prompt instead
+      if (!t.hasData) return;
+      setLoading(true);
+      try {
+        const res = await fetch('/api/backtest/tf-validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'trade-detail',
+            symbol: t.symbol,
+            date: t.date,
+            optionType: t.optionType,
+            strike: t.strike,
+            spotPrice: t.spotPrice,
+            tfPnl: t.pnl,
+            tfExpiry: t.expiry,
+            entryTime: t.entryTime,
+            entryPrice: t.entryPrice,
+            exitTime: t.exitTime,
+            exitPrice: t.exitPrice,
+            quantity: t.quantity,
+          }),
+        });
+        const d = await res.json();
+        if (d.success) setDetail(d.detail);
+      } catch {
+        /* ignore */
+      } finally {
+        setLoading(false);
+      }
+    },
+    [trades],
+  );
+
+  const downloadSingleTrade = useCallback(
+    async (idx: number) => {
+      const t = trades[idx];
+      if (!t) return;
+      setDownloadingTrade(true);
+      setDownloadProgress(
+        `Downloading ${t.symbol}: equity + futures + ${t.optionType} ${t.strike} option 5-min data...`,
+      );
+      try {
+        const res = await fetch('/api/backtest/tf-validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'download-symbols',
+            symbols: [t.symbol],
+            fromDate: '2024-12-01',
+            toDate: '2026-03-22',
+            options: t.strike > 0 ? [{ symbol: t.symbol, optionType: t.optionType, strike: t.strike }] : [],
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setDownloadProgress(`Done: ${data.total} rows for ${t.symbol}`);
+          setTrades((prev) => prev.map((item, i) => (i === idx ? { ...item, hasData: true } : item)));
+          await loadDetail(idx);
+        } else {
+          setDownloadProgress(`Error: ${data.error ?? 'Download failed'}`);
+        }
+      } catch (e) {
+        setDownloadProgress(`Error: ${(e as Error).message}`);
+      } finally {
+        setDownloadingTrade(false);
+      }
+    },
+    [trades, loadDetail],
+  );
+
+  const selected = selectedIdx >= 0 ? trades[selectedIdx] : null;
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+        <Search className="w-4 h-4" /> Trade Detail View
+      </h2>
+
+      <TradeSearch trades={trades} selectedIdx={selectedIdx} onSelect={loadDetail} />
+
+      {/* Download prompt — shows immediately when selecting a trade without data */}
+      {selected && !selected.hasData && (
+        <div className="flex items-center gap-3 px-4 py-4 rounded-xl bg-amber-500/10 border-2 border-amber-500/30 border-dashed">
+          <Download className="w-5 h-5 text-amber-400 shrink-0" />
+          <div className="flex-1">
+            <span className="text-sm font-medium text-amber-300">
+              No 5-min data for {selected.symbol} {selected.optionType} {selected.strike}
+            </span>
+            <p className="text-[11px] text-amber-400/60 mt-0.5">
+              Downloads equity + futures + option candles from Dhan
+            </p>
+            {downloadProgress && <p className="text-[11px] text-amber-400 mt-1 font-mono">{downloadProgress}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={() => downloadSingleTrade(selectedIdx)}
+            disabled={downloadingTrade}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-sm font-semibold disabled:opacity-50 shrink-0"
+          >
+            <Download className="w-4 h-4" />
+            {downloadingTrade ? 'Downloading...' : `Download ${selected.symbol}`}
+          </button>
+        </div>
+      )}
+
+      {loading && <div className="text-center py-8 text-slate-500 text-sm">Loading trade detail...</div>}
+
+      {detail && !detail.dataAvailable && !downloadingTrade && (
+        <div className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+          No option data for {detail.symbol} {detail.tf.optionType} {detail.tf.strike} on {detail.date}. Use the
+          download button above.
+        </div>
+      )}
+
+      {detail?.dataAvailable && selected && (
+        <div className="space-y-4">
+          {/* Trade Info Cards */}
+          <div className="grid grid-cols-7 gap-2">
+            <InfoCard label="Stock" value={`${detail.symbol} ${detail.tf.optionType} ${detail.tf.strike}`} />
+            <InfoCard label="Date" value={detail.date} />
+            <InfoCard
+              label="TF P&L"
+              value={`\u20B9${detail.tf.pnl.toLocaleString()}`}
+              color={detail.tf.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}
+            />
+            <InfoCard
+              label="Capital"
+              value={
+                selected.quantity && selected.entryPrice
+                  ? `\u20B9${Math.round((selected.entryPrice * selected.quantity) / 1000)}K`
+                  : `Lot: ${detail.lotSize.toLocaleString()}`
+              }
+            />
+            <InfoCard
+              label="Return"
+              value={
+                selected.entryPrice && selected.exitPrice
+                  ? `${(((selected.exitPrice - selected.entryPrice) / selected.entryPrice) * 100).toFixed(0)}%`
+                  : '\u2014'
+              }
+              color={
+                selected.exitPrice && selected.entryPrice && selected.exitPrice > selected.entryPrice
+                  ? 'text-emerald-400'
+                  : 'text-red-400'
+              }
+            />
+            <InfoCard
+              label={selected.entryTime ? 'Entry (verified)' : 'Entry (est.)'}
+              value={
+                selected.entryTime
+                  ? `${selected.entryTime} \u20B9${selected.entryPrice}`
+                  : detail.estimatedEntry
+                    ? `${detail.estimatedEntry.time} \u20B9${detail.estimatedEntry.optionPrice.toFixed(1)}`
+                    : '\u2014'
+              }
+              color={selected.entryTime ? 'text-emerald-400' : undefined}
+            />
+            <InfoCard
+              label={selected.exitTime ? 'Exit (verified)' : 'Exit (est.)'}
+              value={
+                selected.exitTime
+                  ? `${selected.exitTime} \u20B9${selected.exitPrice}`
+                  : detail.estimatedExit
+                    ? `${detail.estimatedExit.time} \u20B9${detail.estimatedExit.optionPrice.toFixed(1)}`
+                    : '\u2014'
+              }
+              color={selected.exitTime ? 'text-emerald-400' : undefined}
+            />
+          </div>
+
+          {/* Verified P&L Breakdown */}
+          {selected.entryPrice && selected.exitPrice && (
+            <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 px-5 py-3">
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-slate-400">
+                  <span className="text-emerald-400 font-bold">Verified Trade:</span> Buy @ {'\u20B9'}
+                  {selected.entryPrice} ({selected.entryTime ?? detail.estimatedEntry?.time}) &rarr; Sell @ {'\u20B9'}
+                  {selected.exitPrice} ({selected.exitTime ?? detail.estimatedExit?.time})
+                </div>
+                <div className="flex items-center gap-4 text-sm font-mono">
+                  <span className="text-slate-400">
+                    ({'\u20B9'}
+                    {selected.exitPrice} - {'\u20B9'}
+                    {selected.entryPrice}) &times; {detail.lotSize.toLocaleString()} =
+                  </span>
+                  <span className={`font-bold text-lg ${detail.tf.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {'\u20B9'}
+                    {detail.tf.pnl.toLocaleString()}
+                  </span>
+                  <span className="text-slate-500 text-xs">
+                    ({(((selected.exitPrice - selected.entryPrice) / selected.entryPrice) * 100).toFixed(1)}% return)
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Charts: Option + Equity side by side — crosshair synced */}
+          <div className="grid grid-cols-2 gap-4">
+            <OptionChart
+              bars={detail.optionBars}
+              title={`${detail.symbol} ${detail.tf.optionType} ${detail.tf.strike}`}
+              entryBar={
+                detail.estimatedEntry
+                  ? {
+                      timestamp: detail.estimatedEntry.timestamp,
+                      price: selected.entryPrice ?? detail.estimatedEntry.optionPrice,
+                      label: `BUY \u20B9${selected.entryPrice ?? detail.estimatedEntry.optionPrice}`,
+                    }
+                  : undefined
+              }
+              exitBar={
+                detail.estimatedExit
+                  ? {
+                      timestamp: detail.estimatedExit.timestamp,
+                      price: selected.exitPrice ?? detail.estimatedExit.optionPrice,
+                      label: `SELL \u20B9${selected.exitPrice ?? detail.estimatedExit.optionPrice}`,
+                    }
+                  : undefined
+              }
+              height={350}
+            />
+            <OptionChart
+              bars={detail.equityBars}
+              title={`${detail.symbol} Equity`}
+              entryBar={
+                detail.estimatedEntry
+                  ? {
+                      timestamp: detail.estimatedEntry.timestamp,
+                      price: detail.signals[detail.estimatedEntry.barIndex]?.equityClose ?? 0,
+                      label: `Entry \u20B9${detail.signals[detail.estimatedEntry.barIndex]?.equityClose?.toFixed(1) ?? ''}`,
+                    }
+                  : undefined
+              }
+              exitBar={
+                detail.estimatedExit
+                  ? {
+                      timestamp: detail.estimatedExit.timestamp,
+                      price: detail.signals[detail.estimatedExit.barIndex]?.equityClose ?? 0,
+                      label: `Exit \u20B9${detail.signals[detail.estimatedExit.barIndex]?.equityClose?.toFixed(1) ?? ''}`,
+                    }
+                  : undefined
+              }
+              height={350}
+            />
+          </div>
+
+          {/* R-Factor + ADX / P&L side by side */}
+          <div className="grid grid-cols-2 gap-4">
+            <SignalChart signals={detail.signals} height={200} />
+            {detail.pnlCurve.length > 0 ? (
+              <PnlChart curve={detail.pnlCurve} tfPnl={detail.tf.pnl} height={200} />
+            ) : (
+              <div />
+            )}
+          </div>
+
+          {/* Signal Table — auto-scrolls to entry row */}
+          <SignalTable key={`${detail.symbol}-${detail.date}`} detail={detail} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SignalTable({ detail }: { detail: TradeDetailData }) {
+  const entryRowRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to entry row when detail loads
+  useEffect(() => {
+    if (entryRowRef.current) {
+      setTimeout(() => {
+        entryRowRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }, 100);
+    }
+  }, []);
+
+  return (
+    <div className="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden">
+      <h3 className="px-4 py-2.5 bg-slate-800/50 text-xs font-bold text-slate-400 uppercase tracking-wider">
+        Bar-by-Bar Signals ({detail.signals.length} bars)
+      </h3>
+      <div className="max-h-64 overflow-y-auto">
+        <div className="grid grid-cols-[55px_65px_55px_55px_40px_40px_40px_55px_55px] gap-1 px-4 py-1.5 bg-slate-800/30 text-[9px] text-slate-500 uppercase sticky top-0">
+          <span>Time</span>
+          <span>Equity</span>
+          <span>Spread</span>
+          <span>R-Factor</span>
+          <span>ADX</span>
+          <span>+DI</span>
+          <span>-DI</span>
+          <span>Dir</span>
+          <span>Option</span>
+        </div>
+        {detail.signals.map((s) => {
+          const isEntry = detail.estimatedEntry?.time === s.time;
+          const isExit = detail.estimatedExit?.time === s.time;
+          return (
+            <div
+              key={s.timestamp}
+              ref={isEntry ? entryRowRef : undefined}
+              className={`grid grid-cols-[55px_65px_55px_55px_40px_40px_40px_55px_55px] gap-1 px-4 py-1 text-xs font-mono border-b border-slate-800/30 ${
+                s.isHot
+                  ? 'bg-amber-500/10 border-l-2 border-l-amber-400'
+                  : isEntry
+                    ? 'bg-emerald-500/10'
+                    : isExit
+                      ? 'bg-red-500/10'
+                      : ''
+              }`}
+            >
+              <span className="text-slate-400">
+                {s.time}
+                {isEntry ? ' \u25B6' : isExit ? ' \u25A0' : ''}
+              </span>
+              <span className="text-white">
+                {'\u20B9'}
+                {s.equityClose.toFixed(1)}
+              </span>
+              <span className={s.spreadRatio > 1.5 ? 'text-emerald-400' : 'text-slate-500'}>
+                {s.spreadRatio.toFixed(2)}
+              </span>
+              <span className={s.rFactor >= 2.0 ? 'text-sky-400 font-bold' : 'text-slate-500'}>
+                {s.rFactor.toFixed(2)}
+              </span>
+              <span className={s.adx >= 28 ? 'text-amber-400 font-bold' : 'text-slate-600'}>{s.adx || '\u2014'}</span>
+              <span className="text-slate-600">{s.plusDI || '\u2014'}</span>
+              <span className="text-slate-600">{s.minusDI || '\u2014'}</span>
+              <span className={s.direction === 'CE' ? 'text-emerald-400' : 'text-red-400'}>{s.direction}</span>
+              <span className="text-white">
+                {'\u20B9'}
+                {s.optionClose > 0 ? s.optionClose.toFixed(1) : '\u2014'}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function InfoCard({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div className="px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50">
+      <div className="text-[9px] text-slate-500 uppercase">{label}</div>
+      <div className={`text-sm font-mono font-bold mt-0.5 ${color ?? 'text-white'}`}>{value}</div>
+    </div>
+  );
+}

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 import { downloadAllTFData, downloadSymbols, loadAllTFTrades, TF_TRADES } from '@/lib/backtest/data-downloader';
-import { runFullBacktest } from '@/lib/backtest/backtest-evaluator';
+import { runFullBacktest, getTradeDetail, simulateTrade } from '@/lib/backtest/backtest-evaluator';
 import { getRowCount } from '@/lib/backtest/duckdb-schema';
 
 /**
@@ -137,6 +137,49 @@ export async function POST(req: Request) {
         (msg) => { logs.push(msg); console.log(`[TF Download] ${msg}`); },
       );
       return NextResponse.json({ success: true, downloaded: missing.length, ...result, logs });
+    }
+
+    if (action === 'trade-detail') {
+      const detail = await getTradeDetail({
+        symbol: body.symbol,
+        date: body.date,
+        optionType: body.optionType,
+        strike: body.strike,
+        spotPrice: body.spotPrice,
+        tfPnl: body.tfPnl,
+        tfExpiry: body.tfExpiry,
+        tfEntryTime: body.entryTime,
+        tfEntryPrice: body.entryPrice,
+        tfExitTime: body.exitTime,
+        tfExitPrice: body.exitPrice,
+        tfQuantity: body.quantity,
+      });
+      return NextResponse.json({ success: true, detail });
+    }
+
+    if (action === 'simulate') {
+      const result = await simulateTrade({
+        symbol: body.symbol,
+        date: body.date,
+        optionType: body.optionType,
+        strike: body.strike,
+        entryTimestamp: body.entryTimestamp,
+        exitTimestamp: body.exitTimestamp,
+        tfPnl: body.tfPnl,
+      });
+      return NextResponse.json({ success: true, result });
+    }
+
+    if (action === 'tf-trades-list') {
+      const allTF = await loadAllTFTrades();
+      // Check data availability per trade (quick count)
+      const tradesWithStatus = await Promise.all(
+        allTF.trades.slice(0, 100).map(async (t) => {
+          const count = await getRowCount('backtest_options', t.symbol);
+          return { ...t, hasData: count > 0 };
+        }),
+      );
+      return NextResponse.json({ success: true, trades: tradesWithStatus, total: allTF.trades.length });
     }
 
     if (action === 'debug') {

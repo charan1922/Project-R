@@ -16,7 +16,15 @@
             "trade_type": "Options",
             "total_pnl": 20250,
             "trade_status": "Trade Taken",
-            "verified": true
+            "verified": true,
+            "entry_time": "10:17:46 AM",
+            "entry_price": 10.15,
+            "exit_time": "03:25:32 PM",
+            "exit_price": 15.55,
+            "lots": 1,
+            "lot_size": 3750,
+            "quantity": 3750,
+            "capital_used": 38063
         },
         {
             "month": "March",
