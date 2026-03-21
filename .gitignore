@@ -65,3 +65,9 @@ data/historify-settings.json
 data/.dhan-token.json
 data/.dhan-market-cache.json
 ExpiryFlow-master/
+
+# Python backtesting
+backtesting/venv/
+backtesting/projectr/__pycache__/
+backtesting/**/__pycache__/
+*.pyc

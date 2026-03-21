@@ -231,6 +231,12 @@ export const aiTradingItems: NavItemType[] = [
         icon: <Settings className="w-4 h-4" />,
       },
       {
+        label: 'Option Trader',
+        href: '/trading-lab/ai-autopilot/options',
+        icon: <Activity className="w-4 h-4" />,
+        badge: 'NEW',
+      },
+      {
         label: 'Risk Manager',
         href: '/trading-lab/ai-autopilot/risk',
         icon: <Shield className="w-4 h-4" />,

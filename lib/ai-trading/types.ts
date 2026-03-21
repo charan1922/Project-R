@@ -121,6 +121,48 @@ export interface TradingSession {
   riskConfig: RiskConfig;
 }
 
+// ─── Option Trading Types ──────────────────────────────────────────────────
+
+/** AI decision for option trade (CE or PE buy) */
+export interface OptionTradeDecision extends TradeDecision {
+  optionType: 'CE' | 'PE';
+  strikePrice: number;
+  optionSecurityId: string;
+  optionSymbol: string;
+  spotPrice: number;
+  optionEntryPrice: number;
+  lotSize: number;
+  quantity: number; // lots × lotSize
+  expiryDate: string;
+  dte: number; // Days to expiry
+}
+
+/** Risk-checked option decision */
+export interface OptionExecutableDecision extends OptionTradeDecision {
+  positionSize: number; // Number of lots
+  totalCost: number; // premium × quantity
+  estimatedCharges: number; // Commission estimate
+  approved: boolean;
+  rejectReason?: string;
+}
+
+/** Open option position being tracked */
+export interface OptionPosition {
+  symbol: string;
+  optionType: 'CE' | 'PE';
+  strikePrice: number;
+  securityId: string;
+  entryPrice: number;
+  currentPrice: number;
+  peakPrice: number;
+  quantity: number;
+  lotSize: number;
+  spotAtEntry: number;
+  entryTime: string;
+  expiryDate: string;
+  charges: number;
+}
+
 /** Supported AI model providers via Vercel AI Gateway */
 export type AIModelProvider =
   | 'deepseek/deepseek-chat'

@@ -11,7 +11,7 @@ const MASTER_CSV_URL = 'https://images.dhan.co/api-data/api-scrip-master.csv';
 
 // Only sync instruments needed for R-Factor: equity OHLC + stock/index futures
 const KEEP_SEGMENTS = new Set(['NSE_EQ', 'NSE_FNO']);
-const KEEP_INSTRUMENTS = new Set(['EQUITY', 'FUTSTK', 'FUTIDX']);
+const KEEP_INSTRUMENTS = new Set(['EQUITY', 'FUTSTK', 'FUTIDX', 'OPTSTK']);
 
 export type SecurityEntry = {
   securityId: string;
@@ -85,6 +85,8 @@ async function syncFromDhan(today: string): Promise<void> {
   const idxInstType = col('SEM_EXCH_INSTRUMENT_TYPE');
   const idxExpiry = col('SEM_EXPIRY_DATE');
   const idxLotSize = col('SEM_LOT_UNITS');
+  const idxStrikePrice = col('SEM_STRIKE_PRICE');
+  const idxOptionType = col('SEM_OPTION_TYPE');
 
   // Parse all rows
   const entries: {
@@ -97,6 +99,8 @@ async function syncFromDhan(today: string): Promise<void> {
     underlying: string | null;
     expiryDate: Date | null;
     lotSize: number;
+    strikePrice: number | null;
+    optionType: string | null;
     syncDate: string;
   }[] = [];
 
@@ -135,9 +139,9 @@ async function syncFromDhan(today: string): Promise<void> {
     // Only keep what R-Factor needs: equity + stock/index futures
     if (!KEEP_SEGMENTS.has(segment) || !KEEP_INSTRUMENTS.has(instrument)) continue;
 
-    // Extract underlying for futures (e.g. "RELIANCE-Mar2026-FUT" → "RELIANCE")
+    // Extract underlying for futures/options (e.g. "RELIANCE-Mar2026-FUT" → "RELIANCE")
     let underlying: string | null = null;
-    if (instrument === 'FUTSTK') {
+    if (instrument === 'FUTSTK' || instrument === 'OPTSTK') {
       const dash = symbol.indexOf('-');
       if (dash > 0) underlying = symbol.substring(0, dash);
     }
@@ -149,6 +153,12 @@ async function syncFromDhan(today: string): Promise<void> {
       if (!Number.isNaN(d.getTime())) expiryDate = d;
     }
 
+    // Parse strike price and option type for OPTSTK
+    const strikePriceRaw = idxStrikePrice >= 0 ? cols[idxStrikePrice] : '';
+    const optionTypeRaw = idxOptionType >= 0 ? cols[idxOptionType] : '';
+    const strikePrice = instrument === 'OPTSTK' && strikePriceRaw ? Number.parseFloat(strikePriceRaw) || null : null;
+    const optionType = instrument === 'OPTSTK' && optionTypeRaw ? optionTypeRaw.toUpperCase() : null;
+
     entries.push({
       securityId: secId,
       symbol,
@@ -159,6 +169,8 @@ async function syncFromDhan(today: string): Promise<void> {
       underlying,
       expiryDate,
       lotSize: Number.parseFloat(lotSizeStr) || 1,
+      strikePrice,
+      optionType,
       syncDate: today,
     });
   }
@@ -177,12 +189,14 @@ async function syncFromDhan(today: string): Promise<void> {
         const esc = (s: string) => s.replace(/'/g, "''");
         const exp = e.expiryDate ? `'${e.expiryDate.toISOString()}'` : 'NULL';
         const und = e.underlying ? `'${esc(e.underlying)}'` : 'NULL';
-        return `(NULL, '${esc(e.securityId)}', '${esc(e.symbol)}', '${esc(e.exchange)}', '${esc(e.segment)}', '${esc(e.instrument)}', '${esc(e.name)}', ${und}, ${exp}, ${e.lotSize}, '${e.syncDate}')`;
+        const sp = e.strikePrice !== null ? `${e.strikePrice}` : 'NULL';
+        const ot = e.optionType ? `'${esc(e.optionType)}'` : 'NULL';
+        return `(NULL, '${esc(e.securityId)}', '${esc(e.symbol)}', '${esc(e.exchange)}', '${esc(e.segment)}', '${esc(e.instrument)}', '${esc(e.name)}', ${und}, ${exp}, ${e.lotSize}, ${sp}, ${ot}, '${e.syncDate}')`;
       })
       .join(',');
 
     await prisma.$executeRawUnsafe(
-      `INSERT OR IGNORE INTO master_contracts (id, securityId, symbol, exchange, segment, instrument, name, underlying, expiryDate, lotSize, syncDate) VALUES ${values}`,
+      `INSERT OR IGNORE INTO master_contracts (id, securityId, symbol, exchange, segment, instrument, name, underlying, expiryDate, lotSize, strikePrice, optionType, syncDate) VALUES ${values}`,
     );
 
     if ((i / CHUNK_SIZE) % 50 === 0 && i > 0) {
@@ -319,4 +333,66 @@ export async function searchSymbols(query: string, exchange?: string): Promise<S
     name: r.name,
     instrument: r.instrument,
   }));
+}
+
+/**
+ * Resolve a stock option contract by underlying, strike, and type.
+ * Returns the nearest monthly expiry with >= minDTE days to expiry.
+ */
+export async function resolveOptionSecurity(
+  underlying: string,
+  strikePrice: number,
+  optionType: 'CE' | 'PE',
+  minDTE = 7,
+): Promise<{ securityId: string; symbol: string; lotSize: number; expiry: string } | null> {
+  await ensureSynced();
+
+  const minExpiry = new Date();
+  minExpiry.setDate(minExpiry.getDate() + minDTE);
+
+  const rows = await prisma.masterContract.findMany({
+    where: {
+      underlying,
+      instrument: 'OPTSTK',
+      segment: 'NSE_FNO',
+      optionType,
+      strikePrice,
+      expiryDate: { gte: minExpiry },
+    },
+    orderBy: { expiryDate: 'asc' },
+    take: 1,
+  });
+
+  if (rows.length === 0) return null;
+  const row = rows[0];
+  return {
+    securityId: row.securityId,
+    symbol: row.symbol,
+    lotSize: row.lotSize,
+    expiry: row.expiryDate ? new Date(row.expiryDate).toISOString().split('T')[0] : '',
+  };
+}
+
+/** Strike step sizes for common F&O stocks (from NSE circular) */
+const STRIKE_STEPS: Record<string, number> = {
+  RELIANCE: 20, TCS: 50, HDFCBANK: 25, INFY: 25, SBIN: 5,
+  ICICIBANK: 25, KOTAKBANK: 25, LT: 50, HINDUNILVR: 25, ITC: 5,
+  AXISBANK: 25, BAJFINANCE: 25, MARUTI: 100, WIPRO: 5, TATAMOTORS: 10,
+  HCLTECH: 25, BHARTIARTL: 25, TATASTEEL: 5, NTPC: 5, ONGC: 5,
+  POWERGRID: 5, SUNPHARMA: 25, M_M: 25, ADANIENT: 50, ADANIPORTS: 25,
+  TITAN: 50, ULTRACEMCO: 50, BAJAJFINSV: 25, JSWSTEEL: 25, DIVISLAB: 50,
+  NESTLEIND: 100, APOLLOHOSP: 100, CIPLA: 25, EICHERMOT: 100, GRASIM: 25,
+  INDUSINDBK: 25, COALINDIA: 5, BPCL: 5, VEDL: 5, HINDALCO: 10,
+  DLF: 10, GODREJPROP: 25, PRESTIGE: 25, MCX: 50, BSE: 50,
+  IREDA: 5, NHPC: 5, PFC: 5, RECLTD: 5, SAIL: 5,
+};
+
+/** Get the strike step for a stock. Falls back to 25 (most common). */
+export function getStrikeStep(symbol: string): number {
+  return STRIKE_STEPS[symbol] ?? 25;
+}
+
+/** Calculate ATM strike from spot price */
+export function nearestStrike(spot: number, strikeStep: number): number {
+  return Math.round(spot / strikeStep) * strikeStep;
 }

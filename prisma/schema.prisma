@@ -43,12 +43,15 @@ model MasterContract {
   name       String    @default("")
   underlying String?
   expiryDate DateTime?
-  lotSize    Float     @default(1)
-  syncDate   String
+  lotSize      Float     @default(1)
+  strikePrice  Float?
+  optionType   String?
+  syncDate     String
 
   @@unique([securityId, segment])
   @@index([exchange, symbol])
   @@index([segment, instrument, underlying])
+  @@index([underlying, expiryDate, optionType, strikePrice])
   @@index([syncDate])
   @@map("master_contracts")
 }
@@ -76,6 +79,38 @@ model BhavcopyDay {
   @@index([symbol])
   @@index([date])
   @@map("bhavcopy_days")
+}
+
+model OptionTrade {
+  id            Int      @id @default(autoincrement())
+  date          String
+  symbol        String
+  optionType    String
+  strikePrice   Float
+  expiryDate    String
+  securityId    String
+  entryPrice    Float
+  exitPrice     Float?
+  quantity      Int
+  lotSize       Int
+  spotAtEntry   Float
+  grossPnl      Float?
+  charges       Float?
+  netPnl        Float?
+  entryTime     String
+  exitTime      String?
+  exitReason    String?
+  rFactor       Float
+  adx           Float?
+  aiRationale   String
+  aiConfidence  Float
+  paperTrade    Boolean  @default(true)
+  orderId       String?
+  status        String   @default("OPEN")
+
+  @@index([date])
+  @@index([symbol])
+  @@map("option_trades")
 }
 
 model Settings {
