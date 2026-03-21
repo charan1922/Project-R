@@ -9,6 +9,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
   NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
   DATABASE_URL: z.string().optional(),
+  AI_GATEWAY_API_KEY: z.string().optional(), // Vercel AI Gateway or DeepSeek API key
 });
 
 export const env = envSchema.parse(process.env);

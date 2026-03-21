@@ -87,6 +87,63 @@ export async function dhanMarketFeed(
   return json.data as MarketFeedResponse;
 }
 
+// ─── Intraday Charts ─────────────────────────────────────────────────────────
+
+/** 5-min OHLC candle from Dhan intraday charts API */
+export interface IntradayCandle {
+  high: number;
+  low: number;
+  close: number;
+  timestamp: number;
+}
+
+/**
+ * Fetch 5-min intraday candles for a security.
+ * Returns today's candles sorted by time. Requires equity securityId.
+ */
+export async function fetchIntradayCandles(
+  securityId: number,
+  interval: '1' | '5' | '15' | '25' | '60' = '5',
+): Promise<IntradayCandle[]> {
+  if (!hasDhanAuth()) return [];
+  const token = await getDhanAccessToken();
+  const clientId = env.DHAN_CLIENT_ID!;
+  const today = todayIST();
+
+  const resp = await fetch('https://api.dhan.co/v2/charts/intraday', {
+    method: 'POST',
+    headers: {
+      'access-token': token,
+      'client-id': clientId,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      securityId: String(securityId),
+      exchangeSegment: 'NSE_EQ',
+      instrument: 'EQUITY',
+      interval,
+      fromDate: today,
+      toDate: today,
+    }),
+  });
+
+  if (!resp.ok) return [];
+  const json = await resp.json();
+  if (!json.high || !json.low || !json.close) return [];
+
+  const candles: IntradayCandle[] = [];
+  const n = Math.min(json.high.length, json.low.length, json.close.length);
+  for (let i = 0; i < n; i++) {
+    candles.push({
+      high: json.high[i],
+      low: json.low[i],
+      close: json.close[i],
+      timestamp: json.timestamp?.[i] ?? 0,
+    });
+  }
+  return candles;
+}
+
 // ─── Option Chain ────────────────────────────────────────────────────────────
 
 /** Aggregated option chain data for a single underlying */

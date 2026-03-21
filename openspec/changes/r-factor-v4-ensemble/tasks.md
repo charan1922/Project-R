@@ -149,15 +149,46 @@
 - [x] Add Dhan-live composite formula
 - [x] Update specs & design docs references
 
-## 16. Future Work (Not Implemented)
+## 16. Linear Model (V4.2 — Mar 20, 2026)
+
+- [x] Cross-validate spread-quad vs linear on 158 pooled samples (Mar 19+20)
+- [x] Discover linear (R=1.56×spread) beats quadratic on CV (Pearson 0.757 vs 0.729)
+- [x] Replace spread-quad formula with linear in `ensemble.ts` → `predictSpreadQuadratic()`
+- [x] Replace Dhan-live composite with same linear model in `engine.ts`
+- [x] Re-enable scale correction for live path (linear model needs it for extremes)
+- [x] Save Mar 20 TF ground truth: `derive-r/ground_truth/20260320.json` (79 stocks)
+- [x] Add LTM to `fno_stocks_list.json` (was missing — TF's #2 stock)
+- [x] Add LTM to `fno_sectors.json` → IT sector
+
+## 17. Signal Direction Fix (V4.2)
+
+- [x] Fix `signalFilter === 'UP'` to use `pctChange >= 0` instead of `spread > 1.2`
+- [x] Fix `signalFilter === 'DOWN'` to use `pctChange < 0`
+- [x] Fix `upSignals` stats counter to count positive pctChange stocks
+- [x] Fix `isUp` in StockRow to use `pctChange` (was already done in V4.1)
+- [x] Update info footer text to reflect new direction logic
+- [x] Add `pctChange` to bhavcopy signals (today close vs yesterday close)
+
+## 18. UI Cleanup (V4.2)
+
+- [x] Remove engine preset radio buttons (Spread-Quad 90% vs Balanced OLS 50%)
+- [x] Remove Robust Regression checkbox
+- [x] Remove Tooltip component (no longer used)
+- [x] Remove unused `EnginePreset` import
+- [x] Replace multi-line engine config section with single-line model info
+- [x] Reason: no preset combination beats the default — controls add confusion, not value
+
+## 19. OI Level Correction (V4.2)
+
+- [x] Discover oi_level has NEGATIVE correlation (-0.16) with TF on Mar 20
+- [x] Remove OI level as positive boost in Dhan-live model
+- [x] OI level remains as display-only column in tables (informational, not ranking input)
+
+## 20. Future Work (Not Implemented)
 
 - [ ] Integrate NSE/BSE APIs for live market context (VIX, FII/DII, advance-decline)
-- [ ] Apply Dhan-NSE calibration factors in `data-service.ts` computeLiveSignals
-- [ ] Auto-apply adaptive lookback in signal computation
 - [ ] Collect multi-day ground truth (TradeFinder for 5+ trading days)
-- [ ] Retrain Dhan-live coefficients with time-series CV using `multi_day_training.py`
-- [ ] Use previous day's close instead of LTP for spread denominator (stability fix)
+- [ ] Retrain linear coefficient with 5+ day time-series CV using `multi_day_training.py`
+- [ ] Test opt_volume as secondary factor once 5+ day coefficient stabilizes
 - [ ] Add intraday OI tracking via Dhan charts API with `oi: true` flag
-- [ ] Add intraday tick features if tick-level data becomes available
-- [ ] Regime-aware weight adjustment (afternoon → reduce spread weight, increase OI weight)
-- [ ] Display `rawRFactor`, `scaledRFactor`, `ensembleWeights` in Intraday Boost stock rows
+- [ ] Regime-aware model switching (extreme day → quadratic, normal day → linear)

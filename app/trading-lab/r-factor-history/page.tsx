@@ -112,9 +112,9 @@ export default function RFactorHistoryPage() {
                 </span>
               </div>
 
-              <SummaryCards summary={stock.summary} />
+              <SummaryCards summary={stock.summary} history={stock.history} />
               <HistoryChart data={stock.history} />
-              <ZScoreTable data={stock.history} />
+              <ZScoreTable data={stock.history} symbol={stock.activeSymbol} />
             </>
           )}
 

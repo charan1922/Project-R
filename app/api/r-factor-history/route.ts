@@ -97,10 +97,15 @@ async function getSymbolHistory(symbol: string, days: number) {
     const current = factorData[factorData.length - 1];
     const historical = factorData.slice(0, -1);
     const raw = rows[i];
+    const prevRow = i > 0 ? rows[i - 1] : null;
     try {
       const signal = engine.calculateSignal(symbol, current, historical);
       // Previous day's R for delta computation
       const prevR = results.length > 0 ? (results[results.length - 1].compositeRFactor as number) : null;
+      // % change from previous day's close
+      const pctChange = prevRow && prevRow.eqClose > 0
+        ? ((raw.eqClose - prevRow.eqClose) / prevRow.eqClose) * 100
+        : null;
 
       results.push({
         date: raw.date,
@@ -108,6 +113,7 @@ async function getSymbolHistory(symbol: string, days: number) {
         rawRFactor: signal.rawRFactor,
         scaledRFactor: signal.scaledRFactor,
         confidence: signal.confidence,
+        pctChange: pctChange != null ? Math.round(pctChange * 100) / 100 : null,
         delta: prevR !== null ? signal.compositeRFactor - prevR : null,
         zScores: signal.zScores,
         regime: signal.regime,

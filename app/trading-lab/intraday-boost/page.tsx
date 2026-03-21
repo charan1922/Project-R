@@ -5,7 +5,7 @@ import { parseAsBoolean, parseAsStringLiteral, useQueryState } from 'nuqs';
 import { useMemo, useState } from 'react';
 
 import { getRegimeBadgeClass, getRFactorColor, shortDate } from '@/app/trading-lab/_lib/r-factor-ui';
-import { type BoostMode, type BoostStock, type EnginePreset, useBoostData } from './_hooks/use-boost-data';
+import { type BoostMode, type BoostStock, useBoostData } from './_hooks/use-boost-data';
 import { computeSectorStats } from './_lib/sector-stats';
 
 type SignalFilter = 'ALL' | 'UP' | 'DOWN';
@@ -16,9 +16,7 @@ export default function IntradayBoostPage() {
   const [useOC, setUseOC] = useQueryState('oc', parseAsBoolean.withDefault(true));
   const [tfOnly, setTfOnly] = useQueryState('tf', parseAsBoolean.withDefault(true));
   const [selectedDate, setSelectedDate] = useState('');
-  const [preset, setPreset] = useState<'sq-dominant' | 'balanced'>('sq-dominant');
-  const [robust, setRobust] = useState(false);
-  const data = useBoostData(tab as BoostMode, { useOC, tfOnly, date: selectedDate || undefined, preset, robust });
+  const data = useBoostData(tab as BoostMode, { useOC, tfOnly, date: selectedDate || undefined });
   const [searchQuery, setSearchQuery] = useState('');
   const [signalFilter, setSignalFilter] = useState<SignalFilter>('ALL');
   const [sectorFilter, setSectorFilter] = useState('ALL');
@@ -33,8 +31,8 @@ export default function IntradayBoostPage() {
         const matchSearch = s.symbol.toLowerCase().includes(searchQuery.toLowerCase());
         const matchSector = sectorFilter === 'ALL' || s.sector === sectorFilter;
         if (!matchSearch || !matchSector) return false;
-        if (signalFilter === 'UP') return s.zScores.spread > 1.2;
-        if (signalFilter === 'DOWN') return s.zScores.spread <= 1.2;
+        if (signalFilter === 'UP') return (s.pctChange ?? 0) >= 0;
+        if (signalFilter === 'DOWN') return (s.pctChange ?? 0) < 0;
         return true;
       })
       .sort((a, b) => {
@@ -51,7 +49,7 @@ export default function IntradayBoostPage() {
   const stats = useMemo(() => {
     const blasts = data.stocks.filter((s) => s.isBlastTrade).length;
     const highR = data.stocks.filter((s) => s.compositeRFactor >= 2.8).length;
-    const upSignals = data.stocks.filter((s) => s.zScores.spread > 1.2).length;
+    const upSignals = data.stocks.filter((s) => (s.pctChange ?? 0) >= 0).length;
     return { blasts, highR, upSignals, total: data.stocks.length };
   }, [data.stocks]);
 
@@ -132,65 +130,10 @@ export default function IntradayBoostPage() {
         )}
       </div>
 
-      {/* Engine Config */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-4 px-3 py-2.5 rounded-lg bg-slate-900/50 border border-slate-800/50 text-xs">
-          <span className="text-slate-500 font-medium shrink-0">Model:</span>
-
-          <Tooltip tip="Spread-Quadratic model gets 90% weight. Best match with TradeFinder (8/10 top-10 overlap). Uses equity (High-Low)/Close ratio as the dominant predictor. OLS (5%) and Momentum (5%) contribute when they agree.">
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="radio"
-                name="preset"
-                checked={preset === 'sq-dominant'}
-                onChange={() => setPreset('sq-dominant')}
-                className="accent-emerald-500"
-              />
-              <span className={preset === 'sq-dominant' ? 'text-emerald-400' : 'text-slate-500'}>
-                Spread-Quad 90%
-              </span>
-            </label>
-          </Tooltip>
-
-          <Tooltip tip="OLS regression gets 50% weight, Spread-Quad 30%, Momentum 20%. Uses all 5 factors: spread ratio, put-call ratio, futures turnover Z, futures volume Z (negative suppressor), and spread x turnover interaction. LOO Pearson 0.60 on bhavcopy. May underperform on Dhan live data because futures Z-scores from Dhan don't align with bhavcopy baselines.">
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="radio"
-                name="preset"
-                checked={preset === 'balanced'}
-                onChange={() => setPreset('balanced')}
-                className="accent-sky-500"
-              />
-              <span className={preset === 'balanced' ? 'text-sky-400' : 'text-slate-500'}>
-                Balanced OLS 50%
-              </span>
-            </label>
-          </Tooltip>
-
-          <span className="text-slate-700">|</span>
-
-          <Tooltip tip="Huber-like penalty that reduces R-Factor when any Z-score exceeds |3|. Blends 70% original + 30% penalized value. Designed to dampen outlier stocks (e.g. BIOCON with extreme fut_volume but low TF rank). However, it also penalizes legitimately high-activity stocks like WAAREEENER (opt_volume Z=3.26). Keep OFF for best TradeFinder match.">
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={robust}
-                onChange={(e) => setRobust(e.target.checked)}
-                className="accent-amber-500 rounded"
-              />
-              <span className={robust ? 'text-amber-400' : 'text-slate-500'}>
-                Robust Regression
-              </span>
-            </label>
-          </Tooltip>
-        </div>
-
-        <p className="text-[10px] text-slate-600 px-3 leading-relaxed">
-          {preset === 'sq-dominant'
-            ? 'Spread-Quad 90%: R = 2.45 - 1.86*spread + 0.95*spread\u00B2 (piecewise). Equity price range vs 20-day average is the dominant signal. Matches TradeFinder top-10 ranking 8/10 on bhavcopy. OLS (5%) adds futures turnover/volume/PCR when data quality is high.'
-            : 'Balanced OLS 50%: R = 1.11 + 0.63*spread + 0.08*pcr_z + 0.23*(spread*turn_z) + 1.41*turn_z - 1.73*vol_z. Full 5-factor model. The negative volume coefficient (-1.73) is a suppressor \u2014 turnover/volume divergence = institutional signal. Works best on bhavcopy data.'}
-          {robust
-            ? ' | Robust ON: When any Z-score > |3|, R-Factor is dampened by up to 30%. Catches false positives from data anomalies but also clips genuine extreme activity.'
-            : ''}
+      {/* Model Info */}
+      <div className="px-3 py-2 rounded-lg bg-slate-900/50 border border-slate-800/50">
+        <p className="text-[10px] text-slate-500 leading-relaxed">
+          R-Factor &asymp; 1.56 &times; spread_ratio &mdash; cross-validated on 158 samples (Pearson 0.80, Top-10 7/10). Signal direction based on % price change.
         </p>
       </div>
 
@@ -386,10 +329,9 @@ export default function IntradayBoostPage() {
       <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-sky-500/5 border border-sky-500/15 text-xs text-slate-500">
         <Info className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
         <div>
-          <span className="text-sky-400 font-medium">7-Factor OLS Model</span> — R-Factor = 1.11 +
-          0.63&times;spread_ratio + 0.08&times;pcr_z + 0.23&times;(spread&times;fut_turn) + 1.41&times;fut_turn_z
-          &minus; 1.73&times;fut_vol_z. Validated against 80 stocks (Pearson 0.67, Top-10 overlap 7/10). Signal UP when
-          spread ratio &gt; 1.2&times; 20d average.
+          <span className="text-sky-400 font-medium">Linear Spread Model</span> — R-Factor &asymp; 1.56 &times; spread_ratio.
+          Cross-validated on 158 samples (Pearson 0.80, Top-10 7.5/10). Scale correction for extreme values.
+          Signal direction based on % price change (green = up, red = down).
         </div>
       </div>
     </div>
@@ -525,19 +467,33 @@ function SortButton({
 }
 
 function StockRow({ stock, isLast }: { stock: BoostStock; isLast: boolean }) {
-  const isUp = stock.zScores.spread > 1.2;
+  const isUp = (stock.pctChange ?? 0) >= 0;
+  // HOT: R-Factor > 2.0 + ADX >= 28 (strong trend) + significant move (|%| >= 1)
+  const isHot = stock.compositeRFactor >= 2.0
+    && (stock.adx ?? 0) >= 28
+    && Math.abs(stock.pctChange ?? 0) >= 1;
+  // Override regime when ADX confirms trend but Z-score regime says Defensive
+  const effectiveRegime = (stock.adx ?? 0) >= 28 && stock.compositeRFactor >= 2.0
+    ? (isUp ? 'Cheetah' : 'Hybrid')
+    : stock.regime;
   return (
     <div
       className={`grid grid-cols-[2fr_90px_80px_1fr_1fr_1fr_65px_80px] gap-2 px-5 py-3 items-center transition-colors hover:bg-slate-800/40 cursor-pointer ${
-        !isLast ? 'border-b border-slate-800/50' : ''
-      }`}
+        isHot ? 'border-l-2 border-l-amber-400 bg-amber-500/5' : ''
+      } ${!isLast ? 'border-b border-slate-800/50' : ''}`}
       onClick={() => window.open(`https://www.tradingview.com/chart/?symbol=NSE%3A${stock.symbol}`, '_blank')}
     >
-      {/* Symbol + Regime */}
+      {/* Symbol + Regime + Badges */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-white hover:text-sky-400 transition-colors">{stock.symbol}</span>
-          {stock.isBlastTrade && (
+          <span className={`text-sm font-semibold hover:text-sky-400 transition-colors ${isHot ? 'text-amber-300' : 'text-white'}`}>{stock.symbol}</span>
+          {isHot && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded animate-pulse">
+              <Flame className="w-2.5 h-2.5" />
+              HOT
+            </span>
+          )}
+          {stock.isBlastTrade && !isHot && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded">
               <Zap className="w-2.5 h-2.5" />
               Blast
@@ -552,8 +508,8 @@ function StockRow({ stock, isLast }: { stock: BoostStock; isLast: boolean }) {
             </span>
           )}
         </div>
-        <span className={`px-1.5 py-0.5 text-[9px] font-medium rounded border ${getRegimeBadgeClass(stock.regime)}`}>
-          {stock.regime}
+        <span className={`px-1.5 py-0.5 text-[9px] font-medium rounded border ${getRegimeBadgeClass(effectiveRegime)}`}>
+          {effectiveRegime}
         </span>
       </div>
 
@@ -645,15 +601,3 @@ function StockRow({ stock, isLast }: { stock: BoostStock; isLast: boolean }) {
   );
 }
 
-/** Hover tooltip with styled popup */
-function Tooltip({ tip, children }: { tip: string; children: React.ReactNode }) {
-  return (
-    <div className="relative group/tip">
-      {children}
-      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-[11px] text-slate-300 leading-relaxed shadow-xl opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all duration-200 z-50 pointer-events-none">
-        {tip}
-        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-slate-700" />
-      </div>
-    </div>
-  );
-}

@@ -1,6 +1,7 @@
 import {
   Activity,
   BarChart2,
+  Bot,
   Brain,
   CalendarDays,
   Clock,
@@ -10,11 +11,13 @@ import {
   Flame,
   FlaskConical,
   HardDrive,
+  History,
   Layers,
   LayoutGrid,
   LineChart,
   List,
   Settings,
+  Shield,
   Table2,
   TestTube2,
   Upload,
@@ -199,6 +202,38 @@ export const quantLabItems: NavItemType[] = [
         href: '/quant/backtester',
         icon: <FlaskConical className="w-4 h-4" />,
         badge: 'NEW',
+      },
+    ],
+  },
+];
+
+export const aiTradingItems: NavItemType[] = [
+  {
+    label: 'AI Trading',
+    href: '/trading-lab/ai-autopilot',
+    icon: <Bot className="w-4 h-4" />,
+    badge: 'AI',
+    children: [
+      {
+        label: 'AI Autopilot',
+        href: '/trading-lab/ai-autopilot',
+        icon: <Brain className="w-4 h-4" />,
+        badge: 'LIVE',
+      },
+      {
+        label: 'Trade History',
+        href: '/trading-lab/ai-autopilot/history',
+        icon: <History className="w-4 h-4" />,
+      },
+      {
+        label: 'Strategy Config',
+        href: '/trading-lab/ai-autopilot/config',
+        icon: <Settings className="w-4 h-4" />,
+      },
+      {
+        label: 'Risk Manager',
+        href: '/trading-lab/ai-autopilot/risk',
+        icon: <Shield className="w-4 h-4" />,
       },
     ],
   },

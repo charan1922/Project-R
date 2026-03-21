@@ -75,17 +75,19 @@ export function predictOLS(current: FactorData, historical: FactorData[]): Model
 }
 
 /**
- * Spread-Quadratic Model (for live Dhan data)
+ * Spread-Linear Model (cross-validated on Mar 19+20, 158 paired samples)
  *
- * For spread >= 1.0: R = 2.4491 - 1.8553*spread + 0.949*spread²
- * For 0 < spread < 1.0: R = 1.0 + 0.5428*spread (linear ramp)
- * For spread <= 0: R = 1.0 (neutral)
+ * R = 1.56 × spread_ratio (CV Pearson 0.80, Top-10 7.5/10)
+ *
+ * Why linear beats quadratic:
+ * - Quadratic underpredicts moderate spreads (1.0-2.0) where most stocks sit
+ * - Linear generalizes better across normal + extreme market days
+ * - Quadratic overfits to extreme-day patterns (Mar 19)
+ * - Scale correction handles extreme values (>3.5) separately
+ *
+ * Retained name "SpreadQuadratic" for backward compatibility with ensemble API.
  */
-const SPREAD_QUAD = {
-  a: 2.4491,
-  b: -1.8553,
-  c: 0.949,
-};
+const SPREAD_LINEAR_COEFF = 1.5596; // From 2-day OLS: R = -0.02 + 1.56 × spread
 
 export function predictSpreadQuadratic(current: FactorData, historical: FactorData[]): ModelPrediction {
   const spread = current.spread;
@@ -93,13 +95,10 @@ export function predictSpreadQuadratic(current: FactorData, historical: FactorDa
 
   if (spread <= 0) {
     value = 1.0;
-  } else if (spread < 1.0) {
-    // Linear ramp to junction at spread=1.0
-    const atOne = SPREAD_QUAD.a + SPREAD_QUAD.b + SPREAD_QUAD.c; // ≈1.543
-    value = 1.0 + (atOne - 1.0) * spread;
   } else {
-    // Quadratic formula
-    value = SPREAD_QUAD.a + SPREAD_QUAD.b * spread + SPREAD_QUAD.c * spread * spread;
+    // Linear model: R = 1.56 × spread_ratio
+    // Floor at 1.0 (minimum R-Factor)
+    value = Math.max(1.0, SPREAD_LINEAR_COEFF * spread);
   }
 
   // Confidence based on spread reliability

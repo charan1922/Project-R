@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { NavItem } from './_sidebar/NavItem';
-import { historifyItems, marketScopeItems, quantLabItems, v1Items } from './_sidebar/nav-data';
+import { aiTradingItems, historifyItems, marketScopeItems, quantLabItems, v1Items } from './_sidebar/nav-data';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -79,6 +79,16 @@ export default function Sidebar() {
 
         {/* Navigation Sections */}
         <nav className="flex-1 py-6 px-3.5 space-y-6 overflow-y-auto custom-scrollbar">
+          <div className="space-y-1.5">
+            <div className="px-2 text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <span>AI Trading</span>
+              <div className="h-px bg-amber-500/30 flex-1"></div>
+            </div>
+            {aiTradingItems.map((item) => (
+              <NavItem key={item.href} item={item} {...commonProps} />
+            ))}
+          </div>
+
           <div className="space-y-1.5">
             <div className="px-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
               <span>Current System</span>

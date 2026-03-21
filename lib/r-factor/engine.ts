@@ -165,12 +165,11 @@ export class RFactorEngine {
     // Compute all Z-scores
     const zScores = this.computeZScores(current, historical);
 
-    // Dhan-live model: uses positive Z-scores (above-average activity signals)
+    // Dhan-live model: R = 1.56 × spread (same as bhavcopy ensemble)
     const rawRFactor = this.calculateDhanLiveComposite(zScores);
 
-    // No scale correction for Dhan-live model — already calibrated to TF range.
-    // The output cap in calculateDhanLiveComposite handles extreme values.
-    const scaledRFactor = rawRFactor;
+    // Apply scale correction for extreme values (spread > ~2.2 → R > 3.5)
+    const { scaledRFactor } = this.applyScaleCorrection(rawRFactor);
 
     // Apply market context
     let finalRFactor = scaledRFactor;
@@ -213,36 +212,20 @@ export class RFactorEngine {
   }
 
   /**
-   * Dhan-live composite using OI LEVEL ratio as primary signal.
+   * Dhan-live composite for live data (no option chain path).
    *
-   * Key insight: TF's top stocks all have 20-35% OI buildup above 20d average.
-   * oi_level (absolute OI / 20d avg OI) captures sustained accumulation that
-   * daily oi_change misses. A stock at 1.25× average OI = institutional accumulation.
+   * Cross-validated on 158 samples (Mar 19+20, 2026):
+   * Best CV model: R = 1.56 × spread (Pearson 0.80, Top-10 7.5/10)
+   * Adding opt_volume/oi_level does NOT improve CV (overfits to single day).
    *
-   * Formula: R = base + oi_level_boost + opt_volume_boost + fut_volume_boost + spread_boost
-   * All boosts are bounded and only reward above-average activity.
+   * Uses same linear coefficient as bhavcopy ensemble for consistency.
+   * Scale correction applied separately by the caller for extreme values.
    * Output capped at [1.0, 6.0].
    */
   private calculateDhanLiveComposite(zScores: SignalOutput['zScores']): number {
-    // OI level ratio: 1.0 = average, 1.25 = 25% above average (accumulation)
-    // Subtract 1.0 so only above-average contributes, cap at 0.5 (50% above avg)
-    const oiExcess = Math.max(0, Math.min(zScores.oi_level - 1.0, 0.5));
-
-    // Options volume Z-score: high = unusual hedging/speculation activity
-    const optVolBoost = Math.max(0, Math.min(zScores.opt_volume, 3.0));
-
-    // Futures volume Z-score: high = momentum/urgency
-    const futVolBoost = Math.max(0, Math.min(zScores.fut_volume, 3.0));
-
-    // Spread ratio: above 1.0 = above-average intraday range
-    const spreadBoost = Math.max(0, Math.min(zScores.spread - 0.8, 2.5));
-
-    const r =
-      1.5 + // Base R for average-activity stock
-      oiExcess * 4.0 + // OI 25% above avg → +1.0, 50%+ → +2.0
-      optVolBoost * 0.25 + // High options volume → up to +0.75
-      futVolBoost * 0.20 + // High futures volume → up to +0.60
-      spreadBoost * 0.30; // Above-average spread → up to +0.75
+    // Linear model: R = 1.56 × spread_ratio
+    // Cross-validated Pearson 0.80 on 2-day pooled data (beats quadratic 0.79)
+    const r = 1.5596 * zScores.spread;
 
     // Clamp to [1.0, 6.0]
     return Math.max(1.0, Math.min(6.0, r));

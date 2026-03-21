@@ -1,6 +1,6 @@
 {
-  "source": "Zerodha API — Live F&O eligible stocks",
-  "total": 206,
+  "source": "Zerodha API \u2014 Live F&O eligible stocks",
+  "total": 207,
   "stocks": [
     "360ONE",
     "ABB",
@@ -117,6 +117,7 @@
     "LT",
     "LTF",
     "LTIM",
+    "LTM",
     "LUPIN",
     "M&M",
     "MANAPPURAM",

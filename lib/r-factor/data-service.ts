@@ -4,10 +4,12 @@ import { prisma } from '@/lib/db';
 import { hasDhanAuth } from '@/lib/dhan/auth';
 import {
   dhanMarketFeed,
+  fetchIntradayCandles,
   fetchOptionChain,
   todayIST as getTodayIST,
   isMarketHours,
   isTradingDay,
+  type IntradayCandle,
   type OptionChainSummary,
 } from '@/lib/dhan/market-feed';
 import {
@@ -20,16 +22,6 @@ import { BhavcopyNotSyncedError, getHistoricalData } from './bhavcopy-service';
 import { ADX } from 'trading-signals';
 import { RFactorEngine, engine } from './engine';
 import { type DailyStockData, type SignalOutput, transformToFactorData } from './types';
-
-/**
- * Dhan-adapted engine for live data with option chain.
- * When option chain provides live PCR, the ensemble can use it.
- * Spread-quad dominant (60%) — proven Pearson 0.845 on Dhan data.
- * OLS at 20% weight — contributes when option chain PCR is available.
- */
-const liveEnsembleEngine = new RFactorEngine({
-  ensembleWeights: { ols: 0.20, spreadQuad: 0.60, momentum: 0.20 },
-});
 
 /** Extended signal with live price data */
 export interface BoostSignal extends SignalOutput {
@@ -203,6 +195,43 @@ export class RFactorDataService {
       }
     }
     return result;
+  }
+
+  /**
+   * Compute intraday ADX from 5-min candles (period 7).
+   * Fetches today's candles from Dhan charts API.
+   * Returns null if not enough data or market closed.
+   */
+  private async computeIntradayADX(
+    securityId: number,
+  ): Promise<{ adx: number | null; plusDI: number | null; minusDI: number | null }> {
+    const nullResult: { adx: number | null; plusDI: number | null; minusDI: number | null } = { adx: null, plusDI: null, minusDI: null };
+    try {
+      const candles = await fetchIntradayCandles(securityId, '5');
+      // ADX period 7 on 5-min = needs 15+ candles (7*2+1 for warm-up)
+      if (candles.length < 15) return nullResult;
+
+      const indicator = new ADX(7);
+      let result: { adx: number | null; plusDI: number | null; minusDI: number | null } = { adx: null, plusDI: null, minusDI: null };
+      for (const c of candles) {
+        indicator.update({ high: c.high, low: c.low, close: c.close }, false);
+        try {
+          const adxVal = Number(indicator.getResult());
+          const pdi = Number(indicator.pdi);
+          const mdi = Number(indicator.mdi);
+          result = {
+            adx: Math.round(adxVal * 10) / 10,
+            plusDI: Math.round(pdi * 1000) / 10,
+            minusDI: Math.round(mdi * 1000) / 10,
+          };
+        } catch {
+          // Not enough data yet
+        }
+      }
+      return result;
+    } catch {
+      return nullResult;
+    }
   }
 
   /**
@@ -475,7 +504,13 @@ export class RFactorDataService {
         const historical = factorData.slice(0, -1);
         const signal = this.activeEngine.calculateSignal(s, current, historical);
         const { adx, plusDI, minusDI } = this.computeADX(dailyData);
-        return { ...signal, adx, plusDI, minusDI } as BoostSignal;
+        // % change: today's close vs yesterday's close
+        const today = dailyData[dailyData.length - 1];
+        const yesterday = dailyData.length >= 2 ? dailyData[dailyData.length - 2] : null;
+        const pctChange = yesterday && yesterday.eq_close > 0
+          ? ((today.eq_close - yesterday.eq_close) / yesterday.eq_close) * 100
+          : undefined;
+        return { ...signal, adx, plusDI, minusDI, pctChange } as BoostSignal;
       }),
     );
     return results
@@ -632,7 +667,7 @@ export class RFactorDataService {
           // Equity: live from Dhan Quote (includes volume + VWAP)
           eq_high: eq?.high ?? lastDay.eq_high,
           eq_low: eq?.low ?? lastDay.eq_low,
-          eq_close: eq?.close ?? lastDay.eq_close, // Use previous close (stable) — R only changes on new H/L, like TF
+          eq_close: eq?.lastPrice ?? lastDay.eq_close, // Use LTP for live spread
           eq_volume: eq?.volume ?? lastDay.eq_volume, // Today's volume from Quote endpoint
           eq_turnover: eq ? eq.volume * eq.averagePrice : lastDay.eq_turnover, // VWAP-based turnover
           // Futures: live from Dhan Quote
@@ -689,7 +724,28 @@ export class RFactorDataService {
       }
     }
 
-    return signals.sort((a, b) => b.compositeRFactor - a.compositeRFactor);
+    const sorted = signals.sort((a, b) => b.compositeRFactor - a.compositeRFactor);
+
+    // Compute intraday ADX (5-min, period 7) for top 20 stocks during market hours.
+    // This replaces the daily ADX with a real-time trend indicator.
+    // Only during market hours (need 5-min candles which aren't available post-market).
+    if (isMarketHours()) {
+      const top20 = sorted.slice(0, 20);
+      await Promise.all(
+        top20.map(async (s) => {
+          const eqId = eqIdMap.get(s.symbol);
+          if (!eqId) return;
+          const intraday = await this.computeIntradayADX(eqId);
+          if (intraday.adx !== null) {
+            s.adx = intraday.adx;
+            s.plusDI = intraday.plusDI ?? undefined;
+            s.minusDI = intraday.minusDI ?? undefined;
+          }
+        }),
+      );
+    }
+
+    return sorted;
   }
 }
 

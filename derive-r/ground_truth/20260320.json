@@ -1,0 +1,328 @@
+{
+  "payload": {
+    "data": {
+      "intraday_boost": [
+        {
+          "Symbol": "JSWSTEEL",
+          "param_3": 3.333
+        },
+        {
+          "Symbol": "LTM",
+          "param_3": 3.283
+        },
+        {
+          "Symbol": "APOLLOHOSP",
+          "param_3": 2.659
+        },
+        {
+          "Symbol": "MCX",
+          "param_3": 2.492
+        },
+        {
+          "Symbol": "PETRONET",
+          "param_3": 2.399
+        },
+        {
+          "Symbol": "LUPIN",
+          "param_3": 2.347
+        },
+        {
+          "Symbol": "CGPOWER",
+          "param_3": 2.249
+        },
+        {
+          "Symbol": "ICICIPRULI",
+          "param_3": 2.204
+        },
+        {
+          "Symbol": "INOXWIND",
+          "param_3": 1.997
+        },
+        {
+          "Symbol": "SOLARINDS",
+          "param_3": 1.987
+        },
+        {
+          "Symbol": "COFORGE",
+          "param_3": 1.973
+        },
+        {
+          "Symbol": "BAJAJHLDNG",
+          "param_3": 1.973
+        },
+        {
+          "Symbol": "VOLTAS",
+          "param_3": 1.916
+        },
+        {
+          "Symbol": "ICICIGI",
+          "param_3": 1.94
+        },
+        {
+          "Symbol": "JSWENERGY",
+          "param_3": 1.915
+        },
+        {
+          "Symbol": "GAIL",
+          "param_3": 1.898
+        },
+        {
+          "Symbol": "ICICIBANK",
+          "param_3": 1.886
+        },
+        {
+          "Symbol": "BEL",
+          "param_3": 1.886
+        },
+        {
+          "Symbol": "IREDA",
+          "param_3": 1.878
+        },
+        {
+          "Symbol": "ITC",
+          "param_3": 1.872
+        },
+        {
+          "Symbol": "BIOCON",
+          "param_3": 1.871
+        },
+        {
+          "Symbol": "TORNTPHARM",
+          "param_3": 1.807
+        },
+        {
+          "Symbol": "HAVELLS",
+          "param_3": 1.793
+        },
+        {
+          "Symbol": "JINDALSTEL",
+          "param_3": 1.788
+        },
+        {
+          "Symbol": "BSE",
+          "param_3": 1.759
+        },
+        {
+          "Symbol": "FEDERALBNK",
+          "param_3": 1.755
+        },
+        {
+          "Symbol": "PHOENIXLTD",
+          "param_3": 1.734
+        },
+        {
+          "Symbol": "BRITANNIA",
+          "param_3": 1.712
+        },
+        {
+          "Symbol": "ONGC",
+          "param_3": 1.711
+        },
+        {
+          "Symbol": "LODHA",
+          "param_3": 1.707
+        },
+        {
+          "Symbol": "WAAREEENER",
+          "param_3": 1.694
+        },
+        {
+          "Symbol": "SHRIRAMFIN",
+          "param_3": 1.676
+        },
+        {
+          "Symbol": "GLENMARK",
+          "param_3": 1.67
+        },
+        {
+          "Symbol": "MAZDOCK",
+          "param_3": 1.648
+        },
+        {
+          "Symbol": "PRESTIGE",
+          "param_3": 1.64
+        },
+        {
+          "Symbol": "NMDC",
+          "param_3": 1.58
+        },
+        {
+          "Symbol": "AUBANK",
+          "param_3": 1.572
+        },
+        {
+          "Symbol": "TATAELXSI",
+          "param_3": 1.557
+        },
+        {
+          "Symbol": "SBIN",
+          "param_3": 1.483
+        },
+        {
+          "Symbol": "SAMMAANCAP",
+          "param_3": 1.48
+        },
+        {
+          "Symbol": "POWERGRID",
+          "param_3": 1.477
+        },
+        {
+          "Symbol": "DIVISLAB",
+          "param_3": 1.468
+        },
+        {
+          "Symbol": "HAL",
+          "param_3": 1.453
+        },
+        {
+          "Symbol": "DELHIVERY",
+          "param_3": 1.427
+        },
+        {
+          "Symbol": "KEI",
+          "param_3": 1.402
+        },
+        {
+          "Symbol": "BHEL",
+          "param_3": 1.395
+        },
+        {
+          "Symbol": "HDFCBANK",
+          "param_3": 1.395
+        },
+        {
+          "Symbol": "SRF",
+          "param_3": 1.364
+        },
+        {
+          "Symbol": "MANAPPURAM",
+          "param_3": 1.371
+        },
+        {
+          "Symbol": "TORNTPOWER",
+          "param_3": 1.362
+        },
+        {
+          "Symbol": "PREMIERENE",
+          "param_3": 1.361
+        },
+        {
+          "Symbol": "JUBLFOOD",
+          "param_3": 1.355
+        },
+        {
+          "Symbol": "POLYCAB",
+          "param_3": 1.353
+        },
+        {
+          "Symbol": "HDFCLIFE",
+          "param_3": 1.331
+        },
+        {
+          "Symbol": "JIOFIN",
+          "param_3": 1.319
+        },
+        {
+          "Symbol": "RECLTD",
+          "param_3": 1.317
+        },
+        {
+          "Symbol": "HINDALCO",
+          "param_3": 1.31
+        },
+        {
+          "Symbol": "ASHOKLEY",
+          "param_3": 1.303
+        },
+        {
+          "Symbol": "BLUESTARCO",
+          "param_3": 1.301
+        },
+        {
+          "Symbol": "INDUSINDBK",
+          "param_3": 1.302
+        },
+        {
+          "Symbol": "BDL",
+          "param_3": 1.26
+        },
+        {
+          "Symbol": "PATANJALI",
+          "param_3": 1.232
+        },
+        {
+          "Symbol": "AXISBANK",
+          "param_3": 1.232
+        },
+        {
+          "Symbol": "AUROPHARMA",
+          "param_3": 1.234
+        },
+        {
+          "Symbol": "GODREJCP",
+          "param_3": 1.232
+        },
+        {
+          "Symbol": "POWERINDIA",
+          "param_3": 1.243
+        },
+        {
+          "Symbol": "SAIL",
+          "param_3": 1.214
+        },
+        {
+          "Symbol": "MOTHERSON",
+          "param_3": 1.208
+        },
+        {
+          "Symbol": "SUNPHARMA",
+          "param_3": 1.211
+        },
+        {
+          "Symbol": "SBICARD",
+          "param_3": 1.197
+        },
+        {
+          "Symbol": "VBL",
+          "param_3": 1.198
+        },
+        {
+          "Symbol": "RELIANCE",
+          "param_3": 1.196
+        },
+        {
+          "Symbol": "LAURUSLABS",
+          "param_3": 1.196
+        },
+        {
+          "Symbol": "HDFCAMC",
+          "param_3": 1.194
+        },
+        {
+          "Symbol": "TRENT",
+          "param_3": 1.193
+        },
+        {
+          "Symbol": "COALINDIA",
+          "param_3": 1.163
+        },
+        {
+          "Symbol": "LICHSGFIN",
+          "param_3": 1.159
+        },
+        {
+          "Symbol": "NUVAMA",
+          "param_3": 1.159
+        },
+        {
+          "Symbol": "WIPRO",
+          "param_3": 1.157
+        }
+      ]
+    }
+  },
+  "_meta": {
+    "captured": "2026-03-20",
+    "stocks": 79
+  }
+}

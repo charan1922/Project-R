@@ -32,11 +32,15 @@ export interface StockHistoryEntry {
   rawRFactor?: number;
   scaledRFactor?: number;
   confidence?: number;
+  pctChange?: number | null;
   delta: number | null;
   zScores: ZScores;
   regime: Regime;
   isBlastTrade: boolean;
   modelUsed: string;
+  adx?: number | null;
+  plusDI?: number | null;
+  minusDI?: number | null;
   raw: RawData;
 }
 
