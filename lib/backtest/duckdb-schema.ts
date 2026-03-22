@@ -54,6 +54,39 @@ export async function execute(sql: string): Promise<void> {
   await prisma.$executeRawUnsafe(sql);
 }
 
+/** Get row counts per symbol for a table (batch — 1 query instead of N) */
+export async function getSymbolCounts(table: string): Promise<Map<string, number>> {
+  await ensureBacktestTables();
+  const rows = await prisma.$queryRawUnsafe<{ symbol: string; cnt: bigint }[]>(
+    `SELECT symbol, COUNT(*) as cnt FROM ${table} GROUP BY symbol`,
+  );
+  const map = new Map<string, number>();
+  for (const r of rows) map.set(r.symbol, Number(r.cnt));
+  return map;
+}
+
+/** Get (symbol, date) pairs that have data — for per-trade status checks */
+export async function getSymbolDatePairs(table: string): Promise<Set<string>> {
+  await ensureBacktestTables();
+  const rows = await prisma.$queryRawUnsafe<{ symbol: string; date: string }[]>(
+    `SELECT DISTINCT symbol, date FROM ${table}`,
+  );
+  const set = new Set<string>();
+  for (const r of rows) set.add(`${r.symbol}|${r.date}`);
+  return set;
+}
+
+/** Get (symbol, option_type, strike, date) tuples that have option data */
+export async function getOptionDatePairs(): Promise<Set<string>> {
+  await ensureBacktestTables();
+  const rows = await prisma.$queryRawUnsafe<{ symbol: string; option_type: string; strike: number; date: string }[]>(
+    `SELECT DISTINCT symbol, option_type, CAST(strike AS INTEGER) as strike, date FROM backtest_options`,
+  );
+  const set = new Set<string>();
+  for (const r of rows) set.add(`${r.symbol}|${r.option_type}|${Number(r.strike)}|${r.date}`);
+  return set;
+}
+
 /** Checkpoint — no-op for SQLite (auto-commits) */
 export async function checkpoint(): Promise<void> {
   // SQLite auto-commits, no checkpoint needed

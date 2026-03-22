@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+import { getTradeDetail, runFullBacktest, simulateTrade } from '@/lib/backtest/backtest-evaluator';
 import { downloadAllTFData, downloadSymbols, loadAllTFTrades, TF_TRADES } from '@/lib/backtest/data-downloader';
-import { runFullBacktest, getTradeDetail, simulateTrade } from '@/lib/backtest/backtest-evaluator';
-import { getRowCount } from '@/lib/backtest/duckdb-schema';
+import { getOptionDatePairs, getRowCount, getSymbolDatePairs } from '@/lib/backtest/duckdb-schema';
 
 /**
  * POST /api/backtest/tf-validate
@@ -87,6 +87,50 @@ export async function POST(req: Request) {
       });
     }
 
+    if (action === 'symbol-status') {
+      const allTF = await loadAllTFTrades();
+      // Batch check: which (symbol,date) pairs have data?
+      const [eqPairs, futPairs, optPairs] = await Promise.all([
+        getSymbolDatePairs('backtest_equity'),
+        getSymbolDatePairs('backtest_futures'),
+        getOptionDatePairs(),
+      ]);
+      let readyCount = 0;
+      let partialCount = 0;
+      let missingCount = 0;
+      const trades = allTF.trades.map((t) => {
+        const hasEquity = eqPairs.has(`${t.symbol}|${t.date}`);
+        const hasFutures = futPairs.has(`${t.symbol}|${t.date}`);
+        const hasOptions = t.strike > 0 ? optPairs.has(`${t.symbol}|${t.optionType}|${t.strike}|${t.date}`) : true;
+        const status =
+          hasEquity && hasFutures && hasOptions ? 'ready' : hasEquity || hasFutures ? 'partial' : 'missing';
+        if (status === 'ready') readyCount++;
+        else if (status === 'partial') partialCount++;
+        else missingCount++;
+        return {
+          symbol: t.symbol,
+          date: t.date,
+          optionType: t.optionType,
+          strike: t.strike,
+          pnl: t.pnl,
+          verified: !!(t.entryPrice && t.exitPrice),
+          entryTime: t.entryTime,
+          entryPrice: t.entryPrice,
+          exitTime: t.exitTime,
+          exitPrice: t.exitPrice,
+          hasEquity,
+          hasFutures,
+          hasOptions,
+          status,
+        };
+      });
+      return NextResponse.json({
+        success: true,
+        trades,
+        summary: { totalTrades: trades.length, readyCount, partialCount, missingCount, dateRange: allTF.dateRange },
+      });
+    }
+
     if (action === 'download-symbols') {
       // Download specific symbols: { symbols: string[], fromDate, toDate, options?: [...] }
       const symbols = body.symbols as string[];
@@ -123,7 +167,7 @@ export async function POST(req: Request) {
         .filter((t) => t.strike > 0 && missing.includes(t.symbol))
         .map((t) => ({ symbol: t.symbol, optionType: t.optionType, strike: t.strike }));
       // Dedupe — one option per symbol
-      const optionsMap = new Map<string, typeof optionsList[0]>();
+      const optionsMap = new Map<string, (typeof optionsList)[0]>();
       for (const o of optionsList) {
         if (!optionsMap.has(o.symbol)) optionsMap.set(o.symbol, o);
       }
@@ -134,7 +178,10 @@ export async function POST(req: Request) {
         allTF.dateRange.from,
         allTF.dateRange.to,
         Array.from(optionsMap.values()),
-        (msg) => { logs.push(msg); console.log(`[TF Download] ${msg}`); },
+        (msg) => {
+          logs.push(msg);
+          console.log(`[TF Download] ${msg}`);
+        },
       );
       return NextResponse.json({ success: true, downloaded: missing.length, ...result, logs });
     }
@@ -184,9 +231,15 @@ export async function POST(req: Request) {
 
     if (action === 'debug') {
       const { queryRows: qr } = await import('@/lib/backtest/duckdb-schema');
-      const eqDates = await qr("SELECT DISTINCT symbol, date FROM backtest_equity WHERE symbol='NATIONALUM' ORDER BY date DESC LIMIT 5");
-      const optDates = await qr("SELECT DISTINCT symbol, option_type, date FROM backtest_options WHERE symbol='NATIONALUM' ORDER BY date DESC LIMIT 5");
-      const sample = await qr("SELECT symbol, date, timestamp, close FROM backtest_equity WHERE symbol='NATIONALUM' ORDER BY timestamp DESC LIMIT 3");
+      const eqDates = await qr(
+        "SELECT DISTINCT symbol, date FROM backtest_equity WHERE symbol='NATIONALUM' ORDER BY date DESC LIMIT 5",
+      );
+      const optDates = await qr(
+        "SELECT DISTINCT symbol, option_type, date FROM backtest_options WHERE symbol='NATIONALUM' ORDER BY date DESC LIMIT 5",
+      );
+      const sample = await qr(
+        "SELECT symbol, date, timestamp, close FROM backtest_equity WHERE symbol='NATIONALUM' ORDER BY timestamp DESC LIMIT 3",
+      );
       return NextResponse.json({ success: true, eqDates, optDates, sample });
     }
 

@@ -177,8 +177,9 @@ async function syncFromDhan(today: string): Promise<void> {
 
   console.log(`[MasterContracts] Parsed ${entries.length} entries, inserting into DB...`);
 
-  // Clear old data
-  await prisma.masterContract.deleteMany({});
+  // Remove only current-date entries (preserve historical contracts from previous syncs)
+  const syncDay = new Date().toISOString().split('T')[0];
+  await prisma.$executeRawUnsafe(`DELETE FROM master_contracts WHERE syncDate = '${syncDay}'`);
 
   // Bulk insert using raw SQL for speed
   const CHUNK_SIZE = 500;
@@ -283,18 +284,22 @@ export async function resolveFuturesSecurity(underlying: string): Promise<Future
  */
 export async function batchResolveFutures(
   underlyings: string[],
+  tradeDate?: string,
 ): Promise<Map<string, { securityId: string; lotSize: number; expiryDate: string }>> {
   await ensureSynced();
 
   const result = new Map<string, { securityId: string; lotSize: number; expiryDate: string }>();
   if (underlyings.length === 0) return result;
 
+  // Use tradeDate for historical resolution (finds contracts active on that date)
+  const refDate = tradeDate ? new Date(tradeDate) : new Date();
+
   const rows = await prisma.masterContract.findMany({
     where: {
       underlying: { in: underlyings },
       instrument: 'FUTSTK',
       segment: 'NSE_FNO',
-      expiryDate: { gte: new Date() },
+      expiryDate: { gte: refDate },
     },
     orderBy: { expiryDate: 'asc' },
   });
@@ -344,11 +349,13 @@ export async function resolveOptionSecurity(
   strikePrice: number,
   optionType: 'CE' | 'PE',
   minDTE = 7,
+  tradeDate?: string,
 ): Promise<{ securityId: string; symbol: string; lotSize: number; expiry: string } | null> {
   await ensureSynced();
 
-  const minExpiry = new Date();
-  minExpiry.setDate(minExpiry.getDate() + minDTE);
+  // Use tradeDate for historical resolution (finds contracts active on that date)
+  const minExpiry = tradeDate ? new Date(tradeDate) : new Date();
+  if (!tradeDate) minExpiry.setDate(minExpiry.getDate() + minDTE);
   const minExpiryStr = minExpiry.toISOString();
 
   // Use raw SQL to avoid Prisma client cache issues with new columns
@@ -374,16 +381,56 @@ export async function resolveOptionSecurity(
 
 /** Strike step sizes for common F&O stocks (from NSE circular) */
 const STRIKE_STEPS: Record<string, number> = {
-  RELIANCE: 20, TCS: 50, HDFCBANK: 25, INFY: 25, SBIN: 5,
-  ICICIBANK: 25, KOTAKBANK: 25, LT: 50, HINDUNILVR: 25, ITC: 5,
-  AXISBANK: 25, BAJFINANCE: 25, MARUTI: 100, WIPRO: 5, TATAMOTORS: 10,
-  HCLTECH: 25, BHARTIARTL: 25, TATASTEEL: 5, NTPC: 5, ONGC: 5,
-  POWERGRID: 5, SUNPHARMA: 25, M_M: 25, ADANIENT: 50, ADANIPORTS: 25,
-  TITAN: 50, ULTRACEMCO: 50, BAJAJFINSV: 25, JSWSTEEL: 25, DIVISLAB: 50,
-  NESTLEIND: 100, APOLLOHOSP: 100, CIPLA: 25, EICHERMOT: 100, GRASIM: 25,
-  INDUSINDBK: 25, COALINDIA: 5, BPCL: 5, VEDL: 5, HINDALCO: 10,
-  DLF: 10, GODREJPROP: 25, PRESTIGE: 25, MCX: 50, BSE: 50,
-  IREDA: 5, NHPC: 5, PFC: 5, RECLTD: 5, SAIL: 5,
+  RELIANCE: 20,
+  TCS: 50,
+  HDFCBANK: 25,
+  INFY: 25,
+  SBIN: 5,
+  ICICIBANK: 25,
+  KOTAKBANK: 25,
+  LT: 50,
+  HINDUNILVR: 25,
+  ITC: 5,
+  AXISBANK: 25,
+  BAJFINANCE: 25,
+  MARUTI: 100,
+  WIPRO: 5,
+  TATAMOTORS: 10,
+  HCLTECH: 25,
+  BHARTIARTL: 25,
+  TATASTEEL: 5,
+  NTPC: 5,
+  ONGC: 5,
+  POWERGRID: 5,
+  SUNPHARMA: 25,
+  M_M: 25,
+  ADANIENT: 50,
+  ADANIPORTS: 25,
+  TITAN: 50,
+  ULTRACEMCO: 50,
+  BAJAJFINSV: 25,
+  JSWSTEEL: 25,
+  DIVISLAB: 50,
+  NESTLEIND: 100,
+  APOLLOHOSP: 100,
+  CIPLA: 25,
+  EICHERMOT: 100,
+  GRASIM: 25,
+  INDUSINDBK: 25,
+  COALINDIA: 5,
+  BPCL: 5,
+  VEDL: 5,
+  HINDALCO: 10,
+  DLF: 10,
+  GODREJPROP: 25,
+  PRESTIGE: 25,
+  MCX: 50,
+  BSE: 50,
+  IREDA: 5,
+  NHPC: 5,
+  PFC: 5,
+  RECLTD: 5,
+  SAIL: 5,
 };
 
 /** Get the strike step for a stock. Falls back to 25 (most common). */

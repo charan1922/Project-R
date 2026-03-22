@@ -9,11 +9,17 @@
 
 import { getDhanAccessToken, hasDhanAuth } from '@/lib/dhan/auth';
 import { env } from '@/lib/env';
-import { resolveSymbol, batchResolveFutures, resolveOptionSecurity, nearestStrike, getStrikeStep } from '@/lib/historify/master-contracts';
-import { execute, checkpoint } from './duckdb-schema';
+import {
+  batchResolveFutures,
+  getStrikeStep,
+  nearestStrike,
+  resolveOptionSecurity,
+  resolveSymbol,
+} from '@/lib/historify/master-contracts';
+import { checkpoint, execute } from './duckdb-schema';
 
 const DHAN_API_BASE = 'https://api.dhan.co';
-const RATE_LIMIT_MS = 260; // ~4 req/sec
+const RATE_LIMIT_MS = 350; // ~3 req/sec (safe margin for Dhan 4/sec limit)
 
 async function dhanFetch(endpoint: string, body: Record<string, unknown>): Promise<unknown> {
   if (!hasDhanAuth()) throw new Error('Dhan auth not configured');
@@ -69,7 +75,14 @@ export async function downloadEquity5min(
       interval: '5',
       fromDate,
       toDate,
-    })) as { open?: number[]; high?: number[]; low?: number[]; close?: number[]; volume?: number[]; timestamp?: number[] };
+    })) as {
+      open?: number[];
+      high?: number[];
+      low?: number[];
+      close?: number[];
+      volume?: number[];
+      timestamp?: number[];
+    };
 
     if (!data.open || data.open.length === 0) return { rows: 0, error: 'No data returned' };
 
@@ -87,7 +100,7 @@ export async function downloadEquity5min(
     // Insert in chunks
     for (let i = 0; i < values.length; i += 500) {
       const chunk = values.slice(i, i + 500).join(',');
-      await execute(`INSERT INTO backtest_equity VALUES ${chunk}`);
+      await execute(`INSERT OR IGNORE INTO backtest_equity VALUES ${chunk}`);
     }
 
     return { rows: n };
@@ -105,7 +118,7 @@ export async function downloadFutures5min(
   toDate: string,
 ): Promise<{ rows: number; error?: string }> {
   try {
-    const futMap = await batchResolveFutures([symbol]);
+    const futMap = await batchResolveFutures([symbol], toDate);
     const fut = futMap.get(symbol);
     if (!fut) return { rows: 0, error: `Futures not found: ${symbol}` };
 
@@ -117,7 +130,15 @@ export async function downloadFutures5min(
       oi: true,
       fromDate,
       toDate,
-    })) as { open?: number[]; high?: number[]; low?: number[]; close?: number[]; volume?: number[]; timestamp?: number[]; open_interest?: number[] };
+    })) as {
+      open?: number[];
+      high?: number[];
+      low?: number[];
+      close?: number[];
+      volume?: number[];
+      timestamp?: number[];
+      open_interest?: number[];
+    };
 
     if (!data.open || data.open.length === 0) return { rows: 0, error: 'No data returned' };
 
@@ -134,7 +155,7 @@ export async function downloadFutures5min(
 
     for (let i = 0; i < values.length; i += 500) {
       const chunk = values.slice(i, i + 500).join(',');
-      await execute(`INSERT INTO backtest_futures VALUES ${chunk}`);
+      await execute(`INSERT OR IGNORE INTO backtest_futures VALUES ${chunk}`);
     }
 
     return { rows: n };
@@ -168,7 +189,7 @@ export async function downloadOption5min(
     }
 
     // Resolve option securityId from master_contracts DB
-    const option = await resolveOptionSecurity(symbol, targetStrike, optionType, 0);
+    const option = await resolveOptionSecurity(symbol, targetStrike, optionType, 0, toDate);
     if (!option) return { rows: 0, error: `Option contract not found: ${symbol} ${targetStrike} ${optionType}` };
 
     const data = (await dhanFetch('/v2/charts/intraday', {
@@ -179,7 +200,15 @@ export async function downloadOption5min(
       oi: true,
       fromDate,
       toDate,
-    })) as { open?: number[]; high?: number[]; low?: number[]; close?: number[]; volume?: number[]; timestamp?: number[]; open_interest?: number[] };
+    })) as {
+      open?: number[];
+      high?: number[];
+      low?: number[];
+      close?: number[];
+      volume?: number[];
+      timestamp?: number[];
+      open_interest?: number[];
+    };
 
     if (!data.open || data.open.length === 0) return { rows: 0, error: 'No option data returned' };
 
@@ -197,7 +226,7 @@ export async function downloadOption5min(
 
     for (let i = 0; i < values.length; i += 500) {
       const chunk = values.slice(i, i + 500).join(',');
-      await execute(`INSERT INTO backtest_options VALUES ${chunk}`);
+      await execute(`INSERT OR IGNORE INTO backtest_options VALUES ${chunk}`);
     }
 
     return { rows: n };
@@ -228,7 +257,11 @@ export interface TFTrade {
  * Load ALL trades from tradefinder_platform_trades.json.
  * Returns unique stocks with their earliest/latest trade dates.
  */
-export async function loadAllTFTrades(): Promise<{ trades: TFTrade[]; symbols: string[]; dateRange: { from: string; to: string } }> {
+export async function loadAllTFTrades(): Promise<{
+  trades: TFTrade[];
+  symbols: string[];
+  dateRange: { from: string; to: string };
+}> {
   const { promises: fs } = await import('node:fs');
   const path = await import('node:path');
   const filePath = path.join(process.cwd(), 'tradefinder_platform_trades.json');
@@ -241,7 +274,20 @@ export async function loadAllTFTrades(): Promise<{ trades: TFTrade[]; symbols: s
     try {
       const match = t.trade_date.match(/(\d+)\s(\w+)\s(\d+)/);
       if (!match) continue;
-      const months: Record<string, string> = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
+      const months: Record<string, string> = {
+        Jan: '01',
+        Feb: '02',
+        Mar: '03',
+        Apr: '04',
+        May: '05',
+        Jun: '06',
+        Jul: '07',
+        Aug: '08',
+        Sep: '09',
+        Oct: '10',
+        Nov: '11',
+        Dec: '12',
+      };
       const day = match[1].padStart(2, '0');
       const mon = months[match[2]] ?? '01';
       const year = match[3];
@@ -263,9 +309,7 @@ export async function loadAllTFTrades(): Promise<{ trades: TFTrade[]; symbols: s
         spotPrice: t.spot_price ?? undefined,
         expiry: t.expiry_date ?? undefined,
       });
-    } catch {
-      continue;
-    }
+    } catch {}
   }
 
   const symbols = [...new Set(trades.map((t) => t.symbol))].sort();
@@ -401,7 +445,9 @@ export async function downloadAllTFData(
       const opt = await downloadOption5min(sym, trade.optionType, trade.strike, fromDateStr, latest);
       if (opt.error) errors.push(`${sym} ${trade.optionType}: ${opt.error}`);
       else total += opt.rows;
-      log(`[${sym}] Option ${trade.optionType} ${trade.strike}: ${opt.rows} rows ${opt.error ? `(ERROR: ${opt.error})` : ''}`);
+      log(
+        `[${sym}] Option ${trade.optionType} ${trade.strike}: ${opt.rows} rows ${opt.error ? `(ERROR: ${opt.error})` : ''}`,
+      );
       break; // One option type per symbol is enough
     }
   }

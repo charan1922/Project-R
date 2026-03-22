@@ -77,6 +77,9 @@ export function TradeDetailSection() {
       setDownloadProgress(
         `Downloading ${t.symbol}: equity + futures + ${t.optionType} ${t.strike} option 5-min data...`,
       );
+      // 45 calendar days back ≈ 30 trading sessions
+      const from = new Date(t.date);
+      from.setDate(from.getDate() - 45);
       try {
         const res = await fetch('/api/backtest/tf-validate', {
           method: 'POST',
@@ -84,8 +87,8 @@ export function TradeDetailSection() {
           body: JSON.stringify({
             action: 'download-symbols',
             symbols: [t.symbol],
-            fromDate: '2024-12-01',
-            toDate: '2026-03-22',
+            fromDate: from.toISOString().slice(0, 10),
+            toDate: t.date,
             options: t.strike > 0 ? [{ symbol: t.symbol, optionType: t.optionType, strike: t.strike }] : [],
           }),
         });
@@ -116,13 +119,15 @@ export function TradeDetailSection() {
 
       <TradeSearch trades={trades} selectedIdx={selectedIdx} onSelect={loadDetail} />
 
-      {/* Download prompt — shows immediately when selecting a trade without data */}
-      {selected && !selected.hasData && (
+      {/* Download prompt — no data at all OR has equity but missing option strike */}
+      {selected && (!selected.hasData || (detail && !detail.dataAvailable)) && !downloadingTrade && (
         <div className="flex items-center gap-3 px-4 py-4 rounded-xl bg-amber-500/10 border-2 border-amber-500/30 border-dashed">
           <Download className="w-5 h-5 text-amber-400 shrink-0" />
           <div className="flex-1">
             <span className="text-sm font-medium text-amber-300">
-              No 5-min data for {selected.symbol} {selected.optionType} {selected.strike}
+              {!selected.hasData
+                ? `No 5-min data for ${selected.symbol}`
+                : `Missing option data: ${selected.symbol} ${selected.optionType} ${selected.strike}`}
             </span>
             <p className="text-[11px] text-amber-400/60 mt-0.5">
               Downloads equity + futures + option candles from Dhan
@@ -142,13 +147,6 @@ export function TradeDetailSection() {
       )}
 
       {loading && <div className="text-center py-8 text-slate-500 text-sm">Loading trade detail...</div>}
-
-      {detail && !detail.dataAvailable && !downloadingTrade && (
-        <div className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
-          No option data for {detail.symbol} {detail.tf.optionType} {detail.tf.strike} on {detail.date}. Use the
-          download button above.
-        </div>
-      )}
 
       {detail?.dataAvailable && selected && (
         <div className="space-y-4">
