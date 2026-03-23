@@ -133,7 +133,8 @@ export default function IntradayBoostPage() {
       {/* Model Info */}
       <div className="px-3 py-2 rounded-lg bg-slate-900/50 border border-slate-800/50">
         <p className="text-[10px] text-slate-500 leading-relaxed">
-          R-Factor &asymp; 1.56 &times; spread_ratio &mdash; cross-validated on 158 samples (Pearson 0.80, Top-10 7/10). Signal direction based on % price change.
+          R-Factor &asymp; 1.56 &times; spread_ratio &mdash; cross-validated on 158 samples (Pearson 0.80, Top-10 7/10).
+          Signal direction based on % price change.
         </p>
       </div>
 
@@ -285,7 +286,7 @@ export default function IntradayBoostPage() {
 
       {/* Table */}
       <div className="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden">
-        <div className="grid grid-cols-[2fr_90px_80px_1fr_1fr_1fr_65px_80px] gap-2 px-5 py-3 bg-slate-800/50 text-xs text-slate-500 uppercase tracking-wider font-medium">
+        <div className="grid grid-cols-[2fr_90px_70px_1fr_1fr_1fr_70px_55px_70px] gap-2 px-5 py-3 bg-slate-800/50 text-xs text-slate-500 uppercase tracking-wider font-medium">
           <SortButton field="symbol" current={sortField} onSort={handleSort}>
             Symbol
           </SortButton>
@@ -302,6 +303,7 @@ export default function IntradayBoostPage() {
           <SortButton field="rfactor" current={sortField} onSort={handleSort}>
             R.Factor
           </SortButton>
+          <span className="text-amber-400/70">TF R</span>
           <span>ADX</span>
           <span className="text-center">Signal</span>
         </div>
@@ -329,9 +331,9 @@ export default function IntradayBoostPage() {
       <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-sky-500/5 border border-sky-500/15 text-xs text-slate-500">
         <Info className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
         <div>
-          <span className="text-sky-400 font-medium">Linear Spread Model</span> — R-Factor &asymp; 1.56 &times; spread_ratio.
-          Cross-validated on 158 samples (Pearson 0.80, Top-10 7.5/10). Scale correction for extreme values.
-          Signal direction based on % price change (green = up, red = down).
+          <span className="text-sky-400 font-medium">Linear Spread Model</span> — R-Factor &asymp; 1.56 &times;
+          spread_ratio. Cross-validated on 158 samples (Pearson 0.80, Top-10 7.5/10). Scale correction for extreme
+          values. Signal direction based on % price change (green = up, red = down).
         </div>
       </div>
     </div>
@@ -469,24 +471,31 @@ function SortButton({
 function StockRow({ stock, isLast }: { stock: BoostStock; isLast: boolean }) {
   const isUp = (stock.pctChange ?? 0) >= 0;
   // HOT: R-Factor > 2.0 + ADX >= 28 (strong trend) + significant move (|%| >= 1)
-  const isHot = stock.compositeRFactor >= 2.0
-    && (stock.adx ?? 0) >= 28
-    && Math.abs(stock.pctChange ?? 0) >= 1;
+  const isHot = stock.compositeRFactor >= 2.0 && (stock.adx ?? 0) >= 28 && Math.abs(stock.pctChange ?? 0) >= 1;
   // Override regime when ADX confirms trend but Z-score regime says Defensive
-  const effectiveRegime = (stock.adx ?? 0) >= 28 && stock.compositeRFactor >= 2.0
-    ? (isUp ? 'Cheetah' : 'Hybrid')
-    : stock.regime;
+  const effectiveRegime =
+    (stock.adx ?? 0) >= 28 && stock.compositeRFactor >= 2.0 ? (isUp ? 'Cheetah' : 'Hybrid') : stock.regime;
   return (
+    // biome-ignore lint/a11y/useSemanticElements: grid layout needs div not button
     <div
-      className={`grid grid-cols-[2fr_90px_80px_1fr_1fr_1fr_65px_80px] gap-2 px-5 py-3 items-center transition-colors hover:bg-slate-800/40 cursor-pointer ${
+      className={`grid grid-cols-[2fr_90px_70px_1fr_1fr_1fr_70px_55px_70px] gap-2 px-5 py-3 items-center transition-colors hover:bg-slate-800/40 cursor-pointer ${
         isHot ? 'border-l-2 border-l-amber-400 bg-amber-500/5' : ''
       } ${!isLast ? 'border-b border-slate-800/50' : ''}`}
+      role="button"
+      tabIndex={0}
       onClick={() => window.open(`https://www.tradingview.com/chart/?symbol=NSE%3A${stock.symbol}`, '_blank')}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') window.open(`https://www.tradingview.com/chart/?symbol=NSE%3A${stock.symbol}`, '_blank');
+      }}
     >
       {/* Symbol + Regime + Badges */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <span className={`text-sm font-semibold hover:text-sky-400 transition-colors ${isHot ? 'text-amber-300' : 'text-white'}`}>{stock.symbol}</span>
+          <span
+            className={`text-sm font-semibold hover:text-sky-400 transition-colors ${isHot ? 'text-amber-300' : 'text-white'}`}
+          >
+            {stock.symbol}
+          </span>
           {isHot && (
             <span className="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded animate-pulse">
               <Flame className="w-2.5 h-2.5" />
@@ -573,10 +582,21 @@ function StockRow({ stock, isLast }: { stock: BoostStock; isLast: boolean }) {
         </span>
       </div>
 
+      {/* TF R-Factor */}
+      <div>
+        {stock.tfRFactor != null ? (
+          <span className={`text-sm font-mono ${getRFactorColor(stock.tfRFactor)}`}>{stock.tfRFactor.toFixed(2)}</span>
+        ) : (
+          <span className="text-xs text-slate-700">&mdash;</span>
+        )}
+      </div>
+
       {/* ADX */}
       <div>
         {stock.adx != null ? (
-          <span className={`text-xs font-mono ${stock.adx >= 28 ? 'text-amber-400 font-bold' : stock.adx >= 20 ? 'text-slate-300' : 'text-slate-600'}`}>
+          <span
+            className={`text-xs font-mono ${stock.adx >= 28 ? 'text-amber-400 font-bold' : stock.adx >= 20 ? 'text-slate-300' : 'text-slate-600'}`}
+          >
             {stock.adx.toFixed(0)}
             {stock.adx >= 28 && <span className="text-[8px] text-amber-500 ml-0.5">T</span>}
           </span>
@@ -600,4 +620,3 @@ function StockRow({ stock, isLast }: { stock: BoostStock; isLast: boolean }) {
     </div>
   );
 }
-

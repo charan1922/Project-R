@@ -2,9 +2,25 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+import { prisma } from '@/lib/db';
 import { MasterContractsNotSyncedError } from '@/lib/historify/master-contracts';
 import { BhavcopyNotSyncedError } from '@/lib/r-factor/bhavcopy-service';
 import { rFactorService } from '@/lib/r-factor/data-service';
+
+/** Look up TF snapshot data for a date, returns Map<symbol, rFactor> */
+async function getTfSnapshot(date?: string): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (!date) return map;
+  try {
+    const rows = await prisma.$queryRawUnsafe<{ symbol: string; rFactor: number }[]>(
+      `SELECT symbol, rFactor FROM tf_snapshots WHERE date = '${date}'`,
+    );
+    for (const r of rows) map.set(r.symbol, r.rFactor);
+  } catch {
+    /* table might not exist yet */
+  }
+  return map;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -32,7 +48,7 @@ export async function GET(req: NextRequest) {
     const robustParam = searchParams.get('robust'); // 'true' | 'false'
     const engineOverrides: Record<string, unknown> = {};
     if (preset === 'balanced') {
-      engineOverrides.ensembleWeights = { ols: 0.50, spreadQuad: 0.30, momentum: 0.20 };
+      engineOverrides.ensembleWeights = { ols: 0.5, spreadQuad: 0.3, momentum: 0.2 };
     }
     // sq-dominant is the default (0.05/0.90/0.05)
     if (robustParam === 'true') {
@@ -61,14 +77,20 @@ export async function GET(req: NextRequest) {
 
     if (mode === 'past') {
       const result = await rFactorService.scanPast({ date, stockList });
+      const tfMap = await getTfSnapshot(result.latestDate);
+      const enriched = result.signals.map((s: any) => ({
+        ...s,
+        tfRFactor: tfMap.get(s.symbol) ?? null,
+      }));
       return NextResponse.json({
         success: true,
         count: result.signals.length,
-        data: result.signals,
+        data: enriched,
         dataSource: result.dataSource,
         latestDate: result.latestDate,
         marketOpen: result.marketOpen,
         availableDates: result.availableDates,
+        hasTfData: tfMap.size > 0,
         timestamp: new Date().toISOString(),
       });
     }
@@ -76,14 +98,20 @@ export async function GET(req: NextRequest) {
     // mode=auto — backward compatible with existing behavior
     const limit = parseInt(searchParams.get('limit') || '206', 10);
     const result = await rFactorService.scanAllSymbols(limit, { useOptionChain: useOC, stockList });
+    const tfMapAuto = await getTfSnapshot(result.latestDate);
+    const enrichedAuto = result.signals.map((s: any) => ({
+      ...s,
+      tfRFactor: tfMapAuto.get(s.symbol) ?? null,
+    }));
 
     return NextResponse.json({
       success: true,
       count: result.signals.length,
-      data: result.signals,
+      data: enrichedAuto,
       dataSource: result.dataSource,
       latestDate: result.latestDate,
       marketOpen: result.marketOpen,
+      hasTfData: tfMapAuto.size > 0,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

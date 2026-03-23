@@ -23,6 +23,7 @@ export interface BoostStock {
   adx?: number;
   plusDI?: number;
   minusDI?: number;
+  tfRFactor?: number | null;
 }
 
 export interface BoostData {
@@ -33,6 +34,7 @@ export interface BoostData {
   dataSource: 'live' | 'bhavcopy' | 'bhavcopy-today' | null;
   latestDate: string | null;
   marketOpen: boolean | null;
+  hasTfData: boolean;
   lastRefresh: Date | null;
   availableDates: string[];
   refresh: () => void;
@@ -60,6 +62,7 @@ export function useBoostData(
   const [marketOpen, setMarketOpen] = useState<boolean | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [hasTfData, setHasTfData] = useState(false);
 
   const mountedRef = useRef(true);
   const abortRef = useRef<AbortController | null>(null);
@@ -70,7 +73,6 @@ export function useBoostData(
   modeRef.current = mode;
   optsRef.current = opts;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reads from refs
   const doFetch = useCallback(async () => {
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -102,6 +104,7 @@ export function useBoostData(
         setDataSource(result.dataSource || 'bhavcopy');
         setLatestDate(result.latestDate || null);
         setMarketOpen(result.marketOpen ?? null);
+        setHasTfData(result.hasTfData ?? false);
         setLastRefresh(new Date());
         if (result.availableDates) setAvailableDates(result.availableDates);
       } else {
@@ -147,6 +150,7 @@ export function useBoostData(
     dataSource,
     latestDate,
     marketOpen,
+    hasTfData,
     lastRefresh,
     availableDates,
     refresh: doFetch,

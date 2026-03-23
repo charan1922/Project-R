@@ -81,6 +81,20 @@ model BhavcopyDay {
   @@map("bhavcopy_days")
 }
 
+model TfSnapshot {
+  id        Int    @id @default(autoincrement())
+  date      String
+  symbol    String
+  rFactor   Float
+  ltp       Float  @default(0)
+  prevClose Float  @default(0)
+  pctChange Float  @default(0)
+
+  @@unique([date, symbol])
+  @@index([date])
+  @@map("tf_snapshots")
+}
+
 model OptionTrade {
   id            Int      @id @default(autoincrement())
   date          String
