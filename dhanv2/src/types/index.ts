@@ -688,3 +688,119 @@ export interface OrderUpdateMessage {
     avgTradedPrice?: number;
     [key: string]: unknown;
 }
+
+// ─── Alert / Conditional Trigger Enums ──────────────────────────────────────
+
+export enum AlertComparisonType {
+    TECHNICAL_WITH_VALUE = 'TECHNICAL_WITH_VALUE',
+    TECHNICAL_WITH_INDICATOR = 'TECHNICAL_WITH_INDICATOR',
+    TECHNICAL_WITH_CLOSE = 'TECHNICAL_WITH_CLOSE',
+    PRICE_WITH_VALUE = 'PRICE_WITH_VALUE',
+}
+
+export enum AlertIndicator {
+    SMA_5 = 'SMA_5',
+    SMA_10 = 'SMA_10',
+    SMA_20 = 'SMA_20',
+    SMA_50 = 'SMA_50',
+    SMA_100 = 'SMA_100',
+    SMA_200 = 'SMA_200',
+    EMA_5 = 'EMA_5',
+    EMA_10 = 'EMA_10',
+    EMA_20 = 'EMA_20',
+    EMA_50 = 'EMA_50',
+    EMA_100 = 'EMA_100',
+    EMA_200 = 'EMA_200',
+    BB_UPPER = 'BB_UPPER',
+    BB_LOWER = 'BB_LOWER',
+    RSI_14 = 'RSI_14',
+    ATR_14 = 'ATR_14',
+    STOCHASTIC = 'STOCHASTIC',
+    STOCHRSI_14 = 'STOCHRSI_14',
+    MACD_26 = 'MACD_26',
+    MACD_12 = 'MACD_12',
+    MACD_HIST = 'MACD_HIST',
+}
+
+export enum AlertOperator {
+    CROSSING_UP = 'CROSSING_UP',
+    CROSSING_DOWN = 'CROSSING_DOWN',
+    CROSSING_ANY_SIDE = 'CROSSING_ANY_SIDE',
+    GREATER_THAN = 'GREATER_THAN',
+    LESS_THAN = 'LESS_THAN',
+    GREATER_THAN_EQUAL = 'GREATER_THAN_EQUAL',
+    LESS_THAN_EQUAL = 'LESS_THAN_EQUAL',
+    EQUAL = 'EQUAL',
+    NOT_EQUAL = 'NOT_EQUAL',
+}
+
+export enum AlertTimeFrame {
+    DAY = 'DAY',
+    ONE_MIN = 'ONE_MIN',
+    FIVE_MIN = 'FIVE_MIN',
+    FIFTEEN_MIN = 'FIFTEEN_MIN',
+}
+
+export enum AlertStatus {
+    ACTIVE = 'ACTIVE',
+    TRIGGERED = 'TRIGGERED',
+    EXPIRED = 'EXPIRED',
+    CANCELLED = 'CANCELLED',
+}
+
+// ─── Alert / Conditional Trigger Interfaces ─────────────────────────────────
+
+export interface AlertCondition {
+    comparisonType?: AlertComparisonType;
+    exchangeSegment?: ExchangeSegment;
+    securityId: string;
+    indicatorName?: AlertIndicator;
+    timeFrame?: AlertTimeFrame;
+    operator?: AlertOperator;
+    comparingValue?: number;
+    comparingIndicatorName?: AlertIndicator;
+    expDate?: string;
+    frequency?: 'ONCE';
+    userNote?: string;
+}
+
+export interface AlertOrder {
+    transactionType: TransactionType;
+    exchangeSegment: ExchangeSegment;
+    productType: ProductType;
+    orderType: OrderType;
+    securityId: string;
+    quantity: number;
+    validity: Validity;
+    price?: string;
+    discQuantity?: string;
+    triggerPrice?: string;
+}
+
+export interface AlertOrderRequest {
+    dhanClientId: string;
+    condition: AlertCondition;
+    orders: AlertOrder[];
+}
+
+export interface AlertModifyRequest {
+    dhanClientId: string;
+    alertId: string;
+    condition: AlertCondition;
+    orders?: AlertOrder[];
+}
+
+export interface AlertOrderResponse {
+    alertId: string;
+    alertStatus: string;
+}
+
+export interface GetAlertResponse {
+    alertId: string;
+    alertStatus: string;
+    createdTime: string;
+    triggeredTime: string;
+    lastPrice: number;
+    condition: AlertCondition;
+    orders: AlertOrder[];
+}

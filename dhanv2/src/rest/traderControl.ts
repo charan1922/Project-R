@@ -54,14 +54,14 @@ export class TraderControlApi {
 
     /**
      * Configure automatic exit when cumulative P&L thresholds are breached.
-     * PUT /pnlExit
+     * POST /pnlExit
      *
      * @warning Setting thresholds below current profit (or above current loss)
      * triggers IMMEDIATE, IRREVERSIBLE liquidation. Use with care.
      * @param req.enableKillSwitch - Lock account after liquidation if true.
      */
     async configurePnlExit(req: PnlExitRequest): Promise<unknown> {
-        const resp = await this.http.put<unknown>('/pnlExit', req);
+        const resp = await this.http.post<unknown>('/pnlExit', req);
         return resp.data;
     }
 

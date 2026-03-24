@@ -5,8 +5,8 @@
   },
   "servers": [
     {
-      "url": "https://api.dhan.co/v2",
-      "description": "Dhan V2 Production"
+      "url": "/api-docs/proxy",
+      "description": "Local proxy to Dhan V2 API (avoids CORS)"
     }
   ],
   "paths": {
@@ -1606,6 +1606,212 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChartsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketfeed/ltp": {
+      "post": {
+        "tags": [
+          "Market Feed"
+        ],
+        "summary": "Get LTP snapshot",
+        "description": "Retrieve Last Traded Price for instruments across segments.",
+        "operationId": "getMarketQuoteLTP",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketFeedRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "LTP data keyed by segment and security ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketfeed/ohlc": {
+      "post": {
+        "tags": [
+          "Market Feed"
+        ],
+        "summary": "Get OHLC snapshot",
+        "description": "Retrieve OHLC + volume for instruments across segments.",
+        "operationId": "getMarketQuoteOHLC",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketFeedRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OHLC data keyed by segment and security ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketfeed/quote": {
+      "post": {
+        "tags": [
+          "Market Feed"
+        ],
+        "summary": "Get full quote with depth",
+        "description": "Full market quote with OHLC, volume, OI, average price, last price, and market depth (top 5 bid/ask). Response nested as data.SEGMENT.securityId.{last_price, ohlc, volume, oi, ...}",
+        "operationId": "getMarketQuoteDepth",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketFeedRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Full quote with depth data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/optionchain": {
+      "post": {
+        "tags": [
+          "Market Feed"
+        ],
+        "summary": "Get option chain",
+        "description": "Per-strike CE/PE data: volume, OI, greeks, IV. Rate limited to 1 request per 3 seconds.",
+        "operationId": "getOptionChain",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "UnderlyingScrip": {
+                    "type": "integer",
+                    "description": "Security ID of the underlying"
+                  },
+                  "UnderlyingSeg": {
+                    "type": "string",
+                    "enum": [
+                      "NSE_EQ",
+                      "NSE_FNO",
+                      "BSE_EQ",
+                      "BSE_FNO",
+                      "IDX_I"
+                    ],
+                    "description": "Exchange segment"
+                  },
+                  "Expiry": {
+                    "type": "string",
+                    "description": "Expiry date (YYYY-MM-DD)"
+                  }
+                },
+                "required": [
+                  "UnderlyingScrip",
+                  "UnderlyingSeg",
+                  "Expiry"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Option chain with strikes, CE/PE volume, OI, greeks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/optionchain/expirylist": {
+      "post": {
+        "tags": [
+          "Market Feed"
+        ],
+        "summary": "Get expiry dates",
+        "description": "Get available expiry dates for option contracts of an underlying.",
+        "operationId": "getExpiryList",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "UnderlyingScrip": {
+                    "type": "integer",
+                    "description": "Security ID of the underlying"
+                  },
+                  "UnderlyingSeg": {
+                    "type": "string",
+                    "enum": [
+                      "NSE_EQ",
+                      "NSE_FNO",
+                      "BSE_EQ",
+                      "BSE_FNO",
+                      "IDX_I"
+                    ]
+                  }
+                },
+                "required": [
+                  "UnderlyingScrip",
+                  "UnderlyingSeg"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of expiry dates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             }
@@ -4522,6 +4728,63 @@
             }
           }
         }
+      },
+      "MarketFeedRequest": {
+        "type": "object",
+        "description": "Keys are exchange segment names, values are arrays of security ID strings.",
+        "properties": {
+          "NSE_EQ": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "NSE Equity security IDs"
+          },
+          "NSE_FNO": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "NSE F&O security IDs"
+          },
+          "BSE_EQ": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "BSE Equity security IDs"
+          },
+          "BSE_FNO": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "BSE F&O security IDs"
+          },
+          "MCX_COMM": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "MCX Commodity security IDs"
+          },
+          "IDX_I": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Index security IDs"
+          }
+        },
+        "example": {
+          "NSE_EQ": [
+            "1333",
+            "11536"
+          ],
+          "NSE_FNO": [
+            "49081"
+          ]
+        }
       }
     },
     "securitySchemes": {
@@ -4543,6 +4806,12 @@
     {
       "accessToken": [],
       "clientId": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Market Feed",
+      "description": "Real-time market quotes (LTP, OHLC, full depth) and option chain. Not in official Dhan OpenAPI spec but implemented in SDK and used by Project-R."
     }
   ]
 }

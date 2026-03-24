@@ -24,6 +24,7 @@ export interface BoostStock {
   plusDI?: number;
   minusDI?: number;
   tfRFactor?: number | null;
+  bhavRFactor?: number | null;
 }
 
 export interface BoostData {
@@ -41,7 +42,7 @@ export interface BoostData {
   dismissSync: () => void;
 }
 
-export type BoostMode = 'live' | 'past';
+export type BoostMode = 'live' | 'past' | 'dhan-daily';
 
 /**
  * Data hook for Intraday Boost — split into Live (Dhan) and Past (bhavcopy) modes.

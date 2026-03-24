@@ -90,6 +90,23 @@ export const v1Items: NavItemType[] = [
         href: '/trading-lab/bhavcopy',
         icon: <BarChart2 className="w-4 h-4" />,
       },
+      {
+        label: 'Option Trader',
+        href: '/trading-lab/ai-autopilot/options',
+        icon: <Activity className="w-4 h-4" />,
+        badge: 'NEW',
+      },
+      {
+        label: 'TF Backtest',
+        href: '/trading-lab/ai-autopilot/backtest',
+        icon: <FlaskConical className="w-4 h-4" />,
+        badge: 'NEW',
+      },
+      {
+        label: 'TF Data',
+        href: '/trading-lab/ai-autopilot/backtest/data',
+        icon: <Database className="w-4 h-4" />,
+      },
     ],
   },
 ];
@@ -229,23 +246,6 @@ export const aiTradingItems: NavItemType[] = [
         label: 'Strategy Config',
         href: '/trading-lab/ai-autopilot/config',
         icon: <Settings className="w-4 h-4" />,
-      },
-      {
-        label: 'Option Trader',
-        href: '/trading-lab/ai-autopilot/options',
-        icon: <Activity className="w-4 h-4" />,
-        badge: 'NEW',
-      },
-      {
-        label: 'TF Backtest',
-        href: '/trading-lab/ai-autopilot/backtest',
-        icon: <FlaskConical className="w-4 h-4" />,
-        badge: 'NEW',
-      },
-      {
-        label: 'TF Data',
-        href: '/trading-lab/ai-autopilot/backtest/data',
-        icon: <Database className="w-4 h-4" />,
       },
       {
         label: 'Risk Manager',

@@ -44,9 +44,9 @@ describe('TraderControlApi', () => {
         expect(http.get).toHaveBeenCalledWith('/pnlExit');
     });
 
-    it('configurePnlExit() PUTs to /pnlExit', async () => {
+    it('configurePnlExit() POSTs to /pnlExit', async () => {
         await api.configurePnlExit({ profitValue: 5000, lossValue: 2000, enableKillSwitch: false });
-        expect(http.put).toHaveBeenCalledWith('/pnlExit', expect.objectContaining({
+        expect(http.post).toHaveBeenCalledWith('/pnlExit', expect.objectContaining({
             profitValue: 5000,
             lossValue: 2000,
         }));

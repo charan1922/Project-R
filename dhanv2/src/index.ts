@@ -40,6 +40,7 @@ import { StatementsApi } from './rest/statements';
 import { MarketQuotesApi } from './rest/marketQuotes';
 import { HistoricalApi } from './rest/historical';
 import { TraderControlApi } from './rest/traderControl';
+import { AlertsApi } from './rest/alerts';
 import { OrderUpdateSocket } from './websockets/OrderUpdateSocket';
 import { MarketFeedSocket } from './websockets/MarketFeedSocket';
 import { FullMarketDepthSocket, DepthLevel_ } from './websockets/FullMarketDepthSocket';
@@ -73,6 +74,8 @@ export class DhanHQClient {
     public readonly historical: HistoricalApi;
     /** Kill switch, P&L exit, and IP setup. */
     public readonly traderControl: TraderControlApi;
+    /** Conditional triggers / price & technical alerts. */
+    public readonly alerts: AlertsApi;
 
     constructor(
         clientId: string,
@@ -91,6 +94,7 @@ export class DhanHQClient {
         this.marketQuotes = new MarketQuotesApi(http);
         this.historical = new HistoricalApi(http);
         this.traderControl = new TraderControlApi(http, clientId);
+        this.alerts = new AlertsApi(http, clientId);
     }
 
     // ─── WebSocket factories ─────────────────────────────────────────────────
@@ -142,6 +146,7 @@ export { StatementsApi } from './rest/statements';
 export { MarketQuotesApi } from './rest/marketQuotes';
 export { HistoricalApi } from './rest/historical';
 export { TraderControlApi } from './rest/traderControl';
+export { AlertsApi } from './rest/alerts';
 export type { SecurityMap, LtpData, OhlcData, QuoteDepthData } from './rest/marketQuotes';
 export type { OhlcCandle, HistoricalDataResponse } from './rest/historical';
 

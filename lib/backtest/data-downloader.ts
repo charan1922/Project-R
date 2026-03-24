@@ -7,8 +7,7 @@
  * Rate limits: 4 req/sec (250ms between calls).
  */
 
-import { getDhanAccessToken, hasDhanAuth } from '@/lib/dhan/auth';
-import { env } from '@/lib/env';
+import { dhanRequest } from '@/lib/dhan/rate-limiter';
 import {
   batchResolveFutures,
   getStrikeStep,
@@ -17,34 +16,6 @@ import {
   resolveSymbol,
 } from '@/lib/historify/master-contracts';
 import { checkpoint, execute } from './duckdb-schema';
-
-const DHAN_API_BASE = 'https://api.dhan.co';
-const RATE_LIMIT_MS = 350; // ~3 req/sec (safe margin for Dhan 4/sec limit)
-
-async function dhanFetch(endpoint: string, body: Record<string, unknown>): Promise<unknown> {
-  if (!hasDhanAuth()) throw new Error('Dhan auth not configured');
-  const token = await getDhanAccessToken();
-  const clientId = env.DHAN_CLIENT_ID!;
-
-  await new Promise((r) => setTimeout(r, RATE_LIMIT_MS));
-
-  const resp = await fetch(`${DHAN_API_BASE}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'access-token': token,
-      'client-id': clientId,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!resp.ok) {
-    const text = await resp.text().catch(() => '');
-    throw new Error(`Dhan API ${resp.status}: ${text.slice(0, 200)}`);
-  }
-
-  return resp.json();
-}
 
 /**
  * Convert Unix timestamp to IST date string (YYYY-MM-DD).
@@ -68,7 +39,7 @@ export async function downloadEquity5min(
     const entry = await resolveSymbol(symbol, 'NSE');
     if (!entry) return { rows: 0, error: `Symbol not found: ${symbol}` };
 
-    const data = (await dhanFetch('/v2/charts/intraday', {
+    const data = (await dhanRequest('/v2/charts/intraday', {
       securityId: entry.securityId,
       exchangeSegment: 'NSE_EQ',
       instrument: 'EQUITY',
@@ -122,7 +93,7 @@ export async function downloadFutures5min(
     const fut = futMap.get(symbol);
     if (!fut) return { rows: 0, error: `Futures not found: ${symbol}` };
 
-    const data = (await dhanFetch('/v2/charts/intraday', {
+    const data = (await dhanRequest('/v2/charts/intraday', {
       securityId: fut.securityId,
       exchangeSegment: 'NSE_FNO',
       instrument: 'FUTSTK',
@@ -192,7 +163,7 @@ export async function downloadOption5min(
     const option = await resolveOptionSecurity(symbol, targetStrike, optionType, 0, toDate);
     if (!option) return { rows: 0, error: `Option contract not found: ${symbol} ${targetStrike} ${optionType}` };
 
-    const data = (await dhanFetch('/v2/charts/intraday', {
+    const data = (await dhanRequest('/v2/charts/intraday', {
       securityId: option.securityId,
       exchangeSegment: 'NSE_FNO',
       instrument: 'OPTSTK',

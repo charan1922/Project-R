@@ -75,6 +75,34 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    if (mode === 'dhan-daily') {
+      const result = await rFactorService.scanDhanDaily({ stockList });
+      const tfMap = await getTfSnapshot(result.latestDate);
+      // Also get bhavcopy R for comparison
+      const bhavMap = new Map<string, number>();
+      try {
+        const bhavResult = await rFactorService.scanPast({ date, stockList });
+        for (const s of bhavResult.signals) bhavMap.set((s as any).symbol, (s as any).compositeRFactor);
+      } catch {
+        /* bhavcopy might not be available */
+      }
+      const enriched = result.signals.map((s: any) => ({
+        ...s,
+        tfRFactor: tfMap.get(s.symbol) ?? null,
+        bhavRFactor: bhavMap.get(s.symbol) ?? null,
+      }));
+      return NextResponse.json({
+        success: true,
+        count: result.signals.length,
+        data: enriched,
+        dataSource: 'dhan-daily',
+        latestDate: result.latestDate,
+        marketOpen: result.marketOpen,
+        hasTfData: tfMap.size > 0,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     if (mode === 'past') {
       const result = await rFactorService.scanPast({ date, stockList });
       const tfMap = await getTfSnapshot(result.latestDate);

@@ -71,7 +71,7 @@ The codebase is organized by domain, not by type:
       - `POST /v2/optionchain` — per-strike CE/PE volume, OI, greeks (rate limit: 1 req / 3s)
       - `POST /v2/charts/intraday` — 5-min candle data (with `oi: true` flag for OI) for backtesting/analysis
       - `POST /v2/charts/historical` — Daily OHLCV candles (with `oi: true` flag for OI)
-- **`/dhanv2`** — Standalone TypeScript SDK for Dhan V2 API (separate pnpm package `dhanhq-ts`). REST clients, WebSocket handlers, binary protocol parser. Rate-limited to 4 req/sec.
+- **`/dhanv2`** — Standalone TypeScript SDK for Dhan V2 API (separate pnpm package `dhanhq-ts`). REST clients, WebSocket handlers, binary protocol parser. Rate limits: Data APIs 10/sec, Quote APIs 1/sec (see rate limit table below).
 - **`/components`** — shadcn/ui components (Radix UI + Tailwind + CVA)
 
 ### Real-Time Data Pipeline
@@ -117,15 +117,27 @@ Rate limit: Dhan allows token generation once every 2 minutes. Concurrent calls 
 
 **Standalone scripts**: When running TypeScript outside Next.js (e.g., `npx tsx -e "..."`), env vars from `.env.local` are NOT auto-loaded. Use `import { config } from 'dotenv'; config({ path: '.env.local' });` at the top of the script.
 
+### Dhan API Rate Limits (Official)
+
+| Category | Limit | Endpoints |
+|----------|-------|-----------|
+| **Data APIs** | 10 req/sec | `/charts/historical`, `/charts/intraday`, `/charts/rollingoption` |
+| **Quote APIs** | 1 req/sec | `/marketfeed/quote`, `/marketfeed/ohlc`, `/optionchain` |
+| **Order APIs** | 25 req/sec | `/orders`, `/orders/slicing` |
+| **Non-Trading APIs** | 20 req/sec | `/holdings`, `/positions`, `/fundlimit` |
+
+**CRITICAL: No parallel Dhan calls.** Always sequential with appropriate delay per category. Never use `Promise.all` for multiple Dhan requests — triggers 429 immediately. Use 100ms delay for Data APIs, 1000ms+ for Quote APIs.
+
 ### Dhan API Endpoints Used
 
 | Endpoint | Segment | Returns | Rate Limit |
 |----------|---------|---------|-----------|
-| `POST /v2/marketfeed/quote` | NSE_EQ | OHLC, volume, average_price, last_price | 4 req/sec |
-| `POST /v2/marketfeed/quote` | NSE_FNO | volume, OI, average_price, last_price, depth | 4 req/sec |
-| `POST /v2/optionchain` | NSE_FNO | Per-strike CE/PE: volume, OI, greeks, IV | 1 req/3sec |
-| `POST /v2/charts/intraday` | Any | 5-min OHLCV candles + OI (with oi flag) | 4 req/sec |
-| `POST /v2/charts/historical` | Any | Daily OHLCV candles + OI (with oi flag) | 4 req/sec |
+| `POST /v2/marketfeed/quote` | NSE_EQ | OHLC, volume, average_price, last_price | **1 req/sec** (Quote) |
+| `POST /v2/marketfeed/quote` | NSE_FNO | volume, OI, average_price, last_price, depth | **1 req/sec** (Quote) |
+| `POST /v2/optionchain` | NSE_FNO | Per-strike CE/PE: volume, OI, greeks, IV | **1 req/sec** (Quote) |
+| `POST /v2/charts/intraday` | Any | 5-min OHLCV candles + OI (with oi flag) | **10 req/sec** (Data) |
+| `POST /v2/charts/historical` | Any | Daily OHLCV candles + OI (with oi flag) | **10 req/sec** (Data) |
+| `POST /v2/charts/rollingoption` | NSE_FNO | Expired option OHLCV + IV by strike | **10 req/sec** (Data) |
 
 ### R-Factor V4 Model Architecture
 

@@ -12,7 +12,10 @@ type SignalFilter = 'ALL' | 'UP' | 'DOWN';
 type SortField = 'rfactor' | 'symbol' | 'spread' | 'pcr' | 'pctChange';
 
 export default function IntradayBoostPage() {
-  const [tab, setTab] = useQueryState('tab', parseAsStringLiteral(['live', 'past'] as const).withDefault('past'));
+  const [tab, setTab] = useQueryState(
+    'tab',
+    parseAsStringLiteral(['live', 'past', 'dhan-daily'] as const).withDefault('past'),
+  );
   const [useOC, setUseOC] = useQueryState('oc', parseAsBoolean.withDefault(true));
   const [tfOnly, setTfOnly] = useQueryState('tf', parseAsBoolean.withDefault(true));
   const [selectedDate, setSelectedDate] = useState('');
@@ -106,6 +109,17 @@ export default function IntradayBoostPage() {
             }`}
           >
             Past (EOD)
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('dhan-daily')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              tab === 'dhan-daily'
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            Dhan Daily
           </button>
         </div>
 
@@ -303,7 +317,7 @@ export default function IntradayBoostPage() {
           <SortButton field="rfactor" current={sortField} onSort={handleSort}>
             R.Factor
           </SortButton>
-          <span className="text-amber-400/70">TF R</span>
+          <span className="text-amber-400/70">{tab === 'dhan-daily' ? 'Bhav R' : 'TF R'}</span>
           <span>ADX</span>
           <span className="text-center">Signal</span>
         </div>
@@ -582,13 +596,16 @@ function StockRow({ stock, isLast }: { stock: BoostStock; isLast: boolean }) {
         </span>
       </div>
 
-      {/* TF R-Factor */}
+      {/* Comparison R-Factor: TF R (on past/live tabs) or Bhav R (on dhan-daily tab) */}
       <div>
-        {stock.tfRFactor != null ? (
-          <span className={`text-sm font-mono ${getRFactorColor(stock.tfRFactor)}`}>{stock.tfRFactor.toFixed(2)}</span>
-        ) : (
-          <span className="text-xs text-slate-700">&mdash;</span>
-        )}
+        {(() => {
+          const cmpR = stock.bhavRFactor ?? stock.tfRFactor;
+          return cmpR != null ? (
+            <span className={`text-sm font-mono ${getRFactorColor(cmpR)}`}>{cmpR.toFixed(2)}</span>
+          ) : (
+            <span className="text-xs text-slate-700">&mdash;</span>
+          );
+        })()}
       </div>
 
       {/* ADX */}

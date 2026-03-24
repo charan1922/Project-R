@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { ADX } from 'trading-signals';
 import { prisma } from '@/lib/db';
 import { hasDhanAuth } from '@/lib/dhan/auth';
 import {
@@ -9,7 +10,6 @@ import {
   todayIST as getTodayIST,
   isMarketHours,
   isTradingDay,
-  type IntradayCandle,
   type OptionChainSummary,
 } from '@/lib/dhan/market-feed';
 import {
@@ -19,8 +19,8 @@ import {
   resolveSymbol,
 } from '../historify/master-contracts';
 import { BhavcopyNotSyncedError, getHistoricalData } from './bhavcopy-service';
-import { ADX } from 'trading-signals';
-import { RFactorEngine, engine } from './engine';
+import { batchGetDhanDaily } from './dhan-daily-service';
+import { engine, RFactorEngine } from './engine';
 import { type DailyStockData, type SignalOutput, transformToFactorData } from './types';
 
 /** Extended signal with live price data */
@@ -175,10 +175,18 @@ export class RFactorDataService {
   }
 
   /** Compute latest ADX values from daily OHLC history */
-  private computeADX(dailyData: DailyStockData[]): { adx: number | null; plusDI: number | null; minusDI: number | null } {
+  private computeADX(dailyData: DailyStockData[]): {
+    adx: number | null;
+    plusDI: number | null;
+    minusDI: number | null;
+  } {
     if (dailyData.length < 28) return { adx: null, plusDI: null, minusDI: null };
     const indicator = new ADX(14);
-    let result: { adx: number | null; plusDI: number | null; minusDI: number | null } = { adx: null, plusDI: null, minusDI: null };
+    let result: { adx: number | null; plusDI: number | null; minusDI: number | null } = {
+      adx: null,
+      plusDI: null,
+      minusDI: null,
+    };
     for (const d of dailyData) {
       indicator.update({ high: d.eq_high, low: d.eq_low, close: d.eq_close }, false);
       try {
@@ -205,14 +213,22 @@ export class RFactorDataService {
   private async computeIntradayADX(
     securityId: number,
   ): Promise<{ adx: number | null; plusDI: number | null; minusDI: number | null }> {
-    const nullResult: { adx: number | null; plusDI: number | null; minusDI: number | null } = { adx: null, plusDI: null, minusDI: null };
+    const nullResult: { adx: number | null; plusDI: number | null; minusDI: number | null } = {
+      adx: null,
+      plusDI: null,
+      minusDI: null,
+    };
     try {
       const candles = await fetchIntradayCandles(securityId, '5');
       // ADX period 7 on 5-min = needs 15+ candles (7*2+1 for warm-up)
       if (candles.length < 15) return nullResult;
 
       const indicator = new ADX(7);
-      let result: { adx: number | null; plusDI: number | null; minusDI: number | null } = { adx: null, plusDI: null, minusDI: null };
+      let result: { adx: number | null; plusDI: number | null; minusDI: number | null } = {
+        adx: null,
+        plusDI: null,
+        minusDI: null,
+      };
       for (const c of candles) {
         indicator.update({ high: c.high, low: c.low, close: c.close }, false);
         try {
@@ -388,6 +404,62 @@ export class RFactorDataService {
     };
   }
 
+  /**
+   * DHAN-DAILY mode: Uses Dhan /charts/historical for daily OHLCV + OI.
+   * Parallel system to bhavcopy — produces same DailyStockData → FactorData → engine.
+   * Allows cross-checking R-Factor from two independent data sources.
+   */
+  async scanDhanDaily(opts?: { stockList?: 'all' | 'tf' }): Promise<ScanResult> {
+    const allSymbols = await this.getFnOStocks();
+    const targetSymbols = opts?.stockList === 'tf' ? await this.getTfTradedStocks(allSymbols) : allSymbols;
+    const sectorMap = await this.getSectorMap();
+
+    console.log(`[Boost] Dhan-daily mode: fetching historical data for ${targetSymbols.length} symbols...`);
+    const signals = this.attachSectors(await this.computeDhanDailySignals(targetSymbols), sectorMap);
+    return {
+      signals,
+      dataSource: 'dhan-daily' as ScanResult['dataSource'],
+      latestDate: getTodayIST(),
+      marketOpen: isMarketHours(),
+    };
+  }
+
+  /**
+   * Compute R-Factor from Dhan daily historical data.
+   * Same logic as computeBhavcopySignals but uses getDhanDailyData() instead of getHistoricalData().
+   */
+  private async computeDhanDailySignals(symbols: string[]): Promise<BoostSignal[]> {
+    const { data: dataMap, failures } = await batchGetDhanDaily(symbols, 30);
+    if (failures.length > 0) {
+      console.warn(
+        `[DhanDaily] ${failures.length} symbols failed: ${failures.slice(0, 5).join(', ')}${failures.length > 5 ? '...' : ''}`,
+      );
+    }
+    const results: (BoostSignal | null)[] = [];
+
+    for (const [sym, dailyData] of dataMap) {
+      try {
+        if (dailyData.length < 15) continue;
+        const factorData = transformToFactorData(dailyData);
+        const current = factorData[factorData.length - 1];
+        const historical = factorData.slice(0, -1);
+        const signal = this.activeEngine.calculateSignal(sym, current, historical);
+        const { adx, plusDI, minusDI } = this.computeADX(dailyData);
+        const today = dailyData[dailyData.length - 1];
+        const yesterday = dailyData.length >= 2 ? dailyData[dailyData.length - 2] : null;
+        const pctChange =
+          yesterday && yesterday.eq_close > 0
+            ? ((today.eq_close - yesterday.eq_close) / yesterday.eq_close) * 100
+            : undefined;
+        results.push({ ...signal, adx, plusDI, minusDI, pctChange } as BoostSignal);
+      } catch (e) {
+        console.warn(`[DhanDaily] ${sym} signal failed:`, (e as Error).message);
+      }
+    }
+
+    return results.filter((r): r is BoostSignal => r !== null).sort((a, b) => b.compositeRFactor - a.compositeRFactor);
+  }
+
   /** Get TradeFinder-traded stocks (intersection with official F&O list) */
   private async getTfTradedStocks(allFno: string[]): Promise<string[]> {
     try {
@@ -507,9 +579,10 @@ export class RFactorDataService {
         // % change: today's close vs yesterday's close
         const today = dailyData[dailyData.length - 1];
         const yesterday = dailyData.length >= 2 ? dailyData[dailyData.length - 2] : null;
-        const pctChange = yesterday && yesterday.eq_close > 0
-          ? ((today.eq_close - yesterday.eq_close) / yesterday.eq_close) * 100
-          : undefined;
+        const pctChange =
+          yesterday && yesterday.eq_close > 0
+            ? ((today.eq_close - yesterday.eq_close) / yesterday.eq_close) * 100
+            : undefined;
         return { ...signal, adx, plusDI, minusDI, pctChange } as BoostSignal;
       }),
     );
