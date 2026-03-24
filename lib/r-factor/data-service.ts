@@ -409,37 +409,52 @@ export class RFactorDataService {
    * Parallel system to bhavcopy — produces same DailyStockData → FactorData → engine.
    * Allows cross-checking R-Factor from two independent data sources.
    */
-  async scanDhanDaily(opts?: { stockList?: 'all' | 'tf' }): Promise<ScanResult> {
+  async scanDhanDaily(opts?: {
+    stockList?: 'all' | 'tf';
+    date?: string;
+  }): Promise<ScanResult & { rawData?: Map<string, DailyStockData>; failures?: string[] }> {
     const allSymbols = await this.getFnOStocks();
     const targetSymbols = opts?.stockList === 'tf' ? await this.getTfTradedStocks(allSymbols) : allSymbols;
     const sectorMap = await this.getSectorMap();
+    const targetDate = opts?.date;
 
-    console.log(`[Boost] Dhan-daily mode: fetching historical data for ${targetSymbols.length} symbols...`);
-    const signals = this.attachSectors(await this.computeDhanDailySignals(targetSymbols), sectorMap);
+    console.log(
+      `[Boost] Dhan-daily mode: fetching historical data for ${targetSymbols.length} symbols${targetDate ? ` (date: ${targetDate})` : ''}...`,
+    );
+    const { signals, rawData, failures } = await this.computeDhanDailySignals(targetSymbols, targetDate);
+    const enriched = this.attachSectors(signals, sectorMap);
     return {
-      signals,
+      signals: enriched,
       dataSource: 'dhan-daily' as ScanResult['dataSource'],
-      latestDate: getTodayIST(),
+      latestDate: targetDate ?? getTodayIST(),
       marketOpen: isMarketHours(),
+      rawData,
+      failures,
     };
   }
 
   /**
    * Compute R-Factor from Dhan daily historical data.
-   * Same logic as computeBhavcopySignals but uses getDhanDailyData() instead of getHistoricalData().
+   * Returns signals + raw data (last day per symbol) + failures.
    */
-  private async computeDhanDailySignals(symbols: string[]): Promise<BoostSignal[]> {
-    const { data: dataMap, failures } = await batchGetDhanDaily(symbols, 30);
+  private async computeDhanDailySignals(
+    symbols: string[],
+    targetDate?: string,
+  ): Promise<{ signals: BoostSignal[]; rawData: Map<string, DailyStockData>; failures: string[] }> {
+    const { data: dataMap, failures } = await batchGetDhanDaily(symbols, 30, targetDate);
     if (failures.length > 0) {
       console.warn(
         `[DhanDaily] ${failures.length} symbols failed: ${failures.slice(0, 5).join(', ')}${failures.length > 5 ? '...' : ''}`,
       );
     }
     const results: (BoostSignal | null)[] = [];
+    const rawData = new Map<string, DailyStockData>();
 
     for (const [sym, dailyData] of dataMap) {
       try {
         if (dailyData.length < 15) continue;
+        // Save last day's raw data for comparison
+        rawData.set(sym, dailyData[dailyData.length - 1]);
         const factorData = transformToFactorData(dailyData);
         const current = factorData[factorData.length - 1];
         const historical = factorData.slice(0, -1);
@@ -457,7 +472,13 @@ export class RFactorDataService {
       }
     }
 
-    return results.filter((r): r is BoostSignal => r !== null).sort((a, b) => b.compositeRFactor - a.compositeRFactor);
+    return {
+      signals: results
+        .filter((r): r is BoostSignal => r !== null)
+        .sort((a, b) => b.compositeRFactor - a.compositeRFactor),
+      rawData,
+      failures,
+    };
   }
 
   /** Get TradeFinder-traded stocks (intersection with official F&O list) */

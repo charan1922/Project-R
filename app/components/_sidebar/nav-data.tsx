@@ -107,6 +107,11 @@ export const v1Items: NavItemType[] = [
         href: '/trading-lab/ai-autopilot/backtest/data',
         icon: <Database className="w-4 h-4" />,
       },
+      {
+        label: 'Bhav vs Dhan',
+        href: '/trading-lab/bhav-dhan-compare',
+        icon: <BarChart2 className="w-4 h-4" />,
+      },
     ],
   },
 ];
