@@ -1,0 +1,2387 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Project-R (DeepQuant) API",
+    "version": "2.0.0",
+    "description": "AI-driven algorithmic trading platform with R-Factor market intelligence, Historify data management, quantitative backtesting, and AI-powered trade decisions. Built on Dhan V2 for Indian equity & F&O markets.",
+    "contact": {
+      "name": "Project-R"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Development"
+    }
+  ],
+  "tags": [
+    {
+      "name": "R-Factor",
+      "description": "V4 ensemble market intelligence engine. Computes composite R-Factor scores from 8 factors (spread, OI level, futures turnover/volume, options volume, equity trade size, OI change, PCR) using spread-quadratic dominant ensemble."
+    },
+    {
+      "name": "TF Snapshot",
+      "description": "TradeFinder comparison data. Import and query TradeFinder R-Factor snapshots for model validation."
+    },
+    {
+      "name": "Historify",
+      "description": "Live trading data, chart data, DuckDB sync, watchlist management, scheduled jobs, settings, and system stats."
+    },
+    {
+      "name": "Backtest",
+      "description": "Strategy backtesting, TradeFinder validation, and 5-min data download for equity/futures/options."
+    },
+    {
+      "name": "Quant",
+      "description": "Quantitative analysis: real backtest engine (EMA Crossover, RSI, Dual Momentum, Buy & Hold) and Relative Rotation Graph."
+    },
+    {
+      "name": "AI Trading",
+      "description": "AI-powered trading decisions using DeepSeek/Claude/GPT. Includes risk management, position tracking, and options analysis."
+    },
+    {
+      "name": "Data Sync",
+      "description": "Master contracts (Dhan instrument mappings) and NSE bhavcopy data sync. User-triggered only."
+    },
+    {
+      "name": "Market Data",
+      "description": "Stock lists, OI scanning, option chains, sector analysis, and cache management."
+    }
+  ],
+  "paths": {
+    "/api/r-factor": {
+      "get": {
+        "tags": ["R-Factor"],
+        "summary": "Compute R-Factor signals",
+        "description": "Bulk R-Factor scanning with mode selection. Supports live (Dhan real-time), past (bhavcopy), or auto mode. Can also compute for a single symbol. Engine preset and robust regression are configurable via query params.",
+        "operationId": "getRFactor",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "description": "Single stock symbol (e.g., RELIANCE). If provided, returns signal for this symbol only.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "description": "Data source mode. `live` = Dhan real-time, `past` = bhavcopy historical, `auto` = system selects best source.",
+            "schema": { "type": "string", "enum": ["live", "past", "auto"], "default": "auto" }
+          },
+          {
+            "name": "useOC",
+            "in": "query",
+            "description": "Include option chain data for PCR computation (live mode only). Rate limited to 1 req/3s per symbol.",
+            "schema": { "type": "boolean", "default": true }
+          },
+          {
+            "name": "stockList",
+            "in": "query",
+            "description": "`tf` = TradeFinder paired stocks (~79), `all` = full FnO universe (~206).",
+            "schema": { "type": "string", "enum": ["tf", "all"], "default": "all" }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Specific date for past mode (YYYY-MM-DD). Defaults to latest available bhavcopy date.",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Max number of symbols to scan (auto mode only).",
+            "schema": { "type": "integer", "default": 206 }
+          },
+          {
+            "name": "preset",
+            "in": "query",
+            "description": "Engine preset. `sq-dominant` = Spread-Quad 90% (default, best TF match). `balanced` = OLS 50% / SQ 30% / Momentum 20%.",
+            "schema": { "type": "string", "enum": ["sq-dominant", "balanced"] }
+          },
+          {
+            "name": "robust",
+            "in": "query",
+            "description": "Enable Huber robust regression. Penalizes extreme Z-scores. Disabled by default (penalizes high-activity stocks).",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "R-Factor signals computed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/RFactorSingleResponse" },
+                    { "$ref": "#/components/schemas/RFactorBulkResponse" },
+                    { "$ref": "#/components/schemas/RFactorPastResponse" }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+          },
+          "503": {
+            "description": "Data not synced — master contracts or bhavcopy sync required",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SyncRequiredError" } } }
+          }
+        }
+      }
+    },
+    "/api/r-factor-history": {
+      "get": {
+        "tags": ["R-Factor"],
+        "summary": "R-Factor history and daily leaderboard",
+        "description": "Three modes: (1) `?symbol=X` — per-symbol R-Factor trend over N days with ADX, Z-scores, raw bhavcopy. (2) `?date=YYYY-MM-DD` — daily leaderboard ranked by R-Factor. (3) `?dates=true` — list available bhavcopy dates.",
+        "operationId": "getRFactorHistory",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "description": "Stock symbol for history mode (e.g., RELIANCE)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "description": "Number of days of history (symbol mode)",
+            "schema": { "type": "integer", "default": 25 }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Date for daily leaderboard (YYYY-MM-DD)",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Max stocks in leaderboard",
+            "schema": { "type": "integer", "default": 20 }
+          },
+          {
+            "name": "dates",
+            "in": "query",
+            "description": "Set to `true` to get list of available dates",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "History data returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/RFactorHistoryResponse" },
+                    { "$ref": "#/components/schemas/RFactorLeaderboardResponse" },
+                    { "$ref": "#/components/schemas/AvailableDatesResponse" }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required parameter",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+          },
+          "404": {
+            "description": "Insufficient data for symbol or no data for date",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/tf-snapshot": {
+      "get": {
+        "tags": ["TF Snapshot"],
+        "summary": "Query TradeFinder snapshots",
+        "description": "Three modes: (1) `?dates=true` — available dates with stock counts. (2) `?symbol=X&days=25` — R-Factor history for a symbol. (3) `?date=YYYY-MM-DD` — all stocks ranked by R-Factor for a date.",
+        "operationId": "getTfSnapshot",
+        "parameters": [
+          {
+            "name": "dates",
+            "in": "query",
+            "description": "Set to `true` to list available snapshot dates",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "symbol",
+            "in": "query",
+            "description": "Stock symbol for history lookup",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "description": "Number of days of history",
+            "schema": { "type": "integer", "default": 25 }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Date for snapshot (YYYY-MM-DD)",
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Snapshot data returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "dates": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": { "type": "string" },
+                          "count": { "type": "integer" }
+                        }
+                      }
+                    },
+                    "stocks": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TfSnapshot" }
+                    },
+                    "symbol": { "type": "string" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TfSnapshot" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tf-snapshot/import": {
+      "post": {
+        "tags": ["TF Snapshot"],
+        "summary": "Import TradeFinder data",
+        "description": "Import TradeFinder R-Factor snapshots. Accepts multiple formats: simple `{ date, stocks }`, ground truth `{ data: { intraday_boost } }`, or payload wrapper format. Supports `replaceDate` to clear existing data before re-import.",
+        "operationId": "importTfSnapshot",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "title": "Simple format",
+                    "properties": {
+                      "date": { "type": "string", "format": "date" },
+                      "stocks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "Symbol": { "type": "string" },
+                            "param_0": { "type": "number", "description": "R-Factor value" },
+                            "param_1": { "type": "number", "description": "LTP" },
+                            "param_2": { "type": "number", "description": "Previous close" },
+                            "param_3": { "type": "number", "description": "% change" }
+                          }
+                        }
+                      },
+                      "replaceDate": { "type": "string", "format": "date" }
+                    },
+                    "required": ["date", "stocks"]
+                  },
+                  {
+                    "type": "object",
+                    "title": "Ground truth format",
+                    "properties": {
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "intraday_boost": { "type": "array", "items": { "type": "object" } }
+                        }
+                      },
+                      "_meta": {
+                        "type": "object",
+                        "properties": { "captured": { "type": "string" } }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Import successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "imported": { "type": "integer" },
+                    "date": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/live-stream": {
+      "get": {
+        "tags": ["Historify"],
+        "summary": "SSE live market data stream",
+        "description": "Server-Sent Events stream that bridges Dhan WebSocket quotes to the browser. Includes heartbeat every 30 seconds. Connect via `EventSource`. Automatically cleans up on disconnect.",
+        "operationId": "getLiveStream",
+        "x-sse-events": {
+          "tick": "Live price tick with OHLCV data from Dhan WebSocket",
+          "heartbeat": "Keep-alive ping every 30 seconds"
+        },
+        "responses": {
+          "200": {
+            "description": "SSE stream established",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "Server-Sent Events stream. Events: `tick` (price data), heartbeat (keep-alive)."
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "example": "no-cache" } },
+              "Connection": { "schema": { "type": "string", "example": "keep-alive" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/live-feed": {
+      "post": {
+        "tags": ["Historify"],
+        "summary": "Subscribe/unsubscribe to live symbols",
+        "description": "Manage Dhan WebSocket subscriptions for live market feed.",
+        "operationId": "manageLiveFeed",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action", "symbol"],
+                "properties": {
+                  "action": { "type": "string", "enum": ["subscribe", "unsubscribe"] },
+                  "symbol": { "type": "string", "description": "Stock symbol (e.g., RELIANCE)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscription updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "symbol": { "type": "string" },
+                    "action": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/live-history": {
+      "get": {
+        "tags": ["Historify"],
+        "summary": "Get candle history for live symbol",
+        "description": "Returns historical OHLCV candles for a symbol from the live session.",
+        "operationId": "getLiveHistory",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Candle data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "candles": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OHLCVCandle" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/chart-data": {
+      "get": {
+        "tags": ["Historify"],
+        "summary": "Get OHLCV chart data with indicators",
+        "description": "Returns historical candles with EMA20, EMA50, and RSI indicators computed server-side.",
+        "operationId": "getChartData",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "exchange",
+            "in": "query",
+            "schema": { "type": "string", "default": "NSE" }
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "schema": { "type": "string", "default": "Daily" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chart data with indicators",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "candles": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OHLCVCandle" }
+                    },
+                    "indicators": { "$ref": "#/components/schemas/ChartIndicators" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/day-chart": {
+      "get": {
+        "tags": ["Historify"],
+        "summary": "Get intraday chart data",
+        "description": "Returns intraday 5-min candles for a specific date with VWAP, EMA20, EMA50, and RSI.",
+        "operationId": "getDayChart",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "exchange",
+            "in": "query",
+            "schema": { "type": "string", "default": "NSE" }
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "schema": { "type": "string", "default": "5min" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Intraday chart data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "candles": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OHLCVCandle" }
+                    },
+                    "indicators": {
+                      "type": "object",
+                      "properties": {
+                        "vwap": { "type": "array", "items": { "type": "number", "nullable": true } },
+                        "ema20": { "type": "array", "items": { "type": "number", "nullable": true } },
+                        "ema50": { "type": "array", "items": { "type": "number", "nullable": true } },
+                        "rsi": { "type": "array", "items": { "type": "number", "nullable": true } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/sync": {
+      "post": {
+        "tags": ["Historify"],
+        "summary": "Sync market data to DuckDB",
+        "description": "Download and persist historical candle data from Dhan to DuckDB Parquet storage. Supports single symbol or batch sync.",
+        "operationId": "syncData",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "title": "Single symbol",
+                    "properties": {
+                      "symbol": { "type": "string" },
+                      "exchange": { "type": "string", "default": "NSE" },
+                      "interval": { "type": "string" },
+                      "customFolder": { "type": "string" },
+                      "fromDate": { "type": "string", "format": "date" },
+                      "toDate": { "type": "string", "format": "date" }
+                    },
+                    "required": ["symbol"]
+                  },
+                  {
+                    "type": "object",
+                    "title": "Batch sync",
+                    "properties": {
+                      "symbols": { "type": "array", "items": { "type": "string" } },
+                      "interval": { "type": "string" },
+                      "exchange": { "type": "string", "default": "NSE" },
+                      "customFolder": { "type": "string" },
+                      "fromDate": { "type": "string", "format": "date" },
+                      "toDate": { "type": "string", "format": "date" }
+                    },
+                    "required": ["symbols"]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": { "type": "array", "items": { "type": "object" } },
+                    "totalRows": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/export": {
+      "get": {
+        "tags": ["Historify"],
+        "summary": "Export data as CSV",
+        "description": "Export historical candle data as CSV file download. Columns: Symbol, Exchange, Interval, Timestamp, DateTime_IST, Open, High, Low, Close, Volume.",
+        "operationId": "exportData",
+        "parameters": [
+          {
+            "name": "symbols",
+            "in": "query",
+            "description": "Comma-separated symbols",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "description": "Candle interval",
+            "schema": { "type": "string", "enum": ["Daily", "5min", "15min", "30min", "60min", "1min"] }
+          },
+          {
+            "name": "preset",
+            "in": "query",
+            "description": "Date range preset",
+            "schema": { "type": "string", "enum": ["Last 7 Days", "Last 30 Days", "Last 90 Days", "Year to Date", "Last 1 Year", "All Time"] }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["csv"], "default": "csv" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV file download",
+            "content": {
+              "text/csv": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/watchlist": {
+      "get": {
+        "tags": ["Historify"],
+        "summary": "Get watchlist",
+        "operationId": "getWatchlist",
+        "responses": {
+          "200": {
+            "description": "Watchlist items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/WatchlistItem" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Historify"],
+        "summary": "Add to watchlist",
+        "operationId": "addToWatchlist",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["symbol"],
+                "properties": {
+                  "symbol": { "type": "string" },
+                  "exchange": { "type": "string", "default": "NSE" },
+                  "segment": { "type": "string" },
+                  "securityId": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated watchlist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/WatchlistItem" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Historify"],
+        "summary": "Remove from watchlist",
+        "operationId": "removeFromWatchlist",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["symbol"],
+                "properties": {
+                  "symbol": { "type": "string" },
+                  "exchange": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated watchlist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/WatchlistItem" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/activity": {
+      "get": {
+        "tags": ["Historify"],
+        "summary": "Get recent activity logs",
+        "description": "Returns last 20 sync activity entries.",
+        "operationId": "getActivity",
+        "responses": {
+          "200": {
+            "description": "Activity log entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ActivityItem" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/settings": {
+      "get": {
+        "tags": ["Historify"],
+        "summary": "Get settings",
+        "description": "Returns current settings with defaults applied.",
+        "operationId": "getSettings",
+        "responses": {
+          "200": {
+            "description": "Settings object",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Settings" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Historify"],
+        "summary": "Update settings",
+        "description": "Partial update — only provided fields are changed. Values are sanitized and clamped.",
+        "operationId": "updateSettings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Settings" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated settings",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Settings" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/jobs": {
+      "get": {
+        "tags": ["Historify"],
+        "summary": "List scheduled jobs and templates",
+        "operationId": "getJobs",
+        "responses": {
+          "200": {
+            "description": "Jobs and templates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jobs": { "type": "array", "items": { "type": "object" } },
+                    "templates": { "type": "array", "items": { "type": "object" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Historify"],
+        "summary": "Manage scheduled jobs",
+        "description": "Create, delete, toggle, run, or create from template.",
+        "operationId": "manageJobs",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action"],
+                "properties": {
+                  "action": { "type": "string", "enum": ["create", "delete", "toggle", "run", "template"] },
+                  "id": { "type": "string", "description": "Job ID (for delete/toggle/run)" },
+                  "templateId": { "type": "string", "description": "Template ID (for template action)" },
+                  "name": { "type": "string" },
+                  "symbols": { "type": "array", "items": { "type": "string" } },
+                  "interval": { "type": "string" },
+                  "schedule": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Job management result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "job": { "type": "object" },
+                    "jobs": { "type": "array", "items": { "type": "object" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/stats": {
+      "get": {
+        "tags": ["Historify"],
+        "summary": "Get dashboard statistics",
+        "description": "Returns counts for watchlist, master contracts, bhavcopy days, backtest data, storage usage, and last sync date.",
+        "operationId": "getStats",
+        "responses": {
+          "200": {
+            "description": "Dashboard stats",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DashboardStats" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/historify/test-connection": {
+      "get": {
+        "tags": ["Historify"],
+        "summary": "Test Dhan API connection",
+        "description": "Verifies Dhan API connectivity and authentication. Returns latency and masked client ID.",
+        "operationId": "testConnection",
+        "responses": {
+          "200": {
+            "description": "Connection test result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "method": { "type": "string", "description": "Auth method used (totp, cached, static)" },
+                    "clientId": { "type": "string", "description": "Masked client ID" },
+                    "latencyMs": { "type": "number" },
+                    "proof": { "type": "object", "description": "Sample API response" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/backtest": {
+      "get": {
+        "tags": ["Backtest"],
+        "summary": "Get available stocks and regimes",
+        "operationId": "getBacktestInfo",
+        "responses": {
+          "200": {
+            "description": "Available stocks and regimes for backtesting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "availableStocks": { "type": "array", "items": { "type": "string" } },
+                    "regimes": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Backtest"],
+        "summary": "Run mock backtest",
+        "description": "Run a simplified backtest simulation with configurable R-Factor parameters and weights.",
+        "operationId": "runMockBacktest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "symbol": { "type": "string", "default": "RELIANCE" },
+                  "days": { "type": "integer", "default": 90 },
+                  "rThreshold": { "type": "number", "default": 1.5 },
+                  "volWeight": { "type": "number" },
+                  "turnWeight": { "type": "number" },
+                  "oiWeight": { "type": "number" },
+                  "spreadWeight": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Backtest results",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MockBacktestResult" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/backtest/tf-validate": {
+      "get": {
+        "tags": ["Backtest"],
+        "summary": "Get TF validation data status",
+        "description": "Returns row counts for equity, futures, and options 5-min data tables, plus TF trades list.",
+        "operationId": "getTfValidateStatus",
+        "responses": {
+          "200": {
+            "description": "Data download status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "equityRows": { "type": "integer" },
+                        "futuresRows": { "type": "integer" },
+                        "optionsRows": { "type": "integer" },
+                        "totalRows": { "type": "integer" },
+                        "hasData": { "type": "boolean" },
+                        "trades": { "type": "array", "items": { "type": "object" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Backtest"],
+        "summary": "TF validation actions",
+        "description": "Multi-action endpoint for TradeFinder trade validation. Actions: `download` (fetch 5-min data), `status` (check counts), `backtest` (run full backtest), `all-tf-trades` (list all TF trades), `symbol-status` (per-trade data availability), `download-symbols` (specific symbols), `download-all-tf` (all missing), `trade-detail` (analyze single trade), `simulate` (run trade simulation), `tf-trades-list` (paginated trades), `debug` (DuckDB inspection).",
+        "operationId": "postTfValidate",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action"],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": ["download", "status", "backtest", "all-tf-trades", "symbol-status", "download-symbols", "download-all-tf", "trade-detail", "simulate", "tf-trades-list", "debug"]
+                  },
+                  "symbols": { "type": "array", "items": { "type": "string" }, "description": "For download-symbols action" },
+                  "fromDate": { "type": "string", "format": "date" },
+                  "toDate": { "type": "string", "format": "date" },
+                  "options": { "type": "array", "items": { "type": "object" }, "description": "Option contracts to download" },
+                  "symbol": { "type": "string", "description": "For trade-detail/simulate" },
+                  "date": { "type": "string", "format": "date", "description": "Trade date" },
+                  "optionType": { "type": "string", "enum": ["CE", "PE"] },
+                  "strike": { "type": "number" },
+                  "spotPrice": { "type": "number" },
+                  "tfPnl": { "type": "number" },
+                  "tfExpiry": { "type": "string" },
+                  "entryTime": { "type": "string" },
+                  "entryPrice": { "type": "number" },
+                  "exitTime": { "type": "string" },
+                  "exitPrice": { "type": "number" },
+                  "quantity": { "type": "integer" },
+                  "entryTimestamp": { "type": "string" },
+                  "exitTimestamp": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Action result (varies by action)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "action": { "type": "string" }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown action or missing params",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/backtest/download-stream": {
+      "post": {
+        "tags": ["Backtest"],
+        "summary": "SSE download progress stream",
+        "description": "Server-Sent Events stream for tracking 5-min data downloads. Reports progress per symbol with events: `progress`, `step-done`, `symbol-done`, `complete`, `error`.",
+        "operationId": "downloadStream",
+        "x-sse-events": {
+          "progress": "Download progress update (percentage, current symbol)",
+          "step-done": "Individual data segment completed (equity/futures/options)",
+          "symbol-done": "All data for a symbol downloaded",
+          "complete": "All downloads finished",
+          "error": "Download error occurred"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["symbols"],
+                "properties": {
+                  "symbols": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "symbol": { "type": "string" },
+                        "optionType": { "type": "string", "enum": ["CE", "PE"] },
+                        "strike": { "type": "number" },
+                        "date": { "type": "string", "format": "date" }
+                      },
+                      "required": ["symbol"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SSE progress stream",
+            "content": {
+              "text/event-stream": {
+                "schema": { "type": "string", "description": "Events: progress, step-done, symbol-done, complete, error" }
+              }
+            },
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "example": "no-cache" } },
+              "Connection": { "schema": { "type": "string", "example": "keep-alive" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/quant/backtest": {
+      "post": {
+        "tags": ["Quant"],
+        "summary": "Run real backtest",
+        "description": "Execute a backtest with the quantitative engine. Supports EMA Crossover, RSI Accumulation, Dual Momentum, and Buy & Hold 75/25 strategies. Returns equity curve, trades, and performance metrics.",
+        "operationId": "runQuantBacktest",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["startDate", "endDate"],
+                "properties": {
+                  "strategy": {
+                    "type": "string",
+                    "enum": ["ema_crossover", "rsi_accumulation", "dual_momentum", "buy_hold_75_25"],
+                    "default": "ema_crossover"
+                  },
+                  "symbol": { "type": "string", "default": "SBIN" },
+                  "interval": { "type": "string", "default": "Daily" },
+                  "startDate": { "type": "string", "format": "date" },
+                  "endDate": { "type": "string", "format": "date" },
+                  "initialCash": { "type": "number", "default": 1000000 },
+                  "allocation": { "type": "number", "default": 0.75, "description": "Fraction of capital to deploy per trade" },
+                  "params": { "type": "object", "description": "Strategy-specific parameters", "additionalProperties": true },
+                  "slippageBps": { "type": "integer", "default": 5, "description": "Slippage in basis points" },
+                  "maxDrawdownLimit": { "type": "number", "default": 0, "description": "Max drawdown % to halt trading (0 = disabled)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Backtest results with equity curve and trades",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BacktestResult" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quant/rrg": {
+      "get": {
+        "tags": ["Quant"],
+        "summary": "Relative Rotation Graph",
+        "description": "Compute RRG data for FnO sectors relative to a benchmark. Returns RS-Ratio and RS-Momentum for each sector with tail history.",
+        "operationId": "getRRG",
+        "parameters": [
+          {
+            "name": "benchmark",
+            "in": "query",
+            "schema": { "type": "string", "default": "NIFTY" }
+          },
+          {
+            "name": "tail",
+            "in": "query",
+            "description": "Number of historical points per sector",
+            "schema": { "type": "integer", "default": 8 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "RRG computation result",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RRGResult" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai-trading/analyze": {
+      "post": {
+        "tags": ["AI Trading"],
+        "summary": "AI stock analysis",
+        "description": "Analyze stocks using AI (DeepSeek, Claude, GPT). Single symbol or bulk top-N analysis. Returns trade signal with AI decision, entry/SL/target, and risk assessment.",
+        "operationId": "aiAnalyze",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "symbol": { "type": "string", "description": "Single stock. Omit for bulk analysis." },
+                  "topN": { "type": "integer", "default": 5, "description": "Top N stocks for bulk analysis" },
+                  "model": {
+                    "type": "string",
+                    "default": "deepseek/deepseek-chat",
+                    "enum": ["deepseek/deepseek-chat", "deepseek/deepseek-reasoner", "anthropic/claude-sonnet-4-6", "openai/gpt-4o", "google/gemini-2.5-flash"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AI analysis result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "signal": { "$ref": "#/components/schemas/TradeSignal" },
+                    "decision": { "$ref": "#/components/schemas/ExecutableDecision" },
+                    "count": { "type": "integer", "description": "Number of results (bulk mode)" },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "signal": { "$ref": "#/components/schemas/TradeSignal" },
+                          "decision": { "$ref": "#/components/schemas/ExecutableDecision" }
+                        }
+                      }
+                    },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai-trading/stream": {
+      "get": {
+        "tags": ["AI Trading"],
+        "summary": "SSE AI decision stream",
+        "description": "Server-Sent Events stream with 60-second AI decision cycles. Heartbeat every 30 seconds. Events: `heartbeat`, `status`, `cycle` (full decision), `error`.",
+        "operationId": "aiStream",
+        "x-sse-events": {
+          "heartbeat": "Keep-alive ping every 30 seconds",
+          "status": "Stream status update (starting, scanning)",
+          "cycle": "Complete AI decision cycle result with signals and decisions",
+          "error": "Error during analysis"
+        },
+        "parameters": [
+          {
+            "name": "model",
+            "in": "query",
+            "schema": { "type": "string", "default": "deepseek/deepseek-chat" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SSE decision stream",
+            "content": {
+              "text/event-stream": {
+                "schema": { "type": "string", "description": "Events: heartbeat, status, cycle, error" }
+              }
+            },
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "example": "no-cache" } },
+              "Connection": { "schema": { "type": "string", "example": "keep-alive" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai-trading/config": {
+      "get": {
+        "tags": ["AI Trading"],
+        "summary": "Get risk configuration",
+        "description": "Returns current risk config and defaults.",
+        "operationId": "getAiConfig",
+        "responses": {
+          "200": {
+            "description": "Risk config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "config": { "$ref": "#/components/schemas/RiskConfig" },
+                    "defaults": { "$ref": "#/components/schemas/RiskConfig" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["AI Trading"],
+        "summary": "Update risk configuration",
+        "description": "Partial update of risk config. Validated: maxCapitalPerTrade 0.5-10%, maxOpenPositions 1-20, minADXThreshold 10-50.",
+        "operationId": "updateAiConfig",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RiskConfig" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "config": { "$ref": "#/components/schemas/RiskConfig" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai-trading/history": {
+      "get": {
+        "tags": ["AI Trading"],
+        "summary": "Get trade decision history",
+        "description": "Returns historical AI trade decisions with optional action filter.",
+        "operationId": "getAiHistory",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 50 }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "description": "Filter by decision action",
+            "schema": { "type": "string", "enum": ["BUY", "SELL", "HOLD"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Decision history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "count": { "type": "integer" },
+                    "total": { "type": "integer" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ExecutableDecision" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai-trading/positions": {
+      "get": {
+        "tags": ["AI Trading"],
+        "summary": "Get open positions and P&L",
+        "operationId": "getAiPositions",
+        "responses": {
+          "200": {
+            "description": "Positions and summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "positions": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/OptionPosition" }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "openCount": { "type": "integer" },
+                        "totalUnrealizedPnL": { "type": "number" },
+                        "closedPnL": { "type": "number" },
+                        "totalPnL": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai-trading/options/analyze": {
+      "post": {
+        "tags": ["AI Trading"],
+        "summary": "AI options analysis",
+        "description": "Analyze options opportunities. Picks CE/PE based on R-Factor + ADX signals. Set `reset: true` to clear daily cached pick.",
+        "operationId": "aiOptionsAnalyze",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "capital": { "type": "number", "default": 500000, "description": "Available capital in INR" },
+                  "reset": { "type": "boolean", "description": "Clear daily cached pick and re-analyze" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Options analysis result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/master-contracts": {
+      "get": {
+        "tags": ["Data Sync"],
+        "summary": "Search master contracts",
+        "description": "Browse and search Dhan instrument mappings (symbol -> securityId). Includes lot sizes for volume conversion.",
+        "operationId": "getMasterContracts",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Search query (symbol or name)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "segment",
+            "in": "query",
+            "description": "Filter by segment",
+            "schema": { "type": "string", "enum": ["NSE_EQ", "NSE_FNO", "BSE_EQ"] }
+          },
+          {
+            "name": "instrument",
+            "in": "query",
+            "description": "Filter by instrument type",
+            "schema": { "type": "string", "enum": ["EQUITY", "FUTSTK", "FUTIDX", "OPTSTK", "OPTIDX"] }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 50, "maximum": 200 }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Master contracts with pagination",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/MasterContract" }
+                    },
+                    "total": { "type": "integer" },
+                    "syncDate": { "type": "string" },
+                    "filters": {
+                      "type": "object",
+                      "properties": {
+                        "segments": { "type": "array", "items": { "type": "string" } },
+                        "instruments": { "type": "array", "items": { "type": "string" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/master-contracts/sync": {
+      "post": {
+        "tags": ["Data Sync"],
+        "summary": "Sync master contracts from Dhan",
+        "description": "Downloads Dhan's master CSV (~24K rows), filters to EQUITY + FUTSTK + FUTIDX, and stores in SQLite. Required before R-Factor can resolve security IDs.",
+        "operationId": "syncMasterContracts",
+        "responses": {
+          "200": {
+            "description": "Sync result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bhavcopy": {
+      "get": {
+        "tags": ["Data Sync"],
+        "summary": "Browse bhavcopy data",
+        "description": "Query NSE daily equity + F&O data. Supports symbol search, date filter, and pagination.",
+        "operationId": "getBhavcopy",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 50, "maximum": 500 }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bhavcopy data with pagination",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/BhavcopyDay" }
+                    },
+                    "total": { "type": "integer" },
+                    "dates": { "type": "array", "items": { "type": "string" } },
+                    "dateRange": {
+                      "type": "object",
+                      "properties": {
+                        "from": { "type": "string" },
+                        "to": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bhavcopy/sync": {
+      "post": {
+        "tags": ["Data Sync"],
+        "summary": "Sync bhavcopy from NSE",
+        "description": "Downloads NSE bhavcopy ZIPs (equity + F&O) for recent trading days. Imports from local JSON cache first, then fetches missing dates from NSE. NSE requires session cookie.",
+        "operationId": "syncBhavcopy",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "description": "Number of days to sync",
+            "schema": { "type": "integer", "default": 25, "maximum": 60 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sync result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stocks": {
+      "get": {
+        "tags": ["Market Data"],
+        "summary": "Get stock list with sector data",
+        "description": "Returns FnO stock universe with sector mappings and aggregate sector data. Revalidates every 60 seconds.",
+        "operationId": "getStocks",
+        "responses": {
+          "200": {
+            "description": "Stock list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stocks": { "type": "array", "items": { "type": "object" } },
+                    "sectorData": { "type": "object", "additionalProperties": true },
+                    "totalFnOStocks": { "type": "integer" },
+                    "lastUpdated": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/oi-data": {
+      "get": {
+        "tags": ["Market Data"],
+        "summary": "Get OI scanning data",
+        "description": "Scans open interest data across FnO stocks. Revalidates every 30 seconds.",
+        "operationId": "getOiData",
+        "responses": {
+          "200": {
+            "description": "OI scan results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stocks": { "type": "array", "items": { "type": "object" } },
+                    "scannedAt": { "type": "string", "format": "date-time" },
+                    "totalScanned": { "type": "integer" },
+                    "successful": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/option-chain": {
+      "get": {
+        "tags": ["Market Data"],
+        "summary": "Get option chain",
+        "description": "Returns full option chain for a symbol with per-strike CE/PE data (volume, OI, greeks, IV). Rate limited: 1 request per 3 seconds on Dhan.",
+        "operationId": "getOptionChain",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "expiry",
+            "in": "query",
+            "description": "Expiry date (YYYY-MM-DD). Defaults to nearest expiry.",
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Option chain data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "symbol": { "type": "string" },
+                    "expiry": { "type": "string" },
+                    "spotPrice": { "type": "number" },
+                    "strikes": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/StrikeData" }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "pcr": { "type": "number" },
+                        "atmStrike": { "type": "number" },
+                        "totalCallOI": { "type": "number" },
+                        "totalPutOI": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sector-scope": {
+      "get": {
+        "tags": ["Market Data"],
+        "summary": "Get sector analysis",
+        "description": "Sector-level R-Factor aggregation and analysis. Requires master contracts to be synced.",
+        "operationId": "getSectorScope",
+        "responses": {
+          "200": {
+            "description": "Sector analysis data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "type": "object", "additionalProperties": true },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Master contracts not synced",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SyncRequiredError" } } }
+          }
+        }
+      }
+    },
+    "/api/cache": {
+      "delete": {
+        "tags": ["Market Data"],
+        "summary": "Clear server cache",
+        "description": "Clears all in-memory caches (Dhan response cache, sector cache, etc.).",
+        "operationId": "clearCache",
+        "responses": {
+          "200": {
+            "description": "Cache cleared",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SignalOutput": {
+        "type": "object",
+        "description": "Complete R-Factor signal with composite score, Z-scores, regime, and model metadata.",
+        "properties": {
+          "symbol": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "compositeRFactor": { "type": "number", "description": "Final R-Factor score (weighted ensemble)" },
+          "rawRFactor": { "type": "number", "description": "Before scale correction" },
+          "scaledRFactor": { "type": "number", "description": "After non-linear scale correction" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "Factor agreement confidence" },
+          "marketAdjustment": { "type": "number", "description": "Market context adjustment applied" },
+          "regime": { "$ref": "#/components/schemas/MarketRegime" },
+          "isBlastTrade": { "type": "boolean", "description": "True if R-Factor exceeds blast trade threshold (2.8)" },
+          "modelUsed": { "$ref": "#/components/schemas/ModelType" },
+          "zScores": { "$ref": "#/components/schemas/ZScores" },
+          "ensembleWeights": {
+            "type": "object",
+            "description": "Weights used if ensemble model was applied",
+            "additionalProperties": { "type": "number" }
+          }
+        }
+      },
+      "ZScores": {
+        "type": "object",
+        "description": "Z-score normalized values for all 8 factors.",
+        "properties": {
+          "spread": { "type": "number", "description": "(H-L)/close ratio vs 20d avg — dominant predictor" },
+          "oi_level": { "type": "number", "description": "OI ratio vs 20d avg (>1 = accumulation, <1 = distribution)" },
+          "fut_turnover": { "type": "number", "description": "Futures turnover Z-score" },
+          "fut_volume": { "type": "number", "description": "Futures volume Z-score" },
+          "opt_volume": { "type": "number", "description": "Options total volume Z-score" },
+          "eq_trade_size": { "type": "number", "description": "Equity avg trade size Z-score" },
+          "oi_change": { "type": "number", "description": "|OI change| Z-score" },
+          "pcr": { "type": "number", "description": "Put-Call ratio Z-score" }
+        }
+      },
+      "MarketRegime": {
+        "type": "string",
+        "enum": ["Elephant", "Cheetah", "Hybrid", "Defensive"],
+        "description": "Market regime classification based on R-Factor score"
+      },
+      "ModelType": {
+        "type": "string",
+        "enum": ["ols", "spread-quad", "momentum", "ensemble"],
+        "description": "Which model computed the R-Factor"
+      },
+      "TradeSignal": {
+        "type": "object",
+        "description": "Aggregated signal from R-Factor + ADX + live data for AI analysis.",
+        "properties": {
+          "symbol": { "type": "string" },
+          "rFactor": { "type": "number" },
+          "confidence": { "type": "number" },
+          "modelUsed": { "type": "string" },
+          "regime": { "$ref": "#/components/schemas/MarketRegime" },
+          "adx": { "type": "number", "nullable": true, "description": "ADX trend strength (14-period)" },
+          "plusDI": { "type": "number", "nullable": true },
+          "minusDI": { "type": "number", "nullable": true },
+          "spread": { "type": "number" },
+          "oiLevel": { "type": "number" },
+          "futTurnover": { "type": "number" },
+          "futVolume": { "type": "number" },
+          "optVolume": { "type": "number" },
+          "pcr": { "type": "number" },
+          "pctChange": { "type": "number", "nullable": true },
+          "sector": { "type": "string", "nullable": true },
+          "lotValue": { "type": "number", "nullable": true },
+          "lastPrice": { "type": "number", "nullable": true }
+        }
+      },
+      "TradeDecision": {
+        "type": "object",
+        "description": "AI model's trading decision.",
+        "properties": {
+          "action": { "type": "string", "enum": ["BUY", "SELL", "HOLD"] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "symbol": { "type": "string" },
+          "rationale": { "type": "string", "description": "AI's explanation" },
+          "suggestedEntry": { "type": "number", "nullable": true },
+          "suggestedStopLoss": { "type": "number", "nullable": true },
+          "suggestedTarget": { "type": "number", "nullable": true },
+          "timeframe": { "type": "string", "enum": ["scalp", "intraday", "swing"] },
+          "riskRewardRatio": { "type": "number", "nullable": true },
+          "modelUsed": { "type": "string", "description": "AI model identifier" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ExecutableDecision": {
+        "allOf": [
+          { "$ref": "#/components/schemas/TradeDecision" },
+          {
+            "type": "object",
+            "description": "Risk-checked decision ready for execution.",
+            "properties": {
+              "positionSize": { "type": "number", "description": "Number of lots" },
+              "capitalRequired": { "type": "number", "description": "INR amount" },
+              "riskAmount": { "type": "number", "description": "Max loss if SL hit" },
+              "approved": { "type": "boolean", "description": "Risk manager approved" },
+              "rejectReason": { "type": "string", "description": "Why rejected (if not approved)" }
+            }
+          }
+        ]
+      },
+      "RiskConfig": {
+        "type": "object",
+        "description": "Risk management configuration for AI trading.",
+        "properties": {
+          "maxCapitalPerTrade": { "type": "number", "description": "% of total capital (default: 2%)", "default": 2 },
+          "maxOpenPositions": { "type": "integer", "description": "Max simultaneous positions", "default": 5 },
+          "maxDailyLoss": { "type": "number", "description": "% of capital to stop trading", "default": 5 },
+          "maxSectorExposure": { "type": "number", "description": "% of capital per sector", "default": 20 },
+          "defaultStopLossPct": { "type": "number", "description": "% below entry", "default": 1.5 },
+          "defaultTargetPct": { "type": "number", "description": "% above entry", "default": 3 },
+          "minRiskReward": { "type": "number", "description": "Minimum R:R ratio", "default": 1.5 },
+          "minRFactorThreshold": { "type": "number", "description": "Min R-Factor to consider", "default": 2.0 },
+          "minADXThreshold": { "type": "number", "description": "Min ADX for strong trend", "default": 28 },
+          "paperTrading": { "type": "boolean", "description": "Log only, no real orders", "default": true },
+          "entryWindowStart": { "type": "string", "description": "HH:MM IST", "default": "09:45" },
+          "entryWindowEnd": { "type": "string", "description": "HH:MM IST", "default": "11:00" },
+          "exitMode": { "type": "string", "enum": ["ai", "fixed-profit", "fixed-time", "trailing-sl"], "default": "fixed-profit" },
+          "fixedProfitTarget": { "type": "number", "description": "INR profit per trade to auto-exit", "default": 5000 },
+          "fixedExitTime": { "type": "string", "description": "HH:MM IST force-exit time", "default": "15:10" },
+          "trailingSlPct": { "type": "number", "description": "Trailing stop-loss %", "default": 1.0 }
+        }
+      },
+      "OptionPosition": {
+        "type": "object",
+        "description": "Open option position being tracked.",
+        "properties": {
+          "symbol": { "type": "string" },
+          "optionType": { "type": "string", "enum": ["CE", "PE"] },
+          "strikePrice": { "type": "number" },
+          "securityId": { "type": "string" },
+          "entryPrice": { "type": "number" },
+          "currentPrice": { "type": "number" },
+          "peakPrice": { "type": "number" },
+          "quantity": { "type": "integer" },
+          "lotSize": { "type": "integer" },
+          "spotAtEntry": { "type": "number" },
+          "entryTime": { "type": "string", "format": "date-time" },
+          "expiryDate": { "type": "string", "format": "date" },
+          "charges": { "type": "number" }
+        }
+      },
+      "WatchlistItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "symbol": { "type": "string" },
+          "exchange": { "type": "string", "default": "NSE" },
+          "segment": { "type": "string", "default": "EQ" },
+          "securityId": { "type": "string", "nullable": true },
+          "addedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ActivityItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "symbol": { "type": "string" },
+          "exchange": { "type": "string" },
+          "interval": { "type": "string" },
+          "action": { "type": "string" },
+          "rowsCount": { "type": "integer" },
+          "status": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "MasterContract": {
+        "type": "object",
+        "description": "Dhan instrument mapping.",
+        "properties": {
+          "id": { "type": "integer" },
+          "securityId": { "type": "string" },
+          "symbol": { "type": "string" },
+          "exchange": { "type": "string" },
+          "segment": { "type": "string" },
+          "instrument": { "type": "string" },
+          "name": { "type": "string" },
+          "underlying": { "type": "string", "nullable": true },
+          "expiryDate": { "type": "string", "format": "date-time", "nullable": true },
+          "lotSize": { "type": "number", "default": 1 },
+          "strikePrice": { "type": "number", "nullable": true },
+          "optionType": { "type": "string", "nullable": true, "enum": ["CE", "PE", null] },
+          "syncDate": { "type": "string" }
+        }
+      },
+      "BhavcopyDay": {
+        "type": "object",
+        "description": "NSE daily equity + F&O data per stock.",
+        "properties": {
+          "id": { "type": "integer" },
+          "date": { "type": "string" },
+          "symbol": { "type": "string" },
+          "eqVolume": { "type": "number" },
+          "eqTurnover": { "type": "number" },
+          "eqHigh": { "type": "number" },
+          "eqLow": { "type": "number" },
+          "eqClose": { "type": "number" },
+          "futVolume": { "type": "number" },
+          "futOi": { "type": "number" },
+          "futOiChange": { "type": "number" },
+          "futTurnover": { "type": "number" },
+          "optVolume": { "type": "number" },
+          "optOi": { "type": "number" },
+          "optTurnover": { "type": "number" },
+          "ceVolume": { "type": "number" },
+          "peVolume": { "type": "number" }
+        }
+      },
+      "TfSnapshot": {
+        "type": "object",
+        "description": "TradeFinder R-Factor snapshot for comparison.",
+        "properties": {
+          "id": { "type": "integer" },
+          "date": { "type": "string" },
+          "symbol": { "type": "string" },
+          "rFactor": { "type": "number" },
+          "ltp": { "type": "number" },
+          "prevClose": { "type": "number" },
+          "pctChange": { "type": "number" }
+        }
+      },
+      "OHLCVCandle": {
+        "type": "object",
+        "description": "OHLCV candle data point.",
+        "properties": {
+          "timestamp": { "type": "number", "description": "Unix timestamp in seconds" },
+          "open": { "type": "number" },
+          "high": { "type": "number" },
+          "low": { "type": "number" },
+          "close": { "type": "number" },
+          "volume": { "type": "number" }
+        }
+      },
+      "ChartIndicators": {
+        "type": "object",
+        "description": "Technical indicators computed for chart data.",
+        "properties": {
+          "ema20": { "type": "array", "items": { "type": "number", "nullable": true } },
+          "ema50": { "type": "array", "items": { "type": "number", "nullable": true } },
+          "rsi": { "type": "array", "items": { "type": "number", "nullable": true } }
+        }
+      },
+      "Settings": {
+        "type": "object",
+        "description": "Application settings.",
+        "properties": {
+          "id": { "type": "integer" },
+          "dhanClientId": { "type": "string" },
+          "dhanAccessToken": { "type": "string" },
+          "batchSize": { "type": "integer", "default": 10 },
+          "rateLimitMs": { "type": "integer", "default": 250 },
+          "defaultRange": { "type": "string", "default": "30" },
+          "theme": { "type": "string", "default": "dark" },
+          "chartHeight": { "type": "integer", "default": 450 },
+          "autoRefresh": { "type": "boolean", "default": true },
+          "showTooltips": { "type": "boolean", "default": true }
+        }
+      },
+      "DashboardStats": {
+        "type": "object",
+        "description": "System statistics for the dashboard.",
+        "properties": {
+          "watchlistCount": { "type": "integer" },
+          "masterContractsCount": { "type": "integer" },
+          "bhavcopyDaysCount": { "type": "integer" },
+          "storageMb": { "type": "number" },
+          "lastMasterSync": { "type": "string", "nullable": true },
+          "optionContractsCount": { "type": "integer" },
+          "backtestEquity": { "type": "integer" },
+          "backtestFutures": { "type": "integer" },
+          "backtestOptions": { "type": "integer" },
+          "backtestTotal": { "type": "integer" }
+        }
+      },
+      "BacktestResult": {
+        "type": "object",
+        "description": "Quantitative backtest result with equity curve and trade log.",
+        "properties": {
+          "totalReturn": { "type": "number" },
+          "sharpeRatio": { "type": "number" },
+          "maxDrawdown": { "type": "number" },
+          "cagr": { "type": "number" },
+          "winRate": { "type": "number" },
+          "totalTrades": { "type": "integer" },
+          "profitFactor": { "type": "number" },
+          "dailyVaR95": { "type": "number" },
+          "trades": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BacktestTrade" }
+          },
+          "equityCurve": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": { "type": "string" },
+                "equity": { "type": "number" }
+              }
+            }
+          },
+          "benchmarkCurve": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": { "type": "string" },
+                "equity": { "type": "number" }
+              }
+            }
+          }
+        }
+      },
+      "BacktestTrade": {
+        "type": "object",
+        "properties": {
+          "entryDate": { "type": "string" },
+          "entryPrice": { "type": "number" },
+          "exitDate": { "type": "string" },
+          "exitPrice": { "type": "number" },
+          "shares": { "type": "integer" },
+          "pnl": { "type": "number" },
+          "pnlPct": { "type": "number" },
+          "fees": { "type": "number" }
+        }
+      },
+      "MockBacktestResult": {
+        "type": "object",
+        "description": "Simplified mock backtest result.",
+        "properties": {
+          "symbol": { "type": "string" },
+          "regime": { "type": "string" },
+          "parameters": { "type": "object" },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "totalTrades": { "type": "integer" },
+              "wins": { "type": "integer" },
+              "losses": { "type": "integer" },
+              "winRate": { "type": "number" },
+              "totalReturn": { "type": "number" },
+              "profitFactor": { "type": "number" },
+              "maxDrawdown": { "type": "number" },
+              "sharpeRatio": { "type": "number" },
+              "avgWin": { "type": "number" },
+              "avgLoss": { "type": "number" },
+              "expectancy": { "type": "number" }
+            }
+          },
+          "trades": { "type": "array", "items": { "$ref": "#/components/schemas/BacktestTrade" } },
+          "availableStocks": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "RRGResult": {
+        "type": "object",
+        "description": "Relative Rotation Graph computation result.",
+        "properties": {
+          "benchmark": { "type": "string" },
+          "benchmarkName": { "type": "string" },
+          "tailLength": { "type": "integer" },
+          "latestDate": { "type": "string" },
+          "computedAt": { "type": "string", "format": "date-time" },
+          "sectors": {
+            "type": "object",
+            "additionalProperties": { "$ref": "#/components/schemas/SectorRRG" }
+          }
+        }
+      },
+      "SectorRRG": {
+        "type": "object",
+        "properties": {
+          "symbol": { "type": "string" },
+          "name": { "type": "string" },
+          "color": { "type": "string" },
+          "quadrant": { "type": "string", "enum": ["Leading", "Weakening", "Lagging", "Improving", "Unknown"] },
+          "current": {
+            "type": "object",
+            "properties": {
+              "rsRatio": { "type": "number" },
+              "rsMomentum": { "type": "number" },
+              "date": { "type": "string" }
+            }
+          },
+          "tail": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "rsRatio": { "type": "number" },
+                "rsMomentum": { "type": "number" },
+                "date": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "StrikeData": {
+        "type": "object",
+        "description": "Option chain strike data with CE and PE sides.",
+        "properties": {
+          "strikePrice": { "type": "number" },
+          "ce": { "$ref": "#/components/schemas/OptionSideData" },
+          "pe": { "$ref": "#/components/schemas/OptionSideData" }
+        }
+      },
+      "OptionSideData": {
+        "type": "object",
+        "description": "Single option side (CE or PE) data.",
+        "properties": {
+          "oi": { "type": "number" },
+          "oiChange": { "type": "number" },
+          "volume": { "type": "number" },
+          "iv": { "type": "number", "description": "Implied volatility" },
+          "ltp": { "type": "number" },
+          "bidPrice": { "type": "number" },
+          "askPrice": { "type": "number" },
+          "delta": { "type": "number" },
+          "theta": { "type": "number" },
+          "gamma": { "type": "number" },
+          "vega": { "type": "number" }
+        }
+      },
+      "RFactorSingleResponse": {
+        "type": "object",
+        "title": "Single symbol response",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": { "$ref": "#/components/schemas/SignalOutput" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RFactorBulkResponse": {
+        "type": "object",
+        "title": "Bulk scan response (live/auto mode)",
+        "properties": {
+          "success": { "type": "boolean" },
+          "count": { "type": "integer" },
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/SignalOutput" } },
+          "dataSource": { "type": "string", "description": "live, bhavcopy-today, or bhavcopy" },
+          "latestDate": { "type": "string" },
+          "marketOpen": { "type": "boolean" },
+          "hasTfData": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RFactorPastResponse": {
+        "type": "object",
+        "title": "Past mode response with TF comparison",
+        "properties": {
+          "success": { "type": "boolean" },
+          "count": { "type": "integer" },
+          "data": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                { "$ref": "#/components/schemas/SignalOutput" },
+                {
+                  "type": "object",
+                  "properties": {
+                    "tfRFactor": { "type": "number", "nullable": true, "description": "TradeFinder R-Factor for comparison" }
+                  }
+                }
+              ]
+            }
+          },
+          "dataSource": { "type": "string" },
+          "latestDate": { "type": "string" },
+          "marketOpen": { "type": "boolean" },
+          "availableDates": { "type": "array", "items": { "type": "string" } },
+          "hasTfData": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RFactorHistoryResponse": {
+        "type": "object",
+        "title": "Symbol history response",
+        "properties": {
+          "success": { "type": "boolean" },
+          "symbol": { "type": "string" },
+          "sector": { "type": "string", "nullable": true },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "avgR": { "type": "number" },
+              "maxR": { "type": "number" },
+              "minR": { "type": "number" },
+              "blastDays": { "type": "integer" },
+              "totalDays": { "type": "integer" },
+              "dominantRegime": { "type": "string" },
+              "regimeCounts": { "type": "object", "additionalProperties": { "type": "integer" } },
+              "trendDirection": { "type": "string", "enum": ["up", "down", "flat"] },
+              "avgSpread": { "type": "number" },
+              "maxSpread": { "type": "number" }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": { "type": "string" },
+                "compositeRFactor": { "type": "number" },
+                "rawRFactor": { "type": "number" },
+                "scaledRFactor": { "type": "number" },
+                "confidence": { "type": "number" },
+                "pctChange": { "type": "number", "nullable": true },
+                "delta": { "type": "number", "nullable": true },
+                "zScores": { "$ref": "#/components/schemas/ZScores" },
+                "regime": { "$ref": "#/components/schemas/MarketRegime" },
+                "isBlastTrade": { "type": "boolean" },
+                "modelUsed": { "$ref": "#/components/schemas/ModelType" },
+                "adx": { "type": "number", "nullable": true },
+                "plusDI": { "type": "number", "nullable": true },
+                "minusDI": { "type": "number", "nullable": true },
+                "raw": {
+                  "type": "object",
+                  "properties": {
+                    "eqHigh": { "type": "number" },
+                    "eqLow": { "type": "number" },
+                    "eqClose": { "type": "number" },
+                    "eqVolume": { "type": "number" },
+                    "futVolume": { "type": "number" },
+                    "futOi": { "type": "number" },
+                    "futOiChange": { "type": "number" },
+                    "futTurnover": { "type": "number" },
+                    "ceVolume": { "type": "number" },
+                    "peVolume": { "type": "number" },
+                    "optOi": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "RFactorLeaderboardResponse": {
+        "type": "object",
+        "title": "Daily leaderboard response",
+        "properties": {
+          "success": { "type": "boolean" },
+          "date": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": { "type": "string" },
+                "sector": { "type": "string", "nullable": true },
+                "compositeRFactor": { "type": "number" },
+                "rawRFactor": { "type": "number" },
+                "scaledRFactor": { "type": "number" },
+                "confidence": { "type": "number" },
+                "zScores": { "$ref": "#/components/schemas/ZScores" },
+                "regime": { "$ref": "#/components/schemas/MarketRegime" },
+                "isBlastTrade": { "type": "boolean" },
+                "modelUsed": { "$ref": "#/components/schemas/ModelType" }
+              }
+            }
+          }
+        }
+      },
+      "AvailableDatesResponse": {
+        "type": "object",
+        "title": "Available dates response",
+        "properties": {
+          "success": { "type": "boolean" },
+          "dates": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "error": { "type": "string" }
+        }
+      },
+      "SyncRequiredError": {
+        "type": "object",
+        "description": "Returned when required data (master contracts or bhavcopy) hasn't been synced yet.",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "error": { "type": "string" },
+          "code": { "type": "string", "example": "SYNC_REQUIRED" },
+          "syncTarget": { "type": "string", "enum": ["master-contracts", "bhavcopy"], "description": "Which data source needs to be synced" }
+        }
+      }
+    }
+  }
+}
