@@ -91,6 +91,16 @@ export const v1Items: NavItemType[] = [
         icon: <BarChart2 className="w-4 h-4" />,
       },
       {
+        label: 'Dhancopy',
+        href: '/trading-lab/dhancopy',
+        icon: <BarChart2 className="w-4 h-4" />,
+      },
+      {
+        label: 'Bhav vs Dhan',
+        href: '/trading-lab/bhav-dhan-compare',
+        icon: <BarChart2 className="w-4 h-4" />,
+      },
+      {
         label: 'Option Trader',
         href: '/trading-lab/ai-autopilot/options',
         icon: <Activity className="w-4 h-4" />,
@@ -106,11 +116,6 @@ export const v1Items: NavItemType[] = [
         label: 'TF Data',
         href: '/trading-lab/ai-autopilot/backtest/data',
         icon: <Database className="w-4 h-4" />,
-      },
-      {
-        label: 'Bhav vs Dhan',
-        href: '/trading-lab/bhav-dhan-compare',
-        icon: <BarChart2 className="w-4 h-4" />,
       },
     ],
   },

@@ -158,11 +158,14 @@ export async function getDhanDailyData(symbol: string, days = 30, targetDate?: s
   const fut = futMap.get(symbol);
 
   // Date range: target a specific date or use today
+  // Dhan's toDate is EXCLUSIVE — add 1 day to include the target date
   const to = targetDate ? new Date(targetDate) : new Date();
+  const toPlus1 = new Date(to);
+  toPlus1.setDate(toPlus1.getDate() + 1);
   const from = new Date(to);
   from.setDate(from.getDate() - Math.round(days * 1.5));
   const fromStr = from.toISOString().slice(0, 10);
-  const toStr = to.toISOString().slice(0, 10);
+  const toStr = toPlus1.toISOString().slice(0, 10);
 
   // 3 sequential API calls (all Data APIs — 10/sec via global rate limiter)
   const eqChart = await fetchDailyChart(eqId, 'NSE_EQ', 'EQUITY', fromStr, toStr);

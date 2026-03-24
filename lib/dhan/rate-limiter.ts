@@ -21,7 +21,7 @@ const DHAN_API = 'https://api.dhan.co';
 
 // Rate limits per category (ms between calls)
 const RATE_LIMITS: Record<string, number> = {
-  data: 150, // Charts: 10/sec → 100ms + 50ms buffer
+  data: 110, // Charts: 10/sec → 100ms + 10ms buffer
   quote: 1100, // Marketfeed/optionchain: 1/sec + 100ms buffer
   order: 50, // Orders: 25/sec
   default: 200,
