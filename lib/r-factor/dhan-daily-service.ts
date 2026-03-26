@@ -321,7 +321,7 @@ async function fetchHistoricalOptionAggregate(
           expiryCode: 1,
           strike,
           drvOptionType,
-          requiredData: ['close', 'volume', 'strike', 'oi'],
+          requiredData: ['close', 'volume', 'strike', 'oi', 'timestamp'],
           interval: '60',
           fromDate,
           toDate,
@@ -419,7 +419,16 @@ export async function getDhanDailyData(symbol: string, days = 30, targetDate?: s
   const futChart = fut
     ? await fetchDailyChart(parseInt(fut.securityId, 10), 'NSE_FNO', 'FUTSTK', fromStr, toStr, true)
     : new Map();
-  const optChart = await fetchHistoricalOptionAggregate(eqId, fromStr, toStr);
+
+  // Fetch options using a narrow window around the target date only.
+  // The rolling-options API (expiryCode:1) only has data within the current monthly expiry
+  // period (~30 days). A 45-day equity window crosses expiry boundaries, causing optChart
+  // to return empty for dates in the prior expiry. Using a narrow window matches how
+  // getDhanSymbolDailyRange works and consistently returns non-zero option data.
+  const optFromDate = targetDate
+    ? targetDate // exact target date
+    : fromStr;   // fallback: full range when no target date specified
+  const optChart = await fetchHistoricalOptionAggregate(eqId, optFromDate, toStr);
 
   // Merge by date
   const dates = [...eqChart.keys()].sort();

@@ -12,6 +12,19 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+import fs from 'node:fs';
+import path from 'node:path';
+
+function getFnoSymbols(): Set<string> {
+  try {
+    const filePath = path.join(process.cwd(), 'lib', 'data', 'fno_stocks_list.json');
+    const json = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    return new Set<string>((json.stocks as string[]).map((s) => s.toUpperCase()));
+  } catch {
+    return new Set<string>();
+  }
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -21,10 +34,15 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, suggestions: [] });
     }
 
+    const fnoSymbols = getFnoSymbols();
     const suggestions = await searchSymbols(query, 'NSE');
+    const filtered = fnoSymbols.size > 0
+      ? suggestions.filter((entry) => fnoSymbols.has(entry.symbol.toUpperCase()))
+      : suggestions;
+
     return NextResponse.json({
       success: true,
-      suggestions: suggestions.map((entry) => ({
+      suggestions: filtered.map((entry) => ({
         symbol: entry.symbol,
         exchange: entry.exchange,
         segment: entry.segment,
