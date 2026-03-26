@@ -19,7 +19,12 @@ import {
   resolveSymbol,
 } from '../historify/master-contracts';
 import { BhavcopyNotSyncedError, getHistoricalData } from './bhavcopy-service';
-import { batchGetDhanDaily } from './dhan-daily-service';
+import {
+  batchGetDhanDaily,
+  fetchIntradayDayAggregate,
+  fetchOptionAggregateForDate,
+  getLatestDhanHistoricalDate,
+} from './dhan-daily-service';
 import { engine, RFactorEngine } from './engine';
 import { type DailyStockData, type SignalOutput, transformToFactorData } from './types';
 
@@ -433,6 +438,41 @@ export class RFactorDataService {
     };
   }
 
+  async scanDhanTodayFromLive(opts?: {
+    stockList?: 'all' | 'tf';
+    date?: string;
+    latestHistoricalDate?: string;
+  }): Promise<ScanResult & { rawData?: Map<string, DailyStockData>; failures?: string[] }> {
+    const allSymbols = await this.getFnOStocks();
+    const targetSymbols = opts?.stockList === 'tf' ? await this.getTfTradedStocks(allSymbols) : allSymbols;
+    const sectorMap = await this.getSectorMap();
+    const targetDate = opts?.date ?? getTodayIST();
+    const latestHistoricalDate = opts?.latestHistoricalDate ?? (await getLatestDhanHistoricalDate()).latestDate;
+
+    if (!latestHistoricalDate) {
+      throw new Error('Unable to determine latest Dhan historical date for live-today sync');
+    }
+
+    console.log(
+      `[Boost] Dhan live-today mode: building ${targetDate} from live quotes + historical baseline ${latestHistoricalDate} for ${targetSymbols.length} symbols...`,
+    );
+
+    const { signals, rawData, failures } = await this.computeDhanTodaySignals(
+      targetSymbols,
+      targetDate,
+      latestHistoricalDate,
+    );
+    const enriched = this.attachSectors(signals, sectorMap);
+    return {
+      signals: enriched,
+      dataSource: 'dhan-daily' as ScanResult['dataSource'],
+      latestDate: targetDate,
+      marketOpen: isMarketHours(),
+      rawData,
+      failures,
+    };
+  }
+
   /**
    * Compute R-Factor from Dhan daily historical data.
    * Returns signals + raw data (last day per symbol) + failures.
@@ -476,6 +516,100 @@ export class RFactorDataService {
       signals: results
         .filter((r): r is BoostSignal => r !== null)
         .sort((a, b) => b.compositeRFactor - a.compositeRFactor),
+      rawData,
+      failures,
+    };
+  }
+
+  private async computeDhanTodaySignals(
+    symbols: string[],
+    targetDate: string,
+    latestHistoricalDate: string,
+  ): Promise<{ signals: BoostSignal[]; rawData: Map<string, DailyStockData>; failures: string[] }> {
+    await ensureSynced();
+
+    const { data: dataMap, failures } = await batchGetDhanDaily(symbols, 30, latestHistoricalDate);
+    const eqIdMap = new Map<string, number>();
+    const futIdMap = new Map<string, number>();
+    const lotSizeMap = new Map<string, number>();
+
+    const eqResolves = symbols.map(async (s) => {
+      const entry = await resolveSymbol(s, 'NSE');
+      if (entry) eqIdMap.set(s, parseInt(entry.securityId, 10));
+      else failures.push(`${s}: Equity not found for live today sync`);
+    });
+    const futMapPromise = batchResolveFutures(symbols, targetDate);
+
+    await Promise.all([...eqResolves, futMapPromise]);
+    const futResolved = await futMapPromise;
+    for (const [sym, { securityId, lotSize }] of futResolved) {
+      futIdMap.set(sym, parseInt(securityId, 10));
+      lotSizeMap.set(sym, lotSize);
+    }
+
+    const results: BoostSignal[] = [];
+    const rawData = new Map<string, DailyStockData>();
+
+    for (const [sym, dailyData] of dataMap) {
+      try {
+        if (dailyData.length < 15) {
+          failures.push(`${sym}: only ${dailyData.length} days (need 15+)`);
+          continue;
+        }
+
+        const eqId = eqIdMap.get(sym);
+        if (!eqId) {
+          failures.push(`${sym}: equity securityId unavailable for ${targetDate}`);
+          continue;
+        }
+
+        const eq = await fetchIntradayDayAggregate(eqId, 'NSE_EQ', 'EQUITY', targetDate);
+        if (!eq) {
+          failures.push(`${sym}: intraday equity data unavailable for ${targetDate}`);
+          continue;
+        }
+
+        const lastDay = dailyData[dailyData.length - 1];
+        const futId = futIdMap.get(sym);
+        const fut = futId ? await fetchIntradayDayAggregate(futId, 'NSE_FNO', 'FUTSTK', targetDate, true) : null;
+        const opt = await fetchOptionAggregateForDate(eqId, targetDate);
+        const lotSize = lotSizeMap.get(sym) || 1;
+        const futVolumeContracts = fut ? Math.round(fut.volume / lotSize) : lastDay.fut_volume;
+
+        const liveDay: DailyStockData = {
+          eq_high: eq.high,
+          eq_low: eq.low,
+          eq_close: eq.close,
+          eq_volume: eq.volume,
+          eq_turnover: eq.turnover > 0 ? eq.turnover : eq.volume * eq.close,
+          fut_volume: futVolumeContracts,
+          fut_turnover: fut ? (fut.turnover > 0 ? fut.turnover : fut.volume * fut.close) : lastDay.fut_turnover,
+          fut_oi: fut?.oi ?? lastDay.fut_oi,
+          fut_oi_change: fut ? Math.abs(fut.oi - lastDay.fut_oi) : lastDay.fut_oi_change,
+          opt_volume: opt?.optVolume ?? lastDay.opt_volume,
+          opt_oi: opt?.optOi ?? lastDay.opt_oi,
+          opt_turnover: opt?.optTurnover ?? lastDay.opt_turnover,
+          ce_volume: opt?.ceVolume ?? lastDay.ce_volume,
+          pe_volume: opt?.peVolume ?? lastDay.pe_volume,
+        };
+
+        const blendedData = [...dailyData, liveDay].slice(-30);
+        rawData.set(sym, liveDay);
+        const factorData = transformToFactorData(blendedData);
+        const current = factorData[factorData.length - 1];
+        const historical = factorData.slice(0, -1);
+        const signal = this.activeEngine.calculateSignal(sym, current, historical);
+        const { adx, plusDI, minusDI } = this.computeADX(blendedData);
+        const pctChange =
+          eq.close > 0 && lastDay.eq_close > 0 ? ((eq.close - lastDay.eq_close) / lastDay.eq_close) * 100 : undefined;
+        results.push({ ...signal, adx, plusDI, minusDI, pctChange } as BoostSignal);
+      } catch (e) {
+        failures.push(`${sym}: ${(e as Error).message}`);
+      }
+    }
+
+    return {
+      signals: results.sort((a, b) => b.compositeRFactor - a.compositeRFactor),
       rawData,
       failures,
     };

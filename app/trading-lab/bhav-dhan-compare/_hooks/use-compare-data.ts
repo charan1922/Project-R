@@ -5,10 +5,14 @@ interface SourceData {
   eqLow: number;
   eqClose: number;
   eqVolume: number;
+  eqTurnover: number;
   futVolume: number;
   futOi: number;
   futOiChange: number;
   futTurnover: number;
+  optVolume: number;
+  optOi: number;
+  optTurnover: number;
   ceVolume: number;
   peVolume: number;
   rFactor: number;
@@ -28,6 +32,14 @@ interface Metrics {
   rmse: number;
 }
 
+interface SyncResult {
+  mode?: string;
+  processedDates?: number;
+  computed: number;
+  failed: number;
+  errors: string[];
+}
+
 export interface CompareData {
   stocks: CompareStock[];
   availableDates: string[];
@@ -39,10 +51,12 @@ export interface CompareData {
   dhanCount: number;
   metrics: Metrics | null;
   loading: boolean;
-  computing: boolean;
-  computeResult: { computed: number; failed: number; errors: string[] } | null;
+  syncingAction: string | null;
+  syncResult: SyncResult | null;
   refresh: () => void;
   computeDhan: () => void;
+  computeRange: (fromDate?: string, toDate?: string) => void;
+  computeMissing: (fromDate?: string, toDate?: string) => void;
 }
 
 export function useCompareData(selectedDate?: string): CompareData {
@@ -56,10 +70,8 @@ export function useCompareData(selectedDate?: string): CompareData {
   const [dhanCount, setDhanCount] = useState(0);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [computing, setComputing] = useState(false);
-  const [computeResult, setComputeResult] = useState<{ computed: number; failed: number; errors: string[] } | null>(
-    null,
-  );
+  const [syncingAction, setSyncingAction] = useState<string | null>(null);
+  const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -101,29 +113,56 @@ export function useCompareData(selectedDate?: string): CompareData {
     fetchData();
   }, [fetchData]);
 
+  const runSync = useCallback(
+    async (body: Record<string, unknown>, label: string) => {
+      setSyncingAction(label);
+      setSyncResult(null);
+      try {
+        const res = await fetch('/api/bhav-dhan-compare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const d = await res.json();
+        setSyncResult(
+          d.success
+            ? {
+                mode: d.mode,
+                processedDates: d.processedDates,
+                computed: d.computed ?? 0,
+                failed: d.failed ?? 0,
+                errors: d.errors ?? [],
+              }
+            : { computed: 0, failed: 0, errors: [d.error ?? 'Unknown error'] },
+        );
+        await fetchData();
+      } catch (e) {
+        setSyncResult({ computed: 0, failed: 0, errors: [(e as Error).message] });
+      } finally {
+        setSyncingAction(null);
+      }
+    },
+    [fetchData],
+  );
+
   const computeDhan = useCallback(async () => {
     if (!date) return;
-    setComputing(true);
-    setComputeResult(null);
-    try {
-      const res = await fetch('/api/bhav-dhan-compare', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'compute-dhan', date }),
-      });
-      const d = await res.json();
-      setComputeResult(
-        d.success
-          ? { computed: d.computed ?? 0, failed: d.failed ?? 0, errors: d.errors ?? [] }
-          : { computed: 0, failed: 0, errors: [d.error ?? 'Unknown error'] },
-      );
-      await fetchData();
-    } catch (e) {
-      setComputeResult({ computed: 0, failed: 0, errors: [(e as Error).message] });
-    } finally {
-      setComputing(false);
-    }
-  }, [date, fetchData]);
+    await runSync({ action: 'compute-dhan', date }, 'selected');
+  }, [date, runSync]);
+
+  const computeRange = useCallback(
+    async (fromDate?: string, toDate?: string) => {
+      await runSync({ action: 'compute-dhan-range', fromDate, toDate }, 'range');
+    },
+    [runSync],
+  );
+
+  const computeMissing = useCallback(
+    async (fromDate?: string, toDate?: string) => {
+      await runSync({ action: 'compute-dhan-missing', fromDate, toDate }, 'missing');
+    },
+    [runSync],
+  );
 
   return {
     stocks,
@@ -136,9 +175,11 @@ export function useCompareData(selectedDate?: string): CompareData {
     dhanCount,
     metrics,
     loading,
-    computing,
-    computeResult,
+    syncingAction,
+    syncResult,
     refresh: fetchData,
     computeDhan,
+    computeRange,
+    computeMissing,
   };
 }

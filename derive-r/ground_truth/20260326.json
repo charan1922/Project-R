@@ -1,0 +1,573 @@
+{
+  "_meta": {
+    "captured": "2026-03-26T00:00:00+05:30",
+    "source": "user-provided in chat",
+    "dataset": "tradefinder_intraday_boost"
+  },
+  "payload": {
+    "data": {
+      "intraday_boost": [
+        {
+          "Symbol": "NESTLEIND",
+          "param_0": 1205,
+          "param_1": 1183.2,
+          "param_2": 1.84,
+          "param_3": 2.9901643851943134
+        },
+        {
+          "Symbol": "DRREDDY",
+          "param_0": 1300,
+          "param_1": 1259.6,
+          "param_2": 3.21,
+          "param_3": 2.906948439188346
+        },
+        {
+          "Symbol": "ASTRAL",
+          "param_0": 1645,
+          "param_1": 1594.4,
+          "param_2": 3.17,
+          "param_3": 2.291996498803777
+        },
+        {
+          "Symbol": "ICICIPRULI",
+          "param_0": 540,
+          "param_1": 537.5,
+          "param_2": 0.47,
+          "param_3": 1.9478721925689297
+        },
+        {
+          "Symbol": "BAJAJHLDNG",
+          "param_0": 9549,
+          "param_1": 9337,
+          "param_2": 2.27,
+          "param_3": 1.7880970229484143
+        },
+        {
+          "Symbol": "PAGEIND",
+          "param_0": 32565,
+          "param_1": 32170,
+          "param_2": 1.23,
+          "param_3": 2.363685475226401
+        },
+        {
+          "Symbol": "SAMMAANCAP",
+          "param_0": 146.4,
+          "param_1": 138.51,
+          "param_2": 5.7,
+          "param_3": 3.6576800863292123
+        },
+        {
+          "Symbol": "BRITANNIA",
+          "param_0": 5664.5,
+          "param_1": 5513.5,
+          "param_2": 2.74,
+          "param_3": 3.298907006134298
+        },
+        {
+          "Symbol": "SOLARINDS",
+          "param_0": 12890,
+          "param_1": 12554,
+          "param_2": 2.68,
+          "param_3": 2.629882664341489
+        },
+        {
+          "Symbol": "CIPLA",
+          "param_0": 1248,
+          "param_1": 1219.4,
+          "param_2": 2.35,
+          "param_3": 2.4949872300782108
+        },
+        {
+          "Symbol": "DELHIVERY",
+          "param_0": 429.1,
+          "param_1": 418.9,
+          "param_2": 2.43,
+          "param_3": 2.001483333135253
+        },
+        {
+          "Symbol": "VBL",
+          "param_0": 400.95,
+          "param_1": 388.35,
+          "param_2": 3.24,
+          "param_3": 1.9500669140944624
+        },
+        {
+          "Symbol": "NAUKRI",
+          "param_0": 994,
+          "param_1": 987.4,
+          "param_2": 0.67,
+          "param_3": 1.8681092578151288
+        },
+        {
+          "Symbol": "AUROPHARMA",
+          "param_0": 1308.9,
+          "param_1": 1281.6,
+          "param_2": 2.13,
+          "param_3": 2.234400639335691
+        },
+        {
+          "Symbol": "HINDUNILVR",
+          "param_0": 2135.5,
+          "param_1": 2085,
+          "param_2": 2.42,
+          "param_3": 2.0701465488048414
+        },
+        {
+          "Symbol": "ABCAPITAL",
+          "param_0": 314.95,
+          "param_1": 302.4,
+          "param_2": 4.15,
+          "param_3": 1.9601036105892318
+        },
+        {
+          "Symbol": "RBLBANK",
+          "param_0": 302.95,
+          "param_1": 296.6,
+          "param_2": 2.14,
+          "param_3": 1.9043574107565568
+        },
+        {
+          "Symbol": "JSWENERGY",
+          "param_0": 494.05,
+          "param_1": 484,
+          "param_2": 2.08,
+          "param_3": 1.778556152796528
+        },
+        {
+          "Symbol": "INOXWIND",
+          "param_0": 81.7,
+          "param_1": 77.91,
+          "param_2": 4.86,
+          "param_3": 1.7527110698173676
+        },
+        {
+          "Symbol": "SYNGENE",
+          "param_0": 419.8,
+          "param_1": 398.85,
+          "param_2": 5.25,
+          "param_3": 3.1581276613644143
+        },
+        {
+          "Symbol": "TIINDIA",
+          "param_0": 2681.1,
+          "param_1": 2568.6,
+          "param_2": 4.38,
+          "param_3": 1.9664574280060518
+        },
+        {
+          "Symbol": "PIIND",
+          "param_0": 2900.1,
+          "param_1": 2759,
+          "param_2": 5.11,
+          "param_3": 4.368205713168023
+        },
+        {
+          "Symbol": "TITAN",
+          "param_0": 4050.2,
+          "param_1": 3899.5,
+          "param_2": 3.86,
+          "param_3": 2.79003401235115
+        },
+        {
+          "Symbol": "KALYANKJIL",
+          "param_0": 391.9,
+          "param_1": 371.7,
+          "param_2": 5.43,
+          "param_3": 2.7169476765956926
+        },
+        {
+          "Symbol": "APOLLOHOSP",
+          "param_0": 7587.5,
+          "param_1": 7413,
+          "param_2": 2.35,
+          "param_3": 2.06682093547374
+        },
+        {
+          "Symbol": "TORNTPOWER",
+          "param_0": 1391.6,
+          "param_1": 1366.3,
+          "param_2": 1.85,
+          "param_3": 1.8471572363575004
+        },
+        {
+          "Symbol": "KFINTECH",
+          "param_0": 933.25,
+          "param_1": 906.25,
+          "param_2": 2.98,
+          "param_3": 1.6883734724854085
+        },
+        {
+          "Symbol": "SBICARD",
+          "param_0": 700.05,
+          "param_1": 673.5,
+          "param_2": 3.94,
+          "param_3": 3.0048152612005237
+        },
+        {
+          "Symbol": "FEDERALBNK",
+          "param_0": 270.55,
+          "param_1": 262.5,
+          "param_2": 3.07,
+          "param_3": 2.1697662226060217
+        },
+        {
+          "Symbol": "MFSL",
+          "param_0": 1584.4,
+          "param_1": 1583.5,
+          "param_2": 0.06,
+          "param_3": 1.923749395064016
+        },
+        {
+          "Symbol": "AXISBANK",
+          "param_0": 1221,
+          "param_1": 1192.7,
+          "param_2": 2.37,
+          "param_3": 1.9674194154534772
+        },
+        {
+          "Symbol": "OBEROIRLTY",
+          "param_0": 1499.6,
+          "param_1": 1443.8,
+          "param_2": 3.86,
+          "param_3": 2.8766412536420956
+        },
+        {
+          "Symbol": "HCLTECH",
+          "param_0": 1383,
+          "param_1": 1373.3,
+          "param_2": 0.71,
+          "param_3": 2.7778439215408897
+        },
+        {
+          "Symbol": "JUBLFOOD",
+          "param_0": 461.15,
+          "param_1": 448.6,
+          "param_2": 2.8,
+          "param_3": 2.6057962417339224
+        },
+        {
+          "Symbol": "BIOCON",
+          "param_0": 378.95,
+          "param_1": 369.05,
+          "param_2": 2.68,
+          "param_3": 2.304831394796914
+        },
+        {
+          "Symbol": "SONACOMS",
+          "param_0": 511.7,
+          "param_1": 494.7,
+          "param_2": 3.44,
+          "param_3": 2.1285064402459084
+        },
+        {
+          "Symbol": "GODREJCP",
+          "param_0": 1040,
+          "param_1": 1006.9,
+          "param_2": 3.29,
+          "param_3": 2.0141837645303386
+        },
+        {
+          "Symbol": "HAVELLS",
+          "param_0": 1274.7,
+          "param_1": 1234.2,
+          "param_2": 3.28,
+          "param_3": 1.9633140732944316
+        },
+        {
+          "Symbol": "PREMIERENE",
+          "param_0": 915.25,
+          "param_1": 889.35,
+          "param_2": 2.91,
+          "param_3": 2.320877018101425
+        },
+        {
+          "Symbol": "ADANIENT",
+          "param_0": 1883.3,
+          "param_1": 1817.9,
+          "param_2": 3.6,
+          "param_3": 2.2417177252727245
+        },
+        {
+          "Symbol": "KAYNES",
+          "param_0": 3717.8,
+          "param_1": 3514.3,
+          "param_2": 5.79,
+          "param_3": 2.190879968091184
+        },
+        {
+          "Symbol": "SHRIRAMFIN",
+          "param_0": 955.6,
+          "param_1": 903.6,
+          "param_2": 5.75,
+          "param_3": 1.9867157122310317
+        },
+        {
+          "Symbol": "GLENMARK",
+          "param_0": 2168.9,
+          "param_1": 2095.7,
+          "param_2": 3.49,
+          "param_3": 1.6902616498928988
+        },
+        {
+          "Symbol": "POWERGRID",
+          "param_0": 294.8,
+          "param_1": 299,
+          "param_2": -1.4,
+          "param_3": 1.6593753333321335
+        },
+        {
+          "Symbol": "SUNPHARMA",
+          "param_0": 1795.5,
+          "param_1": 1753.3,
+          "param_2": 2.41,
+          "param_3": 3.1149018995748685
+        },
+        {
+          "Symbol": "DABUR",
+          "param_0": 432.3,
+          "param_1": 421.4,
+          "param_2": 2.59,
+          "param_3": 2.0776162100458317
+        },
+        {
+          "Symbol": "ZYDUSLIFE",
+          "param_0": 905.45,
+          "param_1": 886.4,
+          "param_2": 2.15,
+          "param_3": 2.003873000168424
+        },
+        {
+          "Symbol": "SIEMENS",
+          "param_0": 3105.9,
+          "param_1": 3001.8,
+          "param_2": 3.47,
+          "param_3": 1.8789986908091763
+        },
+        {
+          "Symbol": "INDIANB",
+          "param_0": 912,
+          "param_1": 871.45,
+          "param_2": 4.65,
+          "param_3": 2.0330695332095754
+        },
+        {
+          "Symbol": "NYKAA",
+          "param_0": 244,
+          "param_1": 240.05,
+          "param_2": 1.65,
+          "param_3": 1.722850242341437
+        },
+        {
+          "Symbol": "GRASIM",
+          "param_0": 2655.7,
+          "param_1": 2549.4,
+          "param_2": 4.17,
+          "param_3": 2.589345051671806
+        },
+        {
+          "Symbol": "CROMPTON",
+          "param_0": 242.15,
+          "param_1": 237.55,
+          "param_2": 1.94,
+          "param_3": 2.0200280292278037
+        },
+        {
+          "Symbol": "SHREECEM",
+          "param_0": 24245,
+          "param_1": 23325,
+          "param_2": 3.94,
+          "param_3": 2.265507158991146
+        },
+        {
+          "Symbol": "RVNL",
+          "param_0": 269.25,
+          "param_1": 258.45,
+          "param_2": 4.18,
+          "param_3": 1.896582521913654
+        },
+        {
+          "Symbol": "ULTRACEMCO",
+          "param_0": 11227,
+          "param_1": 10764,
+          "param_2": 4.3,
+          "param_3": 1.9885043672796723
+        },
+        {
+          "Symbol": "HUDCO",
+          "param_0": 177.41,
+          "param_1": 169.16,
+          "param_2": 4.88,
+          "param_3": 2.67423020853509
+        },
+        {
+          "Symbol": "BLUESTARCO",
+          "param_0": 1743.3,
+          "param_1": 1665.9,
+          "param_2": 4.65,
+          "param_3": 2.444215990581437
+        },
+        {
+          "Symbol": "INDUSINDBK",
+          "param_0": 820.35,
+          "param_1": 797.25,
+          "param_2": 2.9,
+          "param_3": 2.2007317978333902
+        },
+        {
+          "Symbol": "HDFCBANK",
+          "param_0": 779.7,
+          "param_1": 764.9,
+          "param_2": 1.93,
+          "param_3": 2.137098756135714
+        },
+        {
+          "Symbol": "PHOENIXLTD",
+          "param_0": 1568.7,
+          "param_1": 1503.5,
+          "param_2": 4.34,
+          "param_3": 1.9911917423711267
+        },
+        {
+          "Symbol": "AUBANK",
+          "param_0": 911.8,
+          "param_1": 877.5,
+          "param_2": 3.91,
+          "param_3": 1.7918057170417843
+        },
+        {
+          "Symbol": "IREDA",
+          "param_0": 119.11,
+          "param_1": 114.37,
+          "param_2": 4.14,
+          "param_3": 2.42438567532514
+        },
+        {
+          "Symbol": "DMART",
+          "param_0": 3914,
+          "param_1": 3756.5,
+          "param_2": 4.19,
+          "param_3": 3.43087463002987
+        },
+        {
+          "Symbol": "MANAPPURAM",
+          "param_0": 261.5,
+          "param_1": 252.65,
+          "param_2": 3.5,
+          "param_3": 2.429214884912261
+        },
+        {
+          "Symbol": "UNIONBANK",
+          "param_0": 180.36,
+          "param_1": 173.82,
+          "param_2": 3.76,
+          "param_3": 2.1305219758863485
+        },
+        {
+          "Symbol": "ANGELONE",
+          "param_0": 241.44,
+          "param_1": 230.44,
+          "param_2": 4.77,
+          "param_3": 2.0221324117964246
+        },
+        {
+          "Symbol": "BAJAJFINSV",
+          "param_0": 1745.1,
+          "param_1": 1704.4,
+          "param_2": 2.39,
+          "param_3": 1.8045701508879646
+        },
+        {
+          "Symbol": "SUPREMEIND",
+          "param_0": 3832.9,
+          "param_1": 3754.4,
+          "param_2": 2.09,
+          "param_3": 1.789219433578385
+        },
+        {
+          "Symbol": "TRENT",
+          "param_0": 3478,
+          "param_1": 3365.6,
+          "param_2": 3.34,
+          "param_3": 1.7589763753172805
+        },
+        {
+          "Symbol": "LICHSGFIN",
+          "param_0": 496.25,
+          "param_1": 479,
+          "param_2": 3.6,
+          "param_3": 2.3311855548044487
+        },
+        {
+          "Symbol": "ICICIGI",
+          "param_0": 1770,
+          "param_1": 1730.1,
+          "param_2": 2.31,
+          "param_3": 2.0992024784196084
+        },
+        {
+          "Symbol": "VOLTAS",
+          "param_0": 1375.1,
+          "param_1": 1302.1,
+          "param_2": 5.61,
+          "param_3": 2.0532420255296757
+        },
+        {
+          "Symbol": "ASIANPAINT",
+          "param_0": 2268.5,
+          "param_1": 2217.3,
+          "param_2": 2.31,
+          "param_3": 1.9867631694574905
+        },
+        {
+          "Symbol": "NUVAMA",
+          "param_0": 1200.5,
+          "param_1": 1150.3,
+          "param_2": 4.36,
+          "param_3": 2.3584093216881596
+        },
+        {
+          "Symbol": "DALBHARAT",
+          "param_0": 1893.9,
+          "param_1": 1792.9,
+          "param_2": 5.63,
+          "param_3": 2.3100953332225758
+        },
+        {
+          "Symbol": "PATANJALI",
+          "param_0": 484.85,
+          "param_1": 472.8,
+          "param_2": 2.55,
+          "param_3": 2.2153041221231695
+        },
+        {
+          "Symbol": "EXIDEIND",
+          "param_0": 307.5,
+          "param_1": 298.5,
+          "param_2": 3.02,
+          "param_3": 1.9885670878293855
+        },
+        {
+          "Symbol": "BAJFINANCE",
+          "param_0": 883.45,
+          "param_1": 849,
+          "param_2": 4.06,
+          "param_3": 1.7916043976662672
+        },
+        {
+          "Symbol": "IEX",
+          "param_0": 121.9,
+          "param_1": 119.62,
+          "param_2": 1.91,
+          "param_3": 1.7271131724058297
+        },
+        {
+          "Symbol": "PPLPHARMA",
+          "param_0": 141.04,
+          "param_1": 136.08,
+          "param_2": 3.64,
+          "param_3": 3.4509049852772606
+        }
+      ]
+    }
+  }
+}

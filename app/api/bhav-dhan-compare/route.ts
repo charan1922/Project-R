@@ -5,7 +5,12 @@ export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/db';
 import { computeRMSE, computeSpearmanCorrelation, computeTopNOverlap } from '@/lib/r-factor/comparison';
 import { rFactorService } from '@/lib/r-factor/data-service';
-import { isDhanDailyCached, loadDhanDailyFromDb, saveDhanDailyToDb } from '@/lib/r-factor/dhan-daily-service';
+import { DhanDateUnavailableError, isDhanDailyCached, loadDhanDailyFromDb } from '@/lib/r-factor/dhan-daily-service';
+import {
+  computeAndCacheDhanDate,
+  computeAndCacheDhanRange,
+  computeAndCacheMissingDhanDates,
+} from '@/lib/r-factor/dhan-sync-service';
 
 /**
  * GET /api/r-factor-compare?date=2026-03-23
@@ -64,10 +69,14 @@ export async function GET(req: NextRequest) {
               eqLow: b.eqLow,
               eqClose: b.eqClose,
               eqVolume: b.eqVolume,
+              eqTurnover: b.eqTurnover,
               futVolume: b.futVolume,
               futOi: b.futOi,
               futOiChange: b.futOiChange,
               futTurnover: b.futTurnover,
+              optVolume: b.optVolume,
+              optOi: b.optOi,
+              optTurnover: b.optTurnover,
               ceVolume: b.ceVolume,
               peVolume: b.peVolume,
               rFactor: bhavSignals.get(symbol) ?? 0,
@@ -79,10 +88,14 @@ export async function GET(req: NextRequest) {
               eqLow: d.eqLow,
               eqClose: d.eqClose,
               eqVolume: d.eqVolume,
+              eqTurnover: d.eqTurnover,
               futVolume: d.futVolume,
               futOi: d.futOi,
               futOiChange: d.futOiChange,
               futTurnover: d.futTurnover,
+              optVolume: d.optVolume,
+              optOi: d.optOi,
+              optTurnover: d.optTurnover,
               ceVolume: d.ceVolume,
               peVolume: d.peVolume,
               rFactor: d.rFactor,
@@ -118,7 +131,21 @@ export async function GET(req: NextRequest) {
           : null,
     });
   } catch (error) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    if (error instanceof DhanDateUnavailableError) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'DHAN_DATE_UNAVAILABLE',
+          error: error.message,
+          requestedDate: error.requestedDate,
+          latestAvailableDate: error.latestAvailableDate,
+          probeSymbol: error.probeSymbol,
+        },
+        { status: 409 },
+      );
+    }
+
+    return NextResponse.json({ success: false, error: (error as Error).message }, { status: 500 });
   }
 }
 
@@ -129,45 +156,34 @@ export async function GET(req: NextRequest) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    if (body.action !== 'compute-dhan' || !body.date) {
-      return NextResponse.json({ error: 'Provide { action: "compute-dhan", date: "YYYY-MM-DD" }' }, { status: 400 });
+    if (body.action === 'compute-dhan' && body.date) {
+      const single = await computeAndCacheDhanDate(body.date as string);
+      return NextResponse.json({ success: true, ...single });
     }
 
-    const date = body.date as string;
-    const result = await rFactorService.scanDhanDaily({ stockList: 'all', date });
+    if (body.action === 'compute-dhan-range') {
+      const result = await computeAndCacheDhanRange(
+        body.fromDate as string | undefined,
+        body.toDate as string | undefined,
+      );
+      return NextResponse.json(result.body, result.success ? undefined : { status: result.status });
+    }
 
-    const rawData = result.rawData ?? new Map();
-    const rows = result.signals.map((s: any) => ({
-      symbol: s.symbol as string,
-      data: rawData.get(s.symbol) ?? {
-        eq_volume: 0,
-        eq_turnover: 0,
-        eq_high: 0,
-        eq_low: 0,
-        eq_close: 0,
-        fut_volume: 0,
-        fut_oi: 0,
-        fut_oi_change: 0,
-        fut_turnover: 0,
-        opt_volume: 0,
-        opt_oi: 0,
-        opt_turnover: 0,
-        ce_volume: 0,
-        pe_volume: 0,
+    if (body.action === 'compute-dhan-missing') {
+      const result = await computeAndCacheMissingDhanDates(
+        body.fromDate as string | undefined,
+        body.toDate as string | undefined,
+      );
+      return NextResponse.json(result.body, result.success ? undefined : { status: result.status });
+    }
+
+    return NextResponse.json(
+      {
+        error:
+          'Provide { action: "compute-dhan", date } or { action: "compute-dhan-range", fromDate?, toDate? } or { action: "compute-dhan-missing", fromDate?, toDate? }',
       },
-      rFactor: s.compositeRFactor as number,
-    }));
-
-    await saveDhanDailyToDb(date, rows);
-
-    const failures = result.failures ?? [];
-    return NextResponse.json({
-      success: true,
-      date,
-      computed: result.signals.length,
-      failed: failures.length,
-      errors: failures.slice(0, 20),
-    });
+      { status: 400 },
+    );
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }

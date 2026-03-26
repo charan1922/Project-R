@@ -1,12 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import {
-  Clock, Play, Pause, Trash2, CheckCircle2,
-  Loader2, Zap, Database, BarChart2, FlaskConical, RefreshCw,
+  BarChart2,
+  CheckCircle2,
+  Clock,
+  Database,
+  FlaskConical,
+  Loader2,
+  Pause,
+  Play,
+  RefreshCw,
+  Trash2,
+  Zap,
 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
-type JobType = 'historify' | 'bhavcopy' | 'master' | 'backtest' | 'backtest-all' | 'rfactor';
+type JobType = 'historify' | 'bhavcopy' | 'master' | 'backtest' | 'backtest-all' | 'rfactor' | 'dhan-daily';
 
 type Job = {
   id: string;
@@ -37,6 +46,7 @@ const JOB_TYPE_META: Record<JobType, { label: string; icon: typeof Clock; color:
   backtest: { label: 'Backtest Data', icon: FlaskConical, color: 'text-violet-400' },
   'backtest-all': { label: 'All TF Stocks', icon: Database, color: 'text-orange-400' },
   rfactor: { label: 'R-Factor', icon: Zap, color: 'text-emerald-400' },
+  'dhan-daily': { label: 'Dhan Daily', icon: Database, color: 'text-violet-400' },
 };
 
 export default function SchedulerPage() {
@@ -57,7 +67,9 @@ export default function SchedulerPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const addTemplate = async (name: string) => {
     await fetch('/api/historify/jobs', {
@@ -97,7 +109,12 @@ export default function SchedulerPage() {
     load();
   };
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-6 h-6 animate-spin text-slate-600" /></div>;
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-6 h-6 animate-spin text-slate-600" />
+      </div>
+    );
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
@@ -109,7 +126,9 @@ export default function SchedulerPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">Data Scheduler</h1>
-            <p className="text-sm text-slate-500">Cron jobs for bhavcopy, master contracts, backtest data, historify, R-Factor</p>
+            <p className="text-sm text-slate-500">
+              Cron jobs for bhavcopy, Dhan history cache, master contracts, backtest data, historify, R-Factor
+            </p>
           </div>
         </div>
         <button type="button" onClick={load} className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400">
@@ -169,9 +188,11 @@ export default function SchedulerPage() {
             <div
               key={job.id}
               className={`rounded-xl border overflow-hidden ${
-                job.status === 'error' ? 'bg-red-950/20 border-red-800/40' :
-                job.status === 'paused' ? 'bg-slate-900/50 border-slate-800/50' :
-                'bg-slate-900 border-slate-800'
+                job.status === 'error'
+                  ? 'bg-red-950/20 border-red-800/40'
+                  : job.status === 'paused'
+                    ? 'bg-slate-900/50 border-slate-800/50'
+                    : 'bg-slate-900 border-slate-800'
               }`}
             >
               <div className="flex items-center justify-between px-4 py-3">
@@ -179,43 +200,91 @@ export default function SchedulerPage() {
                   <Icon className={`w-5 h-5 ${job.status === 'paused' ? 'text-slate-600' : meta.color}`} />
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-sm font-semibold ${job.status === 'paused' ? 'text-slate-500' : 'text-white'}`}>{job.name}</span>
-                      <span className={`px-1.5 py-0.5 text-[9px] font-bold uppercase rounded ${
-                        job.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' :
-                        job.status === 'error' ? 'bg-red-500/20 text-red-400' :
-                        'bg-slate-700 text-slate-400'
-                      }`}>
+                      <span
+                        className={`text-sm font-semibold ${job.status === 'paused' ? 'text-slate-500' : 'text-white'}`}
+                      >
+                        {job.name}
+                      </span>
+                      <span
+                        className={`px-1.5 py-0.5 text-[9px] font-bold uppercase rounded ${
+                          job.status === 'active'
+                            ? 'bg-emerald-500/20 text-emerald-400'
+                            : job.status === 'error'
+                              ? 'bg-red-500/20 text-red-400'
+                              : 'bg-slate-700 text-slate-400'
+                        }`}
+                      >
                         {job.status}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 text-[10px] text-slate-600 mt-0.5">
-                      <span>{job.type === 'daily' ? `Daily at ${job.time} IST` : `Every ${job.intervalMinutes}min (market hours)`}</span>
-                      {job.nextRun && <span>Next: {new Date(job.nextRun).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}</span>}
-                      {job.lastRun !== 'Never' && <span>Last: {new Date(job.lastRun).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Kolkata' })}</span>}
+                      <span>
+                        {job.type === 'daily'
+                          ? `Daily at ${job.time} IST`
+                          : `Every ${job.intervalMinutes}min (market hours)`}
+                      </span>
+                      {job.nextRun && (
+                        <span>
+                          Next:{' '}
+                          {new Date(job.nextRun).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Asia/Kolkata',
+                          })}
+                        </span>
+                      )}
+                      {job.lastRun !== 'Never' && (
+                        <span>
+                          Last:{' '}
+                          {new Date(job.lastRun).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            timeZone: 'Asia/Kolkata',
+                          })}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  <button type="button" onClick={() => runNow(job.id)} disabled={isRunning}
-                    className="p-1.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 disabled:opacity-50" title="Run now">
+                  <button
+                    type="button"
+                    onClick={() => runNow(job.id)}
+                    disabled={isRunning}
+                    className="p-1.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 disabled:opacity-50"
+                    title="Run now"
+                  >
                     {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
                   </button>
-                  <button type="button" onClick={() => toggleJob(job.id)}
-                    className="p-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-400" title={job.status === 'active' ? 'Pause' : 'Resume'}>
+                  <button
+                    type="button"
+                    onClick={() => toggleJob(job.id)}
+                    className="p-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-400"
+                    title={job.status === 'active' ? 'Pause' : 'Resume'}
+                  >
                     <Pause className="w-3.5 h-3.5" />
                   </button>
-                  <button type="button" onClick={() => deleteJob(job.id)}
-                    className="p-1.5 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400" title="Delete">
+                  <button
+                    type="button"
+                    onClick={() => deleteJob(job.id)}
+                    className="p-1.5 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                    title="Delete"
+                  >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
               {job.lastResult && (
-                <div className={`px-4 py-2 border-t text-[10px] ${
-                  job.lastResult.startsWith('Error') ? 'border-red-800/40 text-red-400' : 'border-slate-800/50 text-slate-500'
-                }`}>
+                <div
+                  className={`px-4 py-2 border-t text-[10px] ${
+                    job.lastResult.startsWith('Error')
+                      ? 'border-red-800/40 text-red-400'
+                      : 'border-slate-800/50 text-slate-500'
+                  }`}
+                >
                   {job.lastResult}
                 </div>
               )}
@@ -225,8 +294,15 @@ export default function SchedulerPage() {
       </div>
 
       <div className="text-[10px] text-slate-700 space-y-1 px-1">
-        <p>Jobs run via <code className="text-slate-500">node-schedule</code> cron (Mon-Fri only). In-memory — restart clears all jobs.</p>
-        <p>Rate limits: Dhan 5 req/sec. NSE bhavcopy needs session cookie (auto-managed). Backtest download ~2 min for 20 stocks.</p>
+        <p>
+          Jobs run via <code className="text-slate-500">node-schedule</code> cron (Mon-Fri only). In-memory — restart
+          clears all jobs.
+        </p>
+        <p>
+          Rate limits: Dhan 5 req/sec. NSE bhavcopy needs session cookie (auto-managed). Backtest download ~2 min for 20
+          stocks.
+        </p>
+        <p>Dhan historical cache jobs trigger the scalable missing-date sync used by Bhav vs Dhan compare.</p>
       </div>
     </div>
   );

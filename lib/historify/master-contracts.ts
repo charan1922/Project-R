@@ -5,6 +5,7 @@
  * All lookups hit the DB (indexed) — no 100MB CSV download on every restart.
  */
 
+import fnoUniverse from '@/lib/data/fno_stocks_list.json';
 import { prisma } from '@/lib/db';
 
 const MASTER_CSV_URL = 'https://images.dhan.co/api-data/api-scrip-master.csv';
@@ -27,8 +28,15 @@ export type FuturesEntry = SecurityEntry & {
   underlying: string;
 };
 
+export type FuturesRangeEntry = SecurityEntry & {
+  expiry: Date;
+  underlying: string;
+  lotSize: number;
+};
+
 // Process-level flag — skip even the DB check once synced
 let synced = false;
+const FNO_SYMBOLS = new Set<string>(fnoUniverse.stocks);
 
 import { todayIST } from '@/lib/dhan/market-feed';
 
@@ -321,23 +329,84 @@ export async function batchResolveFutures(
 export async function searchSymbols(query: string, exchange?: string): Promise<SecurityEntry[]> {
   await ensureSynced();
 
+  const normalizedQuery = query.toUpperCase();
+
   const rows = await prisma.masterContract.findMany({
     where: {
-      symbol: { contains: query.toUpperCase() },
+      symbol: { contains: normalizedQuery },
       ...(exchange ? { exchange } : {}),
       segment: { endsWith: '_EQ' },
     },
-    take: 20,
+    take: 200,
   });
 
-  return rows.map((r) => ({
-    securityId: r.securityId,
-    symbol: r.symbol,
-    exchange: r.exchange,
-    segment: r.segment,
-    name: r.name,
-    instrument: r.instrument,
-  }));
+  const rank = (symbol: string): number => {
+    if (symbol === normalizedQuery) return 0;
+    if (symbol.startsWith(normalizedQuery)) return 10;
+    if (symbol.includes(normalizedQuery)) return 20;
+    return 30;
+  };
+
+  return rows
+    .map((r) => ({
+      securityId: r.securityId,
+      symbol: r.symbol,
+      exchange: r.exchange,
+      segment: r.segment,
+      name: r.name,
+      instrument: r.instrument,
+    }))
+    .sort((left, right) => {
+      const rankDiff = rank(left.symbol) - rank(right.symbol);
+      if (rankDiff !== 0) return rankDiff;
+
+      const fnoBoostDiff = Number(FNO_SYMBOLS.has(right.symbol)) - Number(FNO_SYMBOLS.has(left.symbol));
+      if (fnoBoostDiff !== 0) return fnoBoostDiff;
+
+      const digitPenaltyDiff = Number(/\d/.test(left.symbol)) - Number(/\d/.test(right.symbol));
+      if (digitPenaltyDiff !== 0) return digitPenaltyDiff;
+
+      const lengthDiff = left.symbol.length - right.symbol.length;
+      if (lengthDiff !== 0) return lengthDiff;
+
+      return left.symbol.localeCompare(right.symbol);
+    })
+    .slice(0, 20);
+}
+
+export async function getFuturesContractsForRange(
+  underlying: string,
+  fromDate: string,
+  toDate: string,
+): Promise<FuturesRangeEntry[]> {
+  await ensureSynced();
+
+  const start = new Date(fromDate);
+  const end = new Date(toDate);
+
+  const rows = await prisma.masterContract.findMany({
+    where: {
+      underlying,
+      instrument: 'FUTSTK',
+      segment: 'NSE_FNO',
+      expiryDate: { gte: start },
+    },
+    orderBy: { expiryDate: 'asc' },
+  });
+
+  return rows
+    .filter((row) => row.expiryDate && row.expiryDate <= new Date(end.getTime() + 120 * 24 * 60 * 60 * 1000))
+    .map((row) => ({
+      securityId: row.securityId,
+      symbol: row.symbol,
+      exchange: row.exchange,
+      segment: row.segment,
+      name: row.name,
+      instrument: row.instrument,
+      expiry: row.expiryDate!,
+      underlying: row.underlying!,
+      lotSize: row.lotSize,
+    }));
 }
 
 /**

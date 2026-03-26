@@ -6,18 +6,20 @@ import schedule from 'node-schedule';
  * Job types:
  * - historify:    Equity OHLCV to Parquet (existing)
  * - bhavcopy:     NSE bhavcopy EOD sync
+ * - dhan-daily:   Dhan historical cache warmup from bhavcopy-backed dates
  * - master:       Dhan master contracts refresh
  * - backtest:     5-min equity + futures + options for TF stocks
  * - rfactor:      R-Factor recomputation trigger
  *
  * Templates:
  * - Post-Market EOD (3:35 PM) — bhavcopy + historify daily
+ * - Dhan Daily Cache (3:50 PM) — scalable Dhan catch-up for missing bhavcopy dates
  * - Pre-Market Prep (8:30 AM) — master contracts refresh
  * - Backtest Data (3:45 PM) — 5-min data for TF trade stocks
  * - Market Hours R-Factor (every 5 min) — live R-Factor refresh
  */
 
-export type JobType = 'historify' | 'bhavcopy' | 'master' | 'backtest' | 'backtest-all' | 'rfactor';
+export type JobType = 'historify' | 'bhavcopy' | 'master' | 'backtest' | 'backtest-all' | 'rfactor' | 'dhan-daily';
 
 export type JobConfig = {
   id: string;
@@ -38,10 +40,12 @@ export type JobState = JobConfig & {
   nextRun: string;
 };
 
-// In-memory store (survives within process, lost on restart)
+// In-memory runtime cache backed by SQLite persistence.
 const g = globalThis as unknown as {
   __schedulerJobs?: JobState[];
   __schedulerActive?: Record<string, schedule.Job>;
+  __schedulerLoaded?: boolean;
+  __schedulerInitPromise?: Promise<void>;
 };
 
 function getJobs(): JobState[] {
@@ -54,9 +58,214 @@ function getActive(): Record<string, schedule.Job> {
   return g.__schedulerActive;
 }
 
+function isLoaded(): boolean {
+  return g.__schedulerLoaded === true;
+}
+
+function markLoaded(): void {
+  g.__schedulerLoaded = true;
+}
+
 function getCronFromIST(time: string): string {
   const [hours, minutes] = time.split(':');
   return `${minutes} ${hours} * * 1-5`; // Mon-Fri
+}
+
+const ENSURE_SCHEDULER_TABLE_SQL = `
+  CREATE TABLE IF NOT EXISTS scheduler_jobs (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    jobType TEXT NOT NULL,
+    time TEXT,
+    intervalMinutes INTEGER,
+    dataInterval TEXT,
+    symbolsJson TEXT,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    status TEXT NOT NULL DEFAULT 'active',
+    lastRun TEXT NOT NULL DEFAULT 'Never',
+    lastResult TEXT NOT NULL DEFAULT '',
+    nextRun TEXT NOT NULL DEFAULT '',
+    createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )
+`;
+
+async function ensureSchedulerTable() {
+  const { prisma } = await import('@/lib/db');
+  await prisma.$executeRawUnsafe(ENSURE_SCHEDULER_TABLE_SQL);
+}
+
+function serializeJob(state: JobState) {
+  return {
+    id: state.id,
+    name: state.name,
+    type: state.type,
+    jobType: state.jobType,
+    time: state.time ?? null,
+    intervalMinutes: state.intervalMinutes ?? null,
+    dataInterval: state.dataInterval ?? null,
+    symbolsJson: JSON.stringify(state.symbols ?? []),
+    enabled: state.enabled ? 1 : 0,
+    status: state.status,
+    lastRun: state.lastRun,
+    lastResult: state.lastResult,
+    nextRun: state.nextRun,
+  };
+}
+
+type SchedulerJobRow = {
+  id: string;
+  name: string;
+  type: JobConfig['type'];
+  jobType: JobType;
+  time: string | null;
+  intervalMinutes: number | null;
+  dataInterval: string | null;
+  symbolsJson: string | null;
+  enabled: number;
+  status: JobState['status'];
+  lastRun: string;
+  lastResult: string;
+  nextRun: string;
+};
+
+function deserializeJob(row: SchedulerJobRow): JobState {
+  return {
+    id: row.id,
+    name: row.name,
+    type: row.type,
+    jobType: row.jobType,
+    time: row.time ?? undefined,
+    intervalMinutes: row.intervalMinutes ?? undefined,
+    dataInterval: row.dataInterval ?? undefined,
+    symbols: row.symbolsJson ? (JSON.parse(row.symbolsJson) as string[]) : undefined,
+    enabled: row.enabled === 1,
+    status: row.enabled === 1 ? row.status : 'paused',
+    lastRun: row.lastRun,
+    lastResult: row.lastResult,
+    nextRun: row.nextRun,
+  };
+}
+
+async function persistJob(state: JobState): Promise<void> {
+  await ensureSchedulerTable();
+  const { prisma } = await import('@/lib/db');
+  const data = serializeJob(state);
+  await prisma.$executeRawUnsafe(
+    `
+      INSERT INTO scheduler_jobs
+        (id, name, type, jobType, time, intervalMinutes, dataInterval, symbolsJson, enabled, status, lastRun, lastResult, nextRun, updatedAt)
+      VALUES
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        type = excluded.type,
+        jobType = excluded.jobType,
+        time = excluded.time,
+        intervalMinutes = excluded.intervalMinutes,
+        dataInterval = excluded.dataInterval,
+        symbolsJson = excluded.symbolsJson,
+        enabled = excluded.enabled,
+        status = excluded.status,
+        lastRun = excluded.lastRun,
+        lastResult = excluded.lastResult,
+        nextRun = excluded.nextRun,
+        updatedAt = CURRENT_TIMESTAMP
+    `,
+    data.id,
+    data.name,
+    data.type,
+    data.jobType,
+    data.time,
+    data.intervalMinutes,
+    data.dataInterval,
+    data.symbolsJson,
+    data.enabled,
+    data.status,
+    data.lastRun,
+    data.lastResult,
+    data.nextRun,
+  );
+}
+
+async function removePersistedJob(id: string): Promise<void> {
+  await ensureSchedulerTable();
+  const { prisma } = await import('@/lib/db');
+  await prisma.$executeRawUnsafe('DELETE FROM scheduler_jobs WHERE id = ?', id);
+}
+
+function scheduleState(state: JobState): void {
+  const active = getActive();
+  active[state.id]?.cancel();
+  delete active[state.id];
+
+  if (!state.enabled) {
+    state.status = 'paused';
+    state.nextRun = '';
+    return;
+  }
+
+  let cronExpr = '';
+  if (state.type === 'daily' && state.time) {
+    cronExpr = getCronFromIST(state.time);
+  } else if (state.type === 'interval' && state.intervalMinutes) {
+    cronExpr = `*/${state.intervalMinutes} 9-15 * * 1-5`;
+  }
+
+  if (!cronExpr) {
+    state.nextRun = '';
+    return;
+  }
+
+  const job = schedule.scheduleJob(cronExpr, async () => {
+    console.log(`[Scheduler] Executing: ${state.name} (${state.jobType})`);
+    state.lastRun = new Date().toISOString();
+    state.status = 'active';
+
+    try {
+      state.lastResult = await executeJob(state);
+      console.log(`[Scheduler] ${state.name}: ${state.lastResult}`);
+    } catch (err) {
+      state.status = 'error';
+      state.lastResult = `Error: ${(err as Error).message}`;
+      console.error(`[Scheduler] ${state.name} failed:`, err);
+    }
+
+    const next = active[state.id]?.nextInvocation();
+    state.nextRun = next ? next.toISOString() : '';
+    await persistJob(state);
+  });
+
+  active[state.id] = job;
+  const next = job.nextInvocation();
+  state.nextRun = next ? next.toISOString() : '';
+}
+
+export async function ensureSchedulerLoaded(): Promise<void> {
+  if (isLoaded()) return;
+  if (!g.__schedulerInitPromise) {
+    g.__schedulerInitPromise = (async () => {
+      await ensureSchedulerTable();
+      const { prisma } = await import('@/lib/db');
+      const rows = await prisma.$queryRawUnsafe<SchedulerJobRow[]>(
+        'SELECT id, name, type, jobType, time, intervalMinutes, dataInterval, symbolsJson, enabled, status, lastRun, lastResult, nextRun FROM scheduler_jobs ORDER BY createdAt ASC, id ASC',
+      );
+
+      const jobs = getJobs();
+      jobs.splice(0, jobs.length);
+
+      for (const row of rows) {
+        const state = deserializeJob(row);
+        jobs.push(state);
+        scheduleState(state);
+      }
+
+      markLoaded();
+    })();
+  }
+
+  await g.__schedulerInitPromise;
 }
 
 /** Execute a job based on its type */
@@ -98,6 +307,18 @@ async function executeJob(config: JobState): Promise<string> {
       return `Master contracts: ${data.count ?? 0} rows in ${data.elapsed ?? '?'}`;
     }
 
+    case 'dhan-daily': {
+      // Cache scalable Dhan history for any bhavcopy dates not yet computed
+      const res = await fetch(`${baseUrl}/api/bhav-dhan-compare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'compute-dhan-missing' }),
+      });
+      if (!res.ok) throw new Error(`Dhan daily sync failed: ${res.status}`);
+      const data = await res.json();
+      return `Dhan cache: ${data.processedDates ?? 0} dates, ${data.computed ?? 0} rows, ${data.failed ?? 0} failures`;
+    }
+
     case 'backtest': {
       // Download 5-min backtest data for TF stocks
       const res = await fetch(`${baseUrl}/api/backtest/tf-validate`, {
@@ -136,15 +357,15 @@ async function executeJob(config: JobState): Promise<string> {
 }
 
 /** Create and schedule a job */
-export function createJob(config: JobConfig): JobState {
+export async function createJob(config: JobConfig): Promise<JobState> {
+  await ensureSchedulerLoaded();
   const jobs = getJobs();
-  const active = getActive();
 
   // Remove existing job with same ID
   const existingIdx = jobs.findIndex((j) => j.id === config.id);
   if (existingIdx >= 0) {
-    active[config.id]?.cancel();
-    delete active[config.id];
+    getActive()[config.id]?.cancel();
+    delete getActive()[config.id];
     jobs.splice(existingIdx, 1);
   }
 
@@ -158,45 +379,14 @@ export function createJob(config: JobConfig): JobState {
 
   jobs.push(state);
 
-  if (!config.enabled) return state;
-
-  // Build cron expression
-  let cronExpr = '';
-  if (config.type === 'daily' && config.time) {
-    cronExpr = getCronFromIST(config.time);
-  } else if (config.type === 'interval' && config.intervalMinutes) {
-    cronExpr = `*/${config.intervalMinutes} 9-15 * * 1-5`;
-  }
-
-  if (cronExpr) {
-    const job = schedule.scheduleJob(cronExpr, async () => {
-      console.log(`[Scheduler] Executing: ${config.name} (${config.jobType})`);
-      state.lastRun = new Date().toISOString();
-      state.status = 'active';
-
-      try {
-        state.lastResult = await executeJob(state);
-        console.log(`[Scheduler] ${config.name}: ${state.lastResult}`);
-      } catch (err) {
-        state.status = 'error';
-        state.lastResult = `Error: ${(err as Error).message}`;
-        console.error(`[Scheduler] ${config.name} failed:`, err);
-      }
-
-      const next = active[config.id]?.nextInvocation();
-      state.nextRun = next ? next.toISOString() : '';
-    });
-
-    active[config.id] = job;
-    const next = job.nextInvocation();
-    state.nextRun = next ? next.toISOString() : '';
-  }
-
+  scheduleState(state);
+  await persistJob(state);
   return state;
 }
 
 /** Delete a job */
-export function deleteJob(id: string): boolean {
+export async function deleteJob(id: string): Promise<boolean> {
+  await ensureSchedulerLoaded();
   const jobs = getJobs();
   const active = getActive();
   const idx = jobs.findIndex((j) => j.id === id);
@@ -204,36 +394,41 @@ export function deleteJob(id: string): boolean {
   active[id]?.cancel();
   delete active[id];
   jobs.splice(idx, 1);
+  await removePersistedJob(id);
   return true;
 }
 
 /** Pause/resume a job */
-export function toggleJob(id: string): JobState | null {
+export async function toggleJob(id: string): Promise<JobState | null> {
+  await ensureSchedulerLoaded();
   const jobs = getJobs();
-  const active = getActive();
   const job = jobs.find((j) => j.id === id);
   if (!job) return null;
 
   if (job.status === 'active' || job.status === 'error') {
-    active[id]?.cancel();
-    delete active[id];
+    getActive()[id]?.cancel();
+    delete getActive()[id];
+    job.enabled = false;
     job.status = 'paused';
     job.nextRun = '';
   } else {
-    // Re-create the schedule
     job.enabled = true;
-    createJob(job);
+    job.status = 'active';
+    scheduleState(job);
   }
+  await persistJob(job);
   return job;
 }
 
 /** Get all jobs */
-export function getAllJobs(): JobState[] {
+export async function getAllJobs(): Promise<JobState[]> {
+  await ensureSchedulerLoaded();
   return getJobs();
 }
 
 /** Run a job immediately (one-shot) */
 export async function runJobNow(id: string): Promise<string> {
+  await ensureSchedulerLoaded();
   const jobs = getJobs();
   const job = jobs.find((j) => j.id === id);
   if (!job) return 'Job not found';
@@ -245,8 +440,9 @@ export async function runJobNow(id: string): Promise<string> {
   } catch (err) {
     job.status = 'error';
     job.lastResult = `Error: ${(err as Error).message}`;
-    return job.lastResult;
   }
+  await persistJob(job);
+  return job.lastResult;
 }
 
 // ─── Pre-built Templates ──────────────────────────────────────────────────
@@ -272,6 +468,17 @@ export const JOB_TEMPLATES: { name: string; description: string; config: Omit<Jo
       jobType: 'master',
       time: '08:30',
       enabled: true,
+    },
+  },
+  {
+    name: 'Dhan Historical Cache',
+    description: 'Fill missing Dhan daily history for bhavcopy dates after EOD sync (3:50 PM IST)',
+    config: {
+      name: 'Dhan Historical Cache',
+      type: 'daily',
+      jobType: 'dhan-daily',
+      time: '15:50',
+      enabled: false,
     },
   },
   {

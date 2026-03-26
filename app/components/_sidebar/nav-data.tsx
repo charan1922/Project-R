@@ -96,6 +96,12 @@ export const v1Items: NavItemType[] = [
         icon: <BarChart2 className="w-4 h-4" />,
       },
       {
+        label: 'Dhan Stock Download',
+        href: '/trading-lab/dhan-stock-download',
+        icon: <Download className="w-4 h-4" />,
+        badge: 'NEW',
+      },
+      {
         label: 'Bhav vs Dhan',
         href: '/trading-lab/bhav-dhan-compare',
         icon: <BarChart2 className="w-4 h-4" />,

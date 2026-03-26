@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
         eqVolume REAL DEFAULT 0, eqTurnover REAL DEFAULT 0,
         eqHigh REAL DEFAULT 0, eqLow REAL DEFAULT 0, eqClose REAL DEFAULT 0,
         futVolume REAL DEFAULT 0, futOi REAL DEFAULT 0, futOiChange REAL DEFAULT 0, futTurnover REAL DEFAULT 0,
-        optVolume REAL DEFAULT 0, ceVolume REAL DEFAULT 0, peVolume REAL DEFAULT 0,
+        optVolume REAL DEFAULT 0, optOi REAL DEFAULT 0, optTurnover REAL DEFAULT 0,
+        ceVolume REAL DEFAULT 0, peVolume REAL DEFAULT 0,
         rFactor REAL DEFAULT 0,
         UNIQUE(date, symbol)
       )
@@ -33,23 +34,29 @@ export async function GET(req: NextRequest) {
     if (date) whereClauses.push(`date = '${date}'`);
     const where = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
-    const [data, totalRows, dateRows] = await Promise.all([
+    const [data, totalRows, dateRows, bhavDateRows] = await Promise.all([
       prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-        `SELECT rowid as id, date, symbol, eqHigh, eqLow, eqClose, eqVolume, futVolume, futOi, futOiChange, futTurnover, ceVolume, peVolume, rFactor FROM dhan_daily_data ${where} ORDER BY date DESC, symbol ASC LIMIT ${limit} OFFSET ${offset}`,
+        `SELECT rowid as id, date, symbol, eqHigh, eqLow, eqClose, eqVolume, eqTurnover, futVolume, futOi, futOiChange, futTurnover, optVolume, optOi, optTurnover, ceVolume, peVolume, rFactor FROM dhan_daily_data ${where} ORDER BY date DESC, symbol ASC LIMIT ${limit} OFFSET ${offset}`,
       ),
       prisma.$queryRawUnsafe<{ cnt: bigint }[]>(`SELECT COUNT(*) as cnt FROM dhan_daily_data ${where}`),
       prisma.$queryRawUnsafe<{ date: string }[]>('SELECT DISTINCT date FROM dhan_daily_data ORDER BY date DESC'),
+      prisma
+        .$queryRawUnsafe<{ date: string }[]>('SELECT DISTINCT date FROM bhavcopy_days ORDER BY date DESC')
+        .catch(() => [] as { date: string }[]),
     ]);
 
     const total = Number(totalRows[0]?.cnt ?? 0);
     const dateList = dateRows.map((d) => d.date);
+    const syncDates = bhavDateRows.map((d) => d.date);
 
     return NextResponse.json({
       success: true,
       data,
       total,
       dates: dateList,
+      syncDates,
       dateRange: dateList.length > 0 ? { from: dateList[dateList.length - 1], to: dateList[0] } : null,
+      syncDateRange: syncDates.length > 0 ? { from: syncDates[syncDates.length - 1], to: syncDates[0] } : null,
     });
   } catch (error) {
     return NextResponse.json({ success: false, error: (error as Error).message }, { status: 500 });

@@ -65,6 +65,10 @@ export async function dhanMarketFeed(
   const token = await getDhanAccessToken();
   const clientId = env.DHAN_CLIENT_ID!;
 
+  const requestPayload = Object.fromEntries(
+    Object.entries(securities).map(([segment, ids]) => [segment, ids.map((id) => String(id))]),
+  );
+
   const resp = await fetch(`https://api.dhan.co/v2/marketfeed/${endpoint}`, {
     method: 'POST',
     headers: {
@@ -72,7 +76,7 @@ export async function dhanMarketFeed(
       'client-id': clientId,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(securities),
+    body: JSON.stringify(requestPayload),
   });
 
   if (!resp.ok) {
@@ -82,9 +86,14 @@ export async function dhanMarketFeed(
     return {};
   }
 
-  const json = (await resp.json()) as { data?: Record<string, Record<string, unknown>>; status: string };
-  if (json.status !== 'success' || !json.data) return {};
-  return json.data as MarketFeedResponse;
+  const json = (await resp.json()) as {
+    data?: Record<string, Record<string, unknown>>;
+    Data?: Record<string, Record<string, unknown>>;
+    status?: string;
+  };
+  const responsePayload = json.data ?? json.Data;
+  if ((json.status ?? '').toLowerCase() !== 'success' || !responsePayload) return {};
+  return responsePayload as MarketFeedResponse;
 }
 
 // ─── Intraday Charts ─────────────────────────────────────────────────────────
