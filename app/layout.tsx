@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Sensibull Trading Dashboard',
-  description: 'Trading analytics and portfolio management',
+  description: 'AI-driven R-Factor trading and analytics',
 };
 
 export default async function RootLayout({

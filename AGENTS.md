@@ -345,7 +345,7 @@ For Historify sync and live charts:
 For Quant Lab backtesting:
 
 - `lib/quant/backtest-engine.ts`
-- `app/quant/backtester/page.tsx`
+- `app/historify/backtester/page.tsx`
 
 For AI trading:
 

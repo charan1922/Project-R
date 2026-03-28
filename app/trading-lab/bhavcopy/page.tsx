@@ -82,7 +82,7 @@ export default function BhavcopyPage() {
     setSyncResult(null);
     setError(null);
     try {
-      const res = await fetch('/api/bhavcopy/sync?days=25', { method: 'POST' });
+      const res = await fetch('/api/bhavcopy/sync?days=60', { method: 'POST' });
       const json = await res.json();
       if (json.success) {
         setSyncResult(`Synced ${json.dates} dates, ${json.rows} rows in ${json.elapsed}`);
@@ -121,7 +121,7 @@ export default function BhavcopyPage() {
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-sm hover:bg-slate-700 transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-          {syncing ? 'Syncing...' : 'Sync Bhavcopy (25 days)'}
+          {syncing ? 'Syncing...' : 'Sync Bhavcopy (60 days)'}
         </button>
       </div>
 

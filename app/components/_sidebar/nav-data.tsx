@@ -64,23 +64,6 @@ export const v1Items: NavItemType[] = [
         badge: 'NEW',
       },
       {
-        label: 'Trade Journal',
-        href: '/trading-lab/tradefinder',
-        icon: <LineChart className="w-4 h-4" />,
-        badge: 'ANALYTICS',
-      },
-      {
-        label: 'F&O Universe',
-        href: '/trading-lab/fno-universe',
-        icon: <Layers className="w-4 h-4" />,
-        badge: 'NEW',
-      },
-      {
-        label: 'R-Factor History',
-        href: '/trading-lab/r-factor-history',
-        icon: <Clock className="w-4 h-4" />,
-      },
-      {
         label: 'Master Contracts',
         href: '/trading-lab/master-contracts',
         icon: <Database className="w-4 h-4" />,
@@ -111,6 +94,31 @@ export const v1Items: NavItemType[] = [
         href: '/trading-lab/ai-autopilot/options',
         icon: <Activity className="w-4 h-4" />,
         badge: 'NEW',
+      },
+    ],
+  },
+  {
+    label: 'TF-RFactor',
+    href: '/tf-rfactor',
+    icon: <Brain className="w-4 h-4" />,
+    badge: 'NEW',
+    children: [
+      {
+        label: 'Trade Journal',
+        href: '/trading-lab/tradefinder',
+        icon: <LineChart className="w-4 h-4" />,
+        badge: 'ANALYTICS',
+      },
+      {
+        label: 'F&O Universe',
+        href: '/trading-lab/fno-universe',
+        icon: <Layers className="w-4 h-4" />,
+        badge: 'NEW',
+      },
+      {
+        label: 'R-Factor History',
+        href: '/trading-lab/r-factor-history',
+        icon: <Clock className="w-4 h-4" />,
       },
       {
         label: 'TF Backtest',
@@ -173,16 +181,6 @@ export const historifyItems: NavItemType[] = [
         icon: <Activity className="w-4 h-4" />,
       },
       {
-        label: 'Watchlist',
-        href: '/historify/watchlist',
-        icon: <List className="w-4 h-4" />,
-      },
-      {
-        label: 'Charts',
-        href: '/historify/charts',
-        icon: <BarChart2 className="w-4 h-4" />,
-      },
-      {
         label: 'Day Chart',
         href: '/historify/day-chart',
         icon: <CalendarDays className="w-4 h-4" />,
@@ -192,11 +190,6 @@ export const historifyItems: NavItemType[] = [
         label: 'Download',
         href: '/historify/download',
         icon: <Download className="w-4 h-4" />,
-      },
-      {
-        label: 'Import',
-        href: '/historify/import',
-        icon: <Upload className="w-4 h-4" />,
       },
       {
         label: 'Export',
@@ -213,32 +206,17 @@ export const historifyItems: NavItemType[] = [
         href: '/historify/settings',
         icon: <Settings className="w-4 h-4" />,
       },
-    ],
-  },
-];
-
-export const quantLabItems: NavItemType[] = [
-  {
-    label: 'Quant Lab',
-    href: '/quant',
-    icon: <TestTube2 className="w-4 h-4" />,
-    badge: 'NEW',
-    children: [
-      {
-        label: 'Sector Rotation',
-        href: '/quant/sector-rotation',
-        icon: <Compass className="w-4 h-4" />,
-        badge: 'NEW',
-      },
       {
         label: 'Backtester',
-        href: '/quant/backtester',
+        href: '/historify/backtester',
         icon: <FlaskConical className="w-4 h-4" />,
         badge: 'NEW',
       },
     ],
   },
 ];
+
+
 
 export const aiTradingItems: NavItemType[] = [
   {

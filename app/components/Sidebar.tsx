@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { NavItem } from './_sidebar/NavItem';
-import { aiTradingItems, historifyItems, marketScopeItems, quantLabItems, v1Items } from './_sidebar/nav-data';
+import { aiTradingItems, historifyItems, marketScopeItems, v1Items } from './_sidebar/nav-data';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -37,7 +37,7 @@ export default function Sidebar() {
           <div className="w-7 h-7 rounded border border-sky-500/30 bg-sky-500/10 flex items-center justify-center">
             <Activity className="w-4 h-4 text-sky-400" />
           </div>
-          <span className="text-base font-semibold tracking-tight text-slate-100">DeepQuant</span>
+          <span className="text-base font-semibold tracking-tight text-slate-100">R-Factor AI</span>
         </Link>
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -59,7 +59,7 @@ export default function Sidebar() {
       <aside
         className={`fixed top-0 left-0 h-full w-64 bg-slate-950 border-r border-slate-800/60 z-50 transform transition-transform duration-300 ease-out
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          lg:static lg:transform-none flex flex-col`}
+          lg:sticky lg:top-0 lg:h-screen lg:transform-none flex flex-col`}
       >
         {/* Logo Section */}
         <div className="h-16 flex items-center justify-between px-5 border-b border-slate-800/60">
@@ -68,7 +68,7 @@ export default function Sidebar() {
               <Activity className="w-4 h-4 text-slate-300 group-hover:text-sky-400 transition-colors" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-semibold tracking-tight text-slate-100 leading-tight">DeepQuant</span>
+              <span className="text-sm font-semibold tracking-tight text-slate-100 leading-tight">R-Factor AI</span>
               <span className="text-[10px] uppercase tracking-widest text-slate-500 font-medium">
                 Enterprise Analytics
               </span>
@@ -78,19 +78,10 @@ export default function Sidebar() {
         </div>
 
         {/* Navigation Sections */}
-        <nav className="flex-1 py-6 px-3.5 space-y-6 overflow-y-auto custom-scrollbar">
-          <div className="space-y-1.5">
-            <div className="px-2 text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <span>AI Trading</span>
-              <div className="h-px bg-amber-500/30 flex-1"></div>
-            </div>
-            {aiTradingItems.map((item) => (
-              <NavItem key={item.href} item={item} {...commonProps} />
-            ))}
-          </div>
+        <nav className="flex-1 py-4 px-3 space-y-4 overflow-y-auto custom-scrollbar">
 
-          <div className="space-y-1.5">
-            <div className="px-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+          <div className="space-y-1">
+            <div className="px-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
               <span>Current System</span>
               <div className="h-px bg-slate-800/60 flex-1"></div>
             </div>
@@ -99,8 +90,8 @@ export default function Sidebar() {
             ))}
           </div>
 
-          <div className="space-y-1.5">
-            <div className="px-2 text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+          <div className="space-y-1">
+            <div className="px-2 text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-2 flex items-center gap-2">
               <span>Market Scope</span>
               <div className="h-px bg-amber-800/40 flex-1"></div>
             </div>
@@ -109,8 +100,8 @@ export default function Sidebar() {
             ))}
           </div>
 
-          <div className="space-y-1.5">
-            <div className="px-2 text-[10px] font-bold text-teal-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+          <div className="space-y-1">
+            <div className="px-2 text-[10px] font-bold text-teal-600 uppercase tracking-widest mb-2 flex items-center gap-2">
               <span>Data Platform</span>
               <div className="h-px bg-teal-800/40 flex-1"></div>
             </div>
@@ -119,12 +110,13 @@ export default function Sidebar() {
             ))}
           </div>
 
-          <div className="space-y-1.5">
-            <div className="px-2 text-[10px] font-bold text-violet-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <span>Quant Lab</span>
-              <div className="h-px bg-violet-800/40 flex-1"></div>
+
+          <div className="space-y-1">
+            <div className="px-2 text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+              <span>AI Trading</span>
+              <div className="h-px bg-amber-500/30 flex-1"></div>
             </div>
-            {quantLabItems.map((item) => (
+            {aiTradingItems.map((item) => (
               <NavItem key={item.href} item={item} {...commonProps} />
             ))}
           </div>

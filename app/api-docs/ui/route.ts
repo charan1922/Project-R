@@ -32,10 +32,10 @@ export async function GET() {
     window.onload = function() {
       var ui = SwaggerUIBundle({
         urls: [
-          { url: '/api-docs/spec', name: 'Project-R (DeepQuant) API' },
+          { url: '/api-docs/spec', name: 'Project-R (R-Factor AI) API' },
           { url: '/api-docs/dhan-spec', name: 'DhanHQ V2 API' },
         ],
-        'urls.primaryName': 'Project-R (DeepQuant) API',
+        'urls.primaryName': 'Project-R (R-Factor AI) API',
         dom_id: '#swagger-ui',
         deepLinking: true,
         presets: [

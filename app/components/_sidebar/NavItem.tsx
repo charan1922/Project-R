@@ -37,11 +37,11 @@ export function NavItem({
             }
             onMobileClick();
           }}
-          className={`group flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 ease-in-out flex-1 ${
+          className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-all duration-200 ease-in-out flex-1 ${
             active
               ? "bg-slate-800/80 text-slate-100 shadow-sm"
               : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
-          } ${depth > 0 ? `ml-${depth * 4} text-sm` : "text-sm font-medium"}`}
+          } ${depth > 0 ? `ml-${depth * 4} text-[13px]` : "text-[13px] font-medium"}`}
         >
           <div
             className={`flex-shrink-0 transition-colors ${
@@ -82,7 +82,7 @@ export function NavItem({
         </Link>
       </div>
       {hasChildren && isExpanded && (
-        <div className="mt-1 mb-2 space-y-0.5 border-l border-slate-800 ml-5 pl-2">
+        <div className="mt-0.5 mb-1.5 space-y-0.5 border-l border-slate-800 ml-5 pl-1.5">
           {item.children!.map((child) => (
             <NavItem
               key={child.href}

@@ -5,7 +5,7 @@ import 'nextra-theme-docs/style.css'
 
 export const metadata: import('next').Metadata = {
   title: 'Project-R Docs',
-  description: 'Documentation for Project-R (DeepQuant) — AI-driven algorithmic trading platform',
+  description: 'Documentation for Project-R (R-Factor AI) — AI-driven algorithmic trading platform',
 }
 
 const navbar = (
@@ -17,7 +17,7 @@ const navbar = (
 
 const footer = (
   <Footer>
-    MIT {new Date().getFullYear()} © Project-R (DeepQuant)
+    MIT {new Date().getFullYear()} © Project-R (R-Factor AI)
   </Footer>
 )
 
