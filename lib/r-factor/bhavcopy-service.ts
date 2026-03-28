@@ -32,11 +32,13 @@ export class BhavcopyNotSyncedError extends Error {
 
 /**
  * Get N days of historical data for a symbol from the DB.
+ * When upToDate is provided, only rows up to and including that date are returned —
+ * so past-date queries compute the signal as it would have been on that date.
  * Throws BhavcopyNotSyncedError if no data exists.
  */
-export async function getHistoricalData(symbol: string, days = 25): Promise<DailyStockData[]> {
+export async function getHistoricalData(symbol: string, days = 25, upToDate?: string): Promise<DailyStockData[]> {
   const rows = await prisma.bhavcopyDay.findMany({
-    where: { symbol },
+    where: { symbol, ...(upToDate ? { date: { lte: upToDate } } : {}) },
     orderBy: { date: 'asc' },
   });
 
@@ -44,7 +46,7 @@ export async function getHistoricalData(symbol: string, days = 25): Promise<Dail
     throw new BhavcopyNotSyncedError();
   }
 
-  // Take the most recent `days` entries
+  // Take the most recent `days` entries up to (and including) the target date
   const recent = rows.slice(-days);
 
   return recent.map((r) => ({

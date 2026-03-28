@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { DhanDateUnavailableError } from '@/lib/r-factor/dhan-daily-service';
+import { DhanDateUnavailableError, patchDhanOptionsForZeroRows } from '@/lib/r-factor/dhan-daily-service';
 import {
   computeAndCacheDhanDate,
   computeAndCacheDhanRange,
@@ -33,10 +33,24 @@ export async function POST(req: Request) {
       return NextResponse.json(result.body, result.success ? undefined : { status: result.status });
     }
 
+    if (body.action === 'patch-options') {
+      const result = await patchDhanOptionsForZeroRows(
+        body.fromDate as string | undefined,
+        body.toDate as string | undefined,
+      );
+      return NextResponse.json({
+        success: true,
+        mode: 'patch-options',
+        patched: result.patched,
+        skipped: result.skipped,
+        dates: result.dates,
+      });
+    }
+
     return NextResponse.json(
       {
         error:
-          'Provide { action: "compute-dhan", date } or { action: "compute-dhan-range", fromDate?, toDate? } or { action: "compute-dhan-missing", fromDate?, toDate? }',
+          'Provide { action: "compute-dhan", date } or { action: "compute-dhan-range", fromDate?, toDate? } or { action: "compute-dhan-missing", fromDate?, toDate? } or { action: "patch-options", fromDate?, toDate? }',
       },
       { status: 400 },
     );

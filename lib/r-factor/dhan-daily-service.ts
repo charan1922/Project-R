@@ -427,7 +427,7 @@ export async function getDhanDailyData(symbol: string, days = 30, targetDate?: s
   // getDhanSymbolDailyRange works and consistently returns non-zero option data.
   const optFromDate = targetDate
     ? targetDate // exact target date
-    : fromStr;   // fallback: full range when no target date specified
+    : fromStr; // fallback: full range when no target date specified
   const optChart = await fetchHistoricalOptionAggregate(eqId, optFromDate, toStr);
 
   // Merge by date
@@ -754,4 +754,104 @@ export async function isDhanDailyCached(date: string): Promise<boolean> {
     `SELECT COUNT(*) as cnt FROM dhan_daily_data WHERE date = '${date}'`,
   );
   return Number(rows[0]?.cnt ?? 0) > 0;
+}
+
+/**
+ * Patch option columns on existing dhan_daily_data rows that still have zeros.
+ *
+ * Instead of a full expensive re-scan (equity + futures + options per symbol),
+ * this function:
+ *   1. Finds distinct (date, symbol) pairs where optVolume = 0
+ *   2. Groups by date so we make one rolling-option call per (securityId, date-range)
+ *   3. Updates only the 5 option columns (optVolume, optOi, optTurnover, ceVolume, peVolume)
+ *
+ * Returns counts of patched and skipped rows.
+ */
+export async function patchDhanOptionsForZeroRows(
+  fromDate?: string,
+  toDate?: string,
+): Promise<{ patched: number; skipped: number; dates: number }> {
+  await ensureDhanTable();
+
+  const dateFilter = [fromDate ? `date >= '${fromDate}'` : null, toDate ? `date <= '${toDate}'` : null]
+    .filter(Boolean)
+    .join(' AND ');
+
+  const where = `optVolume = 0 AND ceVolume = 0 AND peVolume = 0${dateFilter ? ` AND ${dateFilter}` : ''}`;
+
+  // Get all distinct symbols with zero option data to resolve security IDs
+  const zeroRows = await prisma.$queryRawUnsafe<{ date: string; symbol: string }[]>(
+    `SELECT DISTINCT date, symbol FROM dhan_daily_data WHERE ${where} ORDER BY date ASC`,
+  );
+
+  if (zeroRows.length === 0) {
+    return { patched: 0, skipped: 0, dates: 0 };
+  }
+
+  // Build a map: symbol → securityId (resolve once)
+  const symbolToSecId = new Map<string, number>();
+  const uniqueSymbols = [...new Set(zeroRows.map((r) => r.symbol))];
+  for (const sym of uniqueSymbols) {
+    try {
+      const entry = await resolveSymbol(sym, 'NSE');
+      if (entry) symbolToSecId.set(sym, parseInt(entry.securityId, 10));
+    } catch {
+      // Skip unresolvable symbols
+    }
+  }
+
+  // Group zero rows by date → symbols
+  const byDate = new Map<string, string[]>();
+  for (const row of zeroRows) {
+    const list = byDate.get(row.date) ?? [];
+    list.push(row.symbol);
+    byDate.set(row.date, list);
+  }
+
+  let patched = 0;
+  let skipped = 0;
+
+  for (const [date, symbols] of byDate) {
+    // Fetch options for each unique securityId for this date
+    const dateToExclusive = new Date(date);
+    dateToExclusive.setDate(dateToExclusive.getDate() + 1);
+    const toStrExclusive = dateToExclusive.toISOString().slice(0, 10);
+
+    // Track which secIds we already fetched (reuse across symbols sharing same secId)
+    const secIdOptMap = new Map<number, Map<string, OptionAggregate>>();
+
+    for (const sym of symbols) {
+      const secId = symbolToSecId.get(sym);
+      if (!secId) {
+        skipped += 1;
+        continue;
+      }
+
+      // Fetch option aggregate (or reuse if already done for this secId+date)
+      if (!secIdOptMap.has(secId)) {
+        try {
+          const optChart = await fetchHistoricalOptionAggregate(secId, date, toStrExclusive);
+          secIdOptMap.set(secId, optChart);
+        } catch {
+          secIdOptMap.set(secId, new Map());
+        }
+      }
+
+      const optChart = secIdOptMap.get(secId)!;
+      const opt = optChart.get(date);
+
+      if (!opt || opt.optVolume === 0) {
+        skipped += 1;
+        continue;
+      }
+
+      const symEsc = sym.replace(/'/g, "''");
+      await prisma.$executeRawUnsafe(
+        `UPDATE dhan_daily_data SET optVolume=${opt.optVolume}, optOi=${opt.optOi}, optTurnover=${opt.optTurnover}, ceVolume=${opt.ceVolume}, peVolume=${opt.peVolume} WHERE date='${date}' AND symbol='${symEsc}'`,
+      );
+      patched += 1;
+    }
+  }
+
+  return { patched, skipped, dates: byDate.size };
 }

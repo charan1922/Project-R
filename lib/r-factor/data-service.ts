@@ -399,7 +399,7 @@ export class RFactorDataService {
     const dateSymbolSet = new Set(dateSymbols.map((r) => r.symbol));
     const filteredSymbols = targetSymbols.filter((s) => dateSymbolSet.has(s));
 
-    const signals = this.attachSectors(await this.computeBhavcopySignals(filteredSymbols), sectorMap);
+    const signals = this.attachSectors(await this.computeBhavcopySignals(filteredSymbols, date), sectorMap);
     return {
       signals,
       dataSource: 'bhavcopy',
@@ -721,10 +721,10 @@ export class RFactorDataService {
     this.optionChainCache = { date: cacheKey, data: result, fetchedAt: Date.now() };
   }
 
-  private async computeBhavcopySignals(symbols: string[]): Promise<BoostSignal[]> {
+  private async computeBhavcopySignals(symbols: string[], upToDate?: string): Promise<BoostSignal[]> {
     const results = await Promise.allSettled(
       symbols.map(async (s) => {
-        const dailyData = await getHistoricalData(s, 40);
+        const dailyData = await getHistoricalData(s, 40, upToDate);
         if (dailyData.length < 15) return null;
         const factorData = transformToFactorData(dailyData);
         const current = factorData[factorData.length - 1];

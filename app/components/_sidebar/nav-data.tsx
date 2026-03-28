@@ -110,6 +110,12 @@ export const v1Items: NavItemType[] = [
         badge: 'ANALYTICS',
       },
       {
+        label: 'Real R factor data',
+        href: '/trading-lab/tf-snapshot',
+        icon: <CalendarDays className="w-4 h-4" />,
+        badge: 'NEW',
+      },
+      {
         label: 'F&O Universe',
         href: '/trading-lab/fno-universe',
         icon: <Layers className="w-4 h-4" />,

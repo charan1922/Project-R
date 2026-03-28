@@ -265,7 +265,7 @@ export default function DhancopyPage() {
             <span className="text-[10px] uppercase tracking-wider text-slate-600">Sync date</span>
             <DatePicker
               selected={computeDate ? toDateValue(computeDate) : null}
-              onChange={(date) => {
+              onChange={(date: Date | null) => {
                 if (!date) return;
                 setComputeDate(toDateKey(date));
               }}
@@ -456,6 +456,25 @@ export default function DhancopyPage() {
                 <RefreshCw className="w-4 h-4" />
               )}
               Sync missing only
+            </Button>
+            <Button
+              type="button"
+              onClick={() =>
+                handleSync(
+                  { action: 'patch-options', fromDate: rangeFrom || undefined, toDate: rangeTo || undefined },
+                  'patch-options',
+                )
+              }
+              disabled={computing || !!syncingAction}
+              variant="outline"
+              className="border-amber-500/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 hover:text-amber-50"
+            >
+              {syncingAction === 'patch-options' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4" />
+              )}
+              Fix options (zeros)
             </Button>
             <Button
               asChild
