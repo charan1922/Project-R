@@ -337,7 +337,7 @@ export default function DhanStockDownloadPage() {
                   <TabsContent value="single" className="pt-3">
                     <DatePicker
                       selected={toDateValue(selectedDate)}
-                      onChange={(date) => {
+                      onChange={(date: Date | null) => {
                         if (date) setSelectedDate(toDateKey(date));
                       }}
                       filterDate={isWeekday}

@@ -283,6 +283,14 @@ export class RFactorEngine {
         current.eq_trade_size,
         historical.map((h) => h.eq_trade_size),
       ),
+      fut_avg_trade_size: calculateZScore(
+        current.fut_avg_trade_size,
+        historical.map((h) => h.fut_avg_trade_size),
+      ),
+      opt_avg_trade_size: calculateZScore(
+        current.opt_avg_trade_size,
+        historical.map((h) => h.opt_avg_trade_size),
+      ),
       oi_change: calculateZScore(
         current.oi_change,
         historical.map((h) => h.oi_change),
@@ -406,7 +414,12 @@ export class RFactorEngine {
     const isCheetah = zScores.spread > this.config.thresholds.regimeSwitch && zScores.fut_volume > 1.0;
     const isElephant = zScores.oi_change > 1.0 && zScores.fut_turnover > 0.5;
 
-    if (isCheetah && isElephant) return 'Hybrid';
+    // Institutional "Whale" logic: Above average volume AND above average trade size
+    const isWhale = (zScores.fut_turnover > 1.0 || zScores.opt_volume > 1.0) &&
+                   (zScores.fut_avg_trade_size > 1.5 || zScores.eq_trade_size > 1.5 || zScores.opt_avg_trade_size > 1.5);
+
+    if (isWhale) return 'Elephant'; // Reuse Elephant for heavy institutional
+    if (isCheetah && (isElephant || isWhale)) return 'Hybrid';
     if (isCheetah) return 'Cheetah';
     if (isElephant) return 'Elephant';
     return 'Defensive';
@@ -425,30 +438,48 @@ export class RFactorEngine {
       confidence += 0.1;
     }
 
-    // Factor agreement: check if multiple factors point in same direction
+    // Institutional support: high turnover AND high avg trade size
+    const institutionalSupport = [
+      zScores.fut_avg_trade_size > 1.0,
+      zScores.eq_trade_size > 1.0,
+      zScores.opt_avg_trade_size > 1.0,
+    ].filter(Boolean).length;
+
+    // Positive signals: price spread, momentum, OI, and institutional size
     const positiveSignals = [
       zScores.spread > 1.0,
       zScores.fut_turnover > 0.5,
       zScores.oi_change > 0.5,
       zScores.pcr > 0.5, // High PCR = unusual hedging
+      institutionalSupport >= 1,
     ].filter(Boolean).length;
 
     const negativeSignals = [
       zScores.spread < 0.8,
       zScores.fut_turnover < -0.5,
-      zScores.fut_volume > 2.0, // High volume with low turnover = retail noise
+      zScores.fut_volume > 2.0 && zScores.fut_avg_trade_size < 0, // High volume + low trade size = retail noise
     ].filter(Boolean).length;
 
     // High agreement = higher confidence
-    if (positiveSignals >= 3) {
-      confidence += 0.2;
+    if (positiveSignals >= 4) {
+      confidence += 0.25;
     } else if (positiveSignals >= 2) {
       confidence += 0.1;
     }
 
+    // High institutional conviction bonus
+    if (institutionalSupport >= 2 && positiveSignals >= 2) {
+      confidence += 0.1;
+    }
+
     // Conflicting signals = lower confidence
-    if (positiveSignals >= 2 && negativeSignals >= 2) {
+    if (positiveSignals >= 2 && negativeSignals >= 1) {
       confidence -= 0.15;
+    }
+
+    // Low trade size warning: retail-driven pumps
+    if (zScores.fut_volume > 1.5 && zScores.fut_avg_trade_size < -1.0) {
+      confidence -= 0.2;
     }
 
     return Math.max(0.1, Math.min(1.0, confidence));

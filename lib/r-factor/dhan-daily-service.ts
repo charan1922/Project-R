@@ -631,9 +631,13 @@ const ENSURE_TABLE_SQL = `
     date TEXT NOT NULL, symbol TEXT NOT NULL,
     eqVolume REAL DEFAULT 0, eqTurnover REAL DEFAULT 0,
     eqHigh REAL DEFAULT 0, eqLow REAL DEFAULT 0, eqClose REAL DEFAULT 0,
+    eqTrades INTEGER DEFAULT 0,
     futVolume REAL DEFAULT 0, futOi REAL DEFAULT 0, futOiChange REAL DEFAULT 0, futTurnover REAL DEFAULT 0,
+    futTrades INTEGER DEFAULT 0,
     optVolume REAL DEFAULT 0, optOi REAL DEFAULT 0, optTurnover REAL DEFAULT 0,
+    optTrades INTEGER DEFAULT 0,
     ceVolume REAL DEFAULT 0, peVolume REAL DEFAULT 0,
+    ceTrades INTEGER DEFAULT 0, peTrades INTEGER DEFAULT 0,
     rFactor REAL DEFAULT 0,
     UNIQUE(date, symbol)
   )
@@ -651,18 +655,26 @@ const ENSURE_STOCK_DOWNLOAD_TABLE_SQL = `
     lotSize REAL DEFAULT 1,
     eqVolume REAL DEFAULT 0,
     eqTurnover REAL DEFAULT 0,
+    eqOpen REAL DEFAULT 0,
     eqHigh REAL DEFAULT 0,
     eqLow REAL DEFAULT 0,
     eqClose REAL DEFAULT 0,
+    eqTrades INTEGER DEFAULT 0,
+    eqDeliveryQty REAL DEFAULT 0,
+    eqDeliveryPct REAL DEFAULT 0,
     futVolume REAL DEFAULT 0,
     futOi REAL DEFAULT 0,
     futOiChange REAL DEFAULT 0,
     futTurnover REAL DEFAULT 0,
+    futTrades INTEGER DEFAULT 0,
     optVolume REAL DEFAULT 0,
     optOi REAL DEFAULT 0,
     optTurnover REAL DEFAULT 0,
+    optTrades INTEGER DEFAULT 0,
     ceVolume REAL DEFAULT 0,
     peVolume REAL DEFAULT 0,
+    ceTrades INTEGER DEFAULT 0,
+    peTrades INTEGER DEFAULT 0,
     requestedFromDate TEXT,
     requestedToDate TEXT,
     savedAt TEXT NOT NULL,
@@ -672,16 +684,39 @@ const ENSURE_STOCK_DOWNLOAD_TABLE_SQL = `
 
 async function ensureDhanTable() {
   await prisma.$executeRawUnsafe(ENSURE_TABLE_SQL);
-  try {
-    await prisma.$executeRawUnsafe('ALTER TABLE dhan_daily_data ADD COLUMN optOi REAL DEFAULT 0');
-  } catch {}
-  try {
-    await prisma.$executeRawUnsafe('ALTER TABLE dhan_daily_data ADD COLUMN optTurnover REAL DEFAULT 0');
-  } catch {}
+  const cols = [
+    'optOi REAL DEFAULT 0',
+    'optTurnover REAL DEFAULT 0',
+    'eqTrades INTEGER DEFAULT 0',
+    'futTrades INTEGER DEFAULT 0',
+    'optTrades INTEGER DEFAULT 0',
+    'ceTrades INTEGER DEFAULT 0',
+    'peTrades INTEGER DEFAULT 0'
+  ];
+  for (const col of cols) {
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE dhan_daily_data ADD COLUMN ${col}`);
+    } catch {}
+  }
 }
 
 async function ensureDhanStockDownloadTable() {
   await prisma.$executeRawUnsafe(ENSURE_STOCK_DOWNLOAD_TABLE_SQL);
+  const cols = [
+    'eqOpen REAL DEFAULT 0',
+    'eqTrades INTEGER DEFAULT 0',
+    'eqDeliveryQty REAL DEFAULT 0',
+    'eqDeliveryPct REAL DEFAULT 0',
+    'futTrades INTEGER DEFAULT 0',
+    'optTrades INTEGER DEFAULT 0',
+    'ceTrades INTEGER DEFAULT 0',
+    'peTrades INTEGER DEFAULT 0'
+  ];
+  for (const col of cols) {
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE dhan_stock_downloads ADD COLUMN ${col}`);
+    } catch {}
+  }
 }
 
 /** Save Dhan daily raw data + computed R-Factor to cache */
@@ -696,11 +731,11 @@ export async function saveDhanDailyToDb(
       .map((r) => {
         const d = r.data;
         const s = r.symbol.replace(/'/g, "''");
-        return `('${date}','${s}',${d.eq_volume},${d.eq_turnover},${d.eq_high},${d.eq_low},${d.eq_close},${d.fut_volume},${d.fut_oi},${d.fut_oi_change},${d.fut_turnover},${d.opt_volume},${d.opt_oi},${d.opt_turnover},${d.ce_volume},${d.pe_volume},${r.rFactor})`;
+        return `('${date}','${s}',${d.eq_volume},${d.eq_turnover},${d.eq_high},${d.eq_low},${d.eq_close},${d.eq_trades},${d.fut_volume},${d.fut_oi},${d.fut_oi_change},${d.fut_turnover},${d.fut_trades},${d.opt_volume},${d.opt_oi},${d.opt_turnover},${d.opt_trades},${d.ce_volume},${d.pe_volume},${d.ce_trades},${d.pe_trades},${r.rFactor})`;
       })
       .join(',');
     await prisma.$executeRawUnsafe(
-      `INSERT OR REPLACE INTO dhan_daily_data (date,symbol,eqVolume,eqTurnover,eqHigh,eqLow,eqClose,futVolume,futOi,futOiChange,futTurnover,optVolume,optOi,optTurnover,ceVolume,peVolume,rFactor) VALUES ${values}`,
+      `INSERT OR REPLACE INTO dhan_daily_data (date,symbol,eqVolume,eqTurnover,eqHigh,eqLow,eqClose,eqTrades,futVolume,futOi,futOiChange,futTurnover,futTrades,optVolume,optOi,optTurnover,optTrades,ceVolume,peVolume,ceTrades,peTrades,rFactor) VALUES ${values}`,
     );
   }
 }
@@ -724,12 +759,12 @@ export async function saveDhanStockDownloadToDb(
           : 'NULL';
         const futuresSecurityId = row.futuresSecurityId ? `'${row.futuresSecurityId.replace(/'/g, "''")}'` : 'NULL';
         const futuresExpiryDate = row.futuresExpiryDate ? `'${row.futuresExpiryDate}'` : 'NULL';
-        return `('${row.date}','${symbol}','${equitySecurityId}',${futuresContractSymbol},${futuresSecurityId},${futuresExpiryDate},${row.lotSize},${d.eq_volume},${d.eq_turnover},${d.eq_high},${d.eq_low},${d.eq_close},${d.fut_volume},${d.fut_oi},${d.fut_oi_change},${d.fut_turnover},${d.opt_volume},${d.opt_oi},${d.opt_turnover},${d.ce_volume},${d.pe_volume},'${meta.requestedFromDate}','${meta.requestedToDate}','${savedAt}')`;
+        return `('${row.date}','${symbol}','${equitySecurityId}',${futuresContractSymbol},${futuresSecurityId},${futuresExpiryDate},${row.lotSize},${d.eq_volume},${d.eq_turnover},${d.eq_open},${d.eq_high},${d.eq_low},${d.eq_close},${d.eq_trades},${d.eq_delivery_qty},${d.eq_delivery_pct},${d.fut_volume},${d.fut_oi},${d.fut_oi_change},${d.fut_turnover},${d.fut_trades},${d.opt_volume},${d.opt_oi},${d.opt_turnover},${d.opt_trades},${d.ce_volume},${d.pe_volume},${d.ce_trades},${d.pe_trades},'${meta.requestedFromDate}','${meta.requestedToDate}','${savedAt}')`;
       })
       .join(',');
 
     await prisma.$executeRawUnsafe(
-      `INSERT OR REPLACE INTO dhan_stock_downloads (date,symbol,equitySecurityId,futuresContractSymbol,futuresSecurityId,futuresExpiryDate,lotSize,eqVolume,eqTurnover,eqHigh,eqLow,eqClose,futVolume,futOi,futOiChange,futTurnover,optVolume,optOi,optTurnover,ceVolume,peVolume,requestedFromDate,requestedToDate,savedAt) VALUES ${values}`,
+      `INSERT OR REPLACE INTO dhan_stock_downloads (date,symbol,equitySecurityId,futuresContractSymbol,futuresSecurityId,futuresExpiryDate,lotSize,eqVolume,eqTurnover,eqOpen,eqHigh,eqLow,eqClose,eqTrades,eqDeliveryQty,eqDeliveryPct,futVolume,futOi,futOiChange,futTurnover,futTrades,optVolume,optOi,optTurnover,optTrades,ceVolume,peVolume,ceTrades,peTrades,requestedFromDate,requestedToDate,savedAt) VALUES ${values}`,
     );
   }
 
@@ -745,21 +780,26 @@ export async function loadDhanDailyFromDb(date: string): Promise<
     eqHigh: number;
     eqLow: number;
     eqClose: number;
+    eqTrades: number;
     futVolume: number;
     futOi: number;
     futOiChange: number;
     futTurnover: number;
+    futTrades: number;
     optVolume: number;
     optOi: number;
     optTurnover: number;
+    optTrades: number;
     ceVolume: number;
     peVolume: number;
+    ceTrades: number;
+    peTrades: number;
     rFactor: number;
   }[]
 > {
   await ensureDhanTable();
   return prisma.$queryRawUnsafe(
-    `SELECT symbol, eqVolume, eqTurnover, eqHigh, eqLow, eqClose, futVolume, futOi, futOiChange, futTurnover, optVolume, optOi, optTurnover, ceVolume, peVolume, rFactor FROM dhan_daily_data WHERE date = '${date}' ORDER BY rFactor DESC`,
+    `SELECT symbol, eqVolume, eqTurnover, eqHigh, eqLow, eqClose, eqTrades, futVolume, futOi, futOiChange, futTurnover, futTrades, optVolume, optOi, optTurnover, optTrades, ceVolume, peVolume, ceTrades, peTrades, rFactor FROM dhan_daily_data WHERE date = '${date}' ORDER BY rFactor DESC`,
   );
 }
 

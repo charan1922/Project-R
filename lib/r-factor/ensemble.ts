@@ -69,6 +69,8 @@ export function predictOLS(current: FactorData, historical: FactorData[]): Model
       pcr_z: pcrZ,
       fut_turn_z: futTurnZ,
       fut_vol_z: futVolZ,
+      fut_avg_trade_size_z: calculateZScore(current.fut_avg_trade_size, historical.map(h => h.fut_avg_trade_size)),
+      opt_avg_trade_size_z: calculateZScore(current.opt_avg_trade_size, historical.map(h => h.opt_avg_trade_size)),
       interaction: current.spread * futTurnZ,
     },
   };

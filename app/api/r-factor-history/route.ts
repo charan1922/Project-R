@@ -21,37 +21,30 @@ async function getSectorMap(): Promise<Record<string, string>> {
   }
 }
 
-function rowToStockData(r: {
-  eqVolume: number;
-  eqTurnover: number;
-  eqHigh: number;
-  eqLow: number;
-  eqClose: number;
-  futVolume: number;
-  futOi: number;
-  futOiChange: number;
-  futTurnover: number;
-  optVolume: number;
-  optOi: number;
-  optTurnover: number;
-  ceVolume: number;
-  peVolume: number;
-}): DailyStockData {
+function rowToStockData(r: any): DailyStockData {
   return {
-    eq_volume: r.eqVolume,
-    eq_turnover: r.eqTurnover,
-    eq_high: r.eqHigh,
-    eq_low: r.eqLow,
-    eq_close: r.eqClose,
-    fut_volume: r.futVolume,
-    fut_oi: r.futOi,
-    fut_oi_change: r.futOiChange,
-    fut_turnover: r.futTurnover,
-    opt_volume: r.optVolume,
-    opt_oi: r.optOi,
-    opt_turnover: r.optTurnover,
-    ce_volume: r.ceVolume,
-    pe_volume: r.peVolume,
+    eq_volume: r.eqVolume || 0,
+    eq_turnover: r.eqTurnover || 0,
+    eq_open: r.eqOpen || 0,
+    eq_high: r.eqHigh || 0,
+    eq_low: r.eqLow || 0,
+    eq_close: r.eqClose || 0,
+    eq_trades: r.eqTrades || 0,
+    eq_delivery_qty: r.eqDeliveryQty || 0,
+    eq_delivery_pct: r.eqDeliveryPct || 0,
+    fut_volume: r.futVolume || 0,
+    fut_oi: r.futOi || 0,
+    fut_oi_change: r.futOiChange || 0,
+    fut_turnover: r.futTurnover || 0,
+    fut_trades: r.futTrades || 0,
+    opt_volume: r.optVolume || 0,
+    opt_oi: r.optOi || 0,
+    opt_turnover: r.optTurnover || 0,
+    opt_trades: r.optTrades || 0,
+    ce_volume: r.ceVolume || 0,
+    pe_volume: r.peVolume || 0,
+    ce_trades: r.ceTrades || 0,
+    pe_trades: r.peTrades || 0,
   };
 }
 
@@ -107,6 +100,15 @@ async function getSymbolHistory(symbol: string, days: number) {
         ? ((raw.eqClose - prevRow.eqClose) / prevRow.eqClose) * 100
         : null;
 
+      // Institutional Bias logic
+      const oiUp = raw.futOiChange > 0;
+      const priceUp = prevRow ? raw.eqClose > prevRow.eqClose : false;
+      let bias = 'Neutral';
+      if (priceUp && oiUp) bias = 'Long Buildup';
+      else if (!priceUp && oiUp) bias = 'Short Buildup';
+      else if (priceUp && !oiUp) bias = 'Short Covering';
+      else if (!priceUp && !oiUp) bias = 'Unwinding';
+
       results.push({
         date: raw.date,
         compositeRFactor: signal.compositeRFactor,
@@ -117,6 +119,7 @@ async function getSymbolHistory(symbol: string, days: number) {
         delta: prevR !== null ? signal.compositeRFactor - prevR : null,
         zScores: signal.zScores,
         regime: signal.regime,
+        bias,
         isBlastTrade: signal.isBlastTrade,
         modelUsed: signal.modelUsed,
         // ADX trend strength (14-period, from trading-signals library)

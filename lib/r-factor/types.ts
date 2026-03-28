@@ -30,6 +30,8 @@ export interface FactorData {
   fut_volume: number; // Futures volume (Pearson 0.16, correlated with turnover)
   opt_volume: number; // Options total volume (Pearson 0.09)
   eq_trade_size: number; // Equity avg trade size = turnover/volume (Pearson 0.13)
+  fut_avg_trade_size: number; // Futures avg trade size = turnover / trades (New institutional signal)
+  opt_avg_trade_size: number; // Options avg trade size = turnover / trades (New institutional signal)
   oi_change: number; // |today's fut OI - yesterday's fut OI| (Pearson 0.21)
   oi_level: number; // Absolute OI RATIO vs 20d avg — captures sustained accumulation
   spread: number; // (high-low)/close RATIO vs 20d avg — dominant predictor (Pearson 0.54)
@@ -85,6 +87,8 @@ export interface SignalOutput {
     fut_volume: number;
     opt_volume: number;
     eq_trade_size: number;
+    fut_avg_trade_size: number;
+    opt_avg_trade_size: number;
     oi_change: number;
     oi_level: number; // OI ratio vs 20d avg (>1 = accumulation, <1 = distribution)
     spread: number;
@@ -185,6 +189,8 @@ export function transformToFactorData(daily: DailyStockData[]): FactorData[] {
       fut_volume: d.fut_volume,
       opt_volume: d.opt_volume,
       eq_trade_size: d.eq_volume > 0 ? d.eq_turnover / d.eq_volume : 0,
+      fut_avg_trade_size: d.fut_trades > 0 ? d.fut_turnover / d.fut_trades : 0,
+      opt_avg_trade_size: d.opt_trades > 0 ? d.opt_turnover / d.opt_trades : 0,
       oi_change: Math.abs(d.fut_oi_change),
       oi_level: avgOi > 0 ? d.fut_oi / avgOi : 0, // OI ratio vs 20d avg
       spread: avgSpread > 0 ? currentSpread / avgSpread : 0,
