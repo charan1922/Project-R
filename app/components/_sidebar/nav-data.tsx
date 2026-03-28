@@ -95,6 +95,11 @@ export const v1Items: NavItemType[] = [
         icon: <Activity className="w-4 h-4" />,
         badge: 'NEW',
       },
+      {
+        label: 'R-Factor History',
+        href: '/trading-lab/r-factor-history',
+        icon: <Clock className="w-4 h-4" />,
+      },
     ],
   },
   {
@@ -104,7 +109,7 @@ export const v1Items: NavItemType[] = [
     badge: 'NEW',
     children: [
       {
-        label: 'Trade Journal',
+        label: 'TF Real Trade Analytics',
         href: '/trading-lab/tradefinder',
         icon: <LineChart className="w-4 h-4" />,
         badge: 'ANALYTICS',
@@ -116,15 +121,10 @@ export const v1Items: NavItemType[] = [
         badge: 'NEW',
       },
       {
-        label: 'F&O Universe',
+        label: 'TF Real trades',
         href: '/trading-lab/fno-universe',
         icon: <Layers className="w-4 h-4" />,
         badge: 'NEW',
-      },
-      {
-        label: 'R-Factor History',
-        href: '/trading-lab/r-factor-history',
-        icon: <Clock className="w-4 h-4" />,
       },
       {
         label: 'TF Backtest',
