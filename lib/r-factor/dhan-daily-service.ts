@@ -455,18 +455,26 @@ export async function getDhanDailyData(symbol: string, days = 30, targetDate?: s
     result.push({
       eq_volume: eq.volume,
       eq_turnover: eq.volume * eq.close,
+      eq_open: eq.open || eq.close,
       eq_high: eq.high,
       eq_low: eq.low,
       eq_close: eq.close,
+      eq_trades: 0,
+      eq_delivery_qty: 0,
+      eq_delivery_pct: 0,
       fut_volume: futVolumeContracts,
       fut_oi: futOi,
       fut_oi_change: futOiChange,
       fut_turnover: f ? f.volume * f.close : 0,
+      fut_trades: 0,
       opt_volume: ceVol + peVol,
       opt_oi: optOi,
       opt_turnover: optTurnover,
+      opt_trades: 0,
       ce_volume: ceVol,
       pe_volume: peVol,
+      ce_trades: 0,
+      pe_trades: 0,
     });
   }
 
@@ -554,6 +562,10 @@ export async function getDhanSymbolDailyRange(
       data: {
         eq_volume: eq.volume,
         eq_turnover: eq.volume * eq.close,
+        eq_open: eq.open || eq.close,
+        eq_trades: 0,
+        eq_delivery_qty: 0,
+        eq_delivery_pct: 0,
         eq_high: eq.high,
         eq_low: eq.low,
         eq_close: eq.close,
@@ -561,11 +573,15 @@ export async function getDhanSymbolDailyRange(
         fut_oi: futOi,
         fut_oi_change: futOiChange,
         fut_turnover: f ? f.volume * f.close : 0,
+        fut_trades: 0, // Dhan chart history doesn't provide transaction counts
         opt_volume: ceVol + peVol,
         opt_oi: opt?.optOi ?? 0,
         opt_turnover: opt?.optTurnover ?? 0,
+        opt_trades: 0,
         ce_volume: ceVol,
         pe_volume: peVol,
+        ce_trades: 0,
+        pe_trades: 0,
       },
     });
   }

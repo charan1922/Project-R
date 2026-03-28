@@ -569,28 +569,46 @@ export class RFactorDataService {
           continue;
         }
 
-        const lastDay = dailyData[dailyData.length - 1];
         const futId = futIdMap.get(sym);
         const fut = futId ? await fetchIntradayDayAggregate(futId, 'NSE_FNO', 'FUTSTK', targetDate, true) : null;
+        if (futId && !fut) {
+          failures.push(`${sym}: intraday futures data unavailable, sticking to strict live data`);
+          continue;
+        }
+
         const opt = await fetchOptionAggregateForDate(eqId, targetDate);
+        if (!opt) {
+          failures.push(`${sym}: intraday option chain unavailable, sticking to strict live data`);
+          continue;
+        }
+
+        const lastDay = dailyData[dailyData.length - 1];
         const lotSize = lotSizeMap.get(sym) || 1;
-        const futVolumeContracts = fut ? Math.round(fut.volume / lotSize) : lastDay.fut_volume;
+        const futVolumeContracts = fut ? Math.round(fut.volume / lotSize) : 0;
 
         const liveDay: DailyStockData = {
+          eq_open: eq.close,
+          eq_trades: 0,
+          eq_delivery_qty: 0,
+          eq_delivery_pct: 0,
           eq_high: eq.high,
           eq_low: eq.low,
           eq_close: eq.close,
           eq_volume: eq.volume,
           eq_turnover: eq.turnover > 0 ? eq.turnover : eq.volume * eq.close,
           fut_volume: futVolumeContracts,
-          fut_turnover: fut ? (fut.turnover > 0 ? fut.turnover : fut.volume * fut.close) : lastDay.fut_turnover,
-          fut_oi: fut?.oi ?? lastDay.fut_oi,
-          fut_oi_change: fut ? Math.abs(fut.oi - lastDay.fut_oi) : lastDay.fut_oi_change,
-          opt_volume: opt?.optVolume ?? lastDay.opt_volume,
-          opt_oi: opt?.optOi ?? lastDay.opt_oi,
-          opt_turnover: opt?.optTurnover ?? lastDay.opt_turnover,
-          ce_volume: opt?.ceVolume ?? lastDay.ce_volume,
-          pe_volume: opt?.peVolume ?? lastDay.pe_volume,
+          fut_turnover: fut ? (fut.turnover > 0 ? fut.turnover : fut.volume * fut.close) : 0,
+          fut_oi: fut?.oi ?? 0,
+          fut_oi_change: fut ? Math.abs(fut.oi - lastDay.fut_oi) : 0,
+          fut_trades: 0, // Dhan intraday does not provide transaction counts
+          opt_volume: opt.optVolume ?? 0,
+          opt_oi: opt.optOi ?? 0,
+          opt_turnover: opt.optTurnover ?? 0,
+          opt_trades: 0,
+          ce_volume: opt.ceVolume ?? 0,
+          pe_volume: opt.peVolume ?? 0,
+          ce_trades: 0,
+          pe_trades: 0,
         };
 
         const blendedData = [...dailyData, liveDay].slice(-30);
@@ -874,43 +892,48 @@ export class RFactorDataService {
         const eq = liveEq.get(symbol);
         const fut = liveFut.get(symbol);
         const oc = optChainData.get(symbol); // Live option chain (CE/PE volume, OI)
+
+        // STRICT enforcement: if any primary live component is missing, we drop the symbol
+        // rather than guessing with yesterday's proxy data.
+        if (!eq) return null;
+        if (!fut) return null;
+        if (useOptionChain && !oc) return null;
+
         const lastDay = dailyData[dailyData.length - 1];
         const lotSize = lotSizeMap.get(symbol) || 1;
 
         // Dhan reports volume in shares, bhavcopy in contracts.
-        // Convert Dhan volume to contracts for Z-score compatibility.
-        const futVolumeContracts = fut ? Math.round(fut.volume / lotSize) : lastDay.fut_volume;
-
-        // Compute VWAP-aligned futures turnover to match NSE bhavcopy's TtlTrfVal.
-        // Bhavcopy uses official VWAP × volume. Dhan gives average_price (≈ VWAP).
-        // Fallback: (high + low) / 2 as VWAP proxy. Last resort: lastPrice.
+        const futVolumeContracts = fut ? Math.round(fut.volume / lotSize) : 0;
         const futTurnoverPrice = fut
           ? fut.averagePrice > 0
             ? fut.averagePrice
             : (fut.ohlcHigh + fut.ohlcLow) / 2 || fut.lastPrice
           : 0;
 
-        // Build today's DailyStockData from live + proxy
+        // Build today's DailyStockData strictly from live data (No lastDay.XY volumes)
         const liveDay: DailyStockData = {
-          // Equity: live from Dhan Quote (includes volume + VWAP)
-          eq_high: eq?.high ?? lastDay.eq_high,
-          eq_low: eq?.low ?? lastDay.eq_low,
-          eq_close: eq?.lastPrice ?? lastDay.eq_close, // Use LTP for live spread
-          eq_volume: eq?.volume ?? lastDay.eq_volume, // Today's volume from Quote endpoint
-          eq_turnover: eq ? eq.volume * eq.averagePrice : lastDay.eq_turnover, // VWAP-based turnover
-          // Futures: live from Dhan Quote
-          // Volume: shares → contracts (÷ lotSize) for Z-score compatibility with bhavcopy
-          // Turnover: VWAP × volume (matches NSE bhavcopy TtlTrfVal methodology)
+          eq_open: eq.lastPrice ?? lastDay.eq_close, // Safe initialization proxy
+          eq_trades: 0,
+          eq_delivery_qty: 0,
+          eq_delivery_pct: 0,
+          eq_high: eq.lastPrice ?? lastDay.eq_high,
+          eq_low: eq.lastPrice ?? lastDay.eq_low,
+          eq_close: eq.lastPrice ?? lastDay.eq_close,
+          eq_volume: eq.volume ?? 0,
+          eq_turnover: eq ? eq.volume * eq.averagePrice : 0,
           fut_volume: futVolumeContracts,
-          fut_turnover: fut ? fut.volume * futTurnoverPrice : lastDay.fut_turnover,
-          fut_oi: fut?.oi ?? lastDay.fut_oi,
-          fut_oi_change: fut ? Math.abs(fut.oi - lastDay.fut_oi) : lastDay.fut_oi_change,
-          // Options: live from Dhan Option Chain if available, otherwise yesterday's proxy
-          opt_volume: oc ? oc.totalOptVolume : lastDay.opt_volume,
-          opt_oi: oc ? oc.totalOptOi : lastDay.opt_oi,
-          opt_turnover: lastDay.opt_turnover, // No turnover in OC response — proxy
-          ce_volume: oc ? oc.totalCeVolume : lastDay.ce_volume,
-          pe_volume: oc ? oc.totalPeVolume : lastDay.pe_volume,
+          fut_turnover: fut ? fut.volume * futTurnoverPrice : 0,
+          fut_oi: fut?.oi ?? 0,
+          fut_oi_change: fut ? Math.abs(fut.oi - lastDay.fut_oi) : 0,
+          fut_trades: 0, // Dhan live doesn't provide transaction counts
+          opt_volume: oc ? oc.totalOptVolume : 0,
+          opt_oi: oc ? oc.totalOptOi : 0,
+          opt_turnover: 0, // OC doesn't return turnover directly
+          opt_trades: 0,
+          ce_volume: oc ? oc.totalCeVolume : 0,
+          pe_volume: oc ? oc.totalPeVolume : 0,
+          ce_trades: 0,
+          pe_trades: 0,
         };
 
         // Replace last bhavcopy day with today's live data.

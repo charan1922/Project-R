@@ -52,18 +52,26 @@ export async function getHistoricalData(symbol: string, days = 25, upToDate?: st
   return recent.map((r) => ({
     eq_volume: r.eqVolume,
     eq_turnover: r.eqTurnover,
+    eq_open: r.eqOpen,
     eq_high: r.eqHigh,
     eq_low: r.eqLow,
     eq_close: r.eqClose,
+    eq_trades: r.eqTrades,
+    eq_delivery_qty: r.eqDeliveryQty,
+    eq_delivery_pct: r.eqDeliveryPct,
     fut_volume: r.futVolume,
     fut_oi: r.futOi,
     fut_oi_change: r.futOiChange,
     fut_turnover: r.futTurnover,
+    fut_trades: r.futTrades,
     opt_volume: r.optVolume,
     opt_oi: r.optOi,
     opt_turnover: r.optTurnover,
+    opt_trades: r.optTrades,
     ce_volume: r.ceVolume,
     pe_volume: r.peVolume,
+    ce_trades: r.ceTrades,
+    pe_trades: r.peTrades,
   }));
 }
 
@@ -74,9 +82,13 @@ type BhavcopyRow = {
   symbol: string;
   eqVolume: number;
   eqTurnover: number;
+  eqOpen: number;
   eqHigh: number;
   eqLow: number;
   eqClose: number;
+  eqTrades: number;
+  eqDeliveryQty: number;
+  eqDeliveryPct: number;
   futVolume: number;
   futOi: number;
   futOiChange: number;
@@ -86,6 +98,10 @@ type BhavcopyRow = {
   optTurnover: number;
   ceVolume: number;
   peVolume: number;
+  ceTrades: number;
+  peTrades: number;
+  futTrades: number;
+  optTrades: number;
 };
 
 /**
@@ -168,9 +184,10 @@ export async function syncBhavcopy(days = 25): Promise<{ dates: number; rows: nu
     const dateKey = formatDate(date);
     console.log(`[Bhavcopy] Downloading ${dateKey}...`);
 
-    const [fnoData, eqData] = await Promise.all([
+    const [fnoData, eqData, mtoData] = await Promise.all([
       fetchFnOBhavcopy(date, nseCookie),
       fetchEquityBhavcopy(date, nseCookie),
+      fetchMTODeliveryData(date, nseCookie),
     ]);
 
     if (fnoData.size === 0 && eqData.size === 0) {
@@ -181,21 +198,30 @@ export async function syncBhavcopy(days = 25): Promise<{ dates: number; rows: nu
     const stockMap: Record<string, DailyStockData> = {};
     for (const [symbol, fno] of fnoData) {
       const eq = eqData.get(symbol);
+      const mto = mtoData.get(symbol);
       stockMap[symbol] = {
         eq_volume: eq?.eq_volume ?? 0,
         eq_turnover: eq?.eq_turnover ?? 0,
+        eq_open: eq?.eq_open ?? 0,
         eq_high: eq?.eq_high ?? 0,
         eq_low: eq?.eq_low ?? 0,
         eq_close: eq?.eq_close ?? 0,
+        eq_trades: eq?.eq_trades ?? 0,
+        eq_delivery_qty: mto?.eq_delivery_qty ?? 0,
+        eq_delivery_pct: mto?.eq_delivery_pct ?? 0,
         fut_volume: fno.fut_volume,
         fut_oi: fno.fut_oi,
         fut_oi_change: fno.fut_oi_change,
         fut_turnover: fno.fut_turnover,
+        fut_trades: fno.fut_trades,
         opt_volume: fno.opt_volume,
         opt_oi: fno.opt_oi,
         opt_turnover: fno.opt_turnover,
+        opt_trades: fno.opt_trades,
         ce_volume: fno.ce_volume,
         pe_volume: fno.pe_volume,
+        ce_trades: fno.ce_trades,
+        pe_trades: fno.pe_trades,
       };
     }
 
@@ -221,18 +247,26 @@ function buildRows(dateKey: string, stocks: Record<string, DailyStockData>): Bha
     symbol,
     eqVolume: s.eq_volume,
     eqTurnover: s.eq_turnover,
+    eqOpen: s.eq_open,
     eqHigh: s.eq_high,
     eqLow: s.eq_low,
     eqClose: s.eq_close,
+    eqTrades: s.eq_trades,
+    eqDeliveryQty: s.eq_delivery_qty,
+    eqDeliveryPct: s.eq_delivery_pct,
     futVolume: s.fut_volume,
     futOi: s.fut_oi,
     futOiChange: s.fut_oi_change,
     futTurnover: s.fut_turnover,
+    futTrades: s.fut_trades,
     optVolume: s.opt_volume,
     optOi: s.opt_oi,
     optTurnover: s.opt_turnover,
+    optTrades: s.opt_trades,
     ceVolume: s.ce_volume,
     peVolume: s.pe_volume,
+    ceTrades: s.ce_trades,
+    peTrades: s.pe_trades,
   }));
 }
 
@@ -243,11 +277,11 @@ async function insertRows(rows: BhavcopyRow[]): Promise<void> {
     const values = chunk
       .map(
         (r) =>
-          `(NULL, '${r.date}', '${esc(r.symbol)}', ${r.eqVolume}, ${r.eqTurnover}, ${r.eqHigh}, ${r.eqLow}, ${r.eqClose}, ${r.futVolume}, ${r.futOi}, ${r.futOiChange}, ${r.futTurnover}, ${r.optVolume}, ${r.optOi}, ${r.optTurnover}, ${r.ceVolume}, ${r.peVolume})`,
+          `(NULL, '${r.date}', '${esc(r.symbol)}', ${r.eqVolume}, ${r.eqTurnover}, ${r.eqOpen}, ${r.eqHigh}, ${r.eqLow}, ${r.eqClose}, ${r.eqTrades}, ${r.eqDeliveryQty}, ${r.eqDeliveryPct}, ${r.futVolume}, ${r.futOi}, ${r.futOiChange}, ${r.futTurnover}, ${r.futTrades}, ${r.optVolume}, ${r.optOi}, ${r.optTurnover}, ${r.optTrades}, ${r.ceVolume}, ${r.peVolume}, ${r.ceTrades}, ${r.peTrades})`,
       )
       .join(',');
     await prisma.$executeRawUnsafe(
-      `INSERT OR IGNORE INTO bhavcopy_days (id, date, symbol, eqVolume, eqTurnover, eqHigh, eqLow, eqClose, futVolume, futOi, futOiChange, futTurnover, optVolume, optOi, optTurnover, ceVolume, peVolume) VALUES ${values}`,
+      `INSERT OR IGNORE INTO bhavcopy_days (id, date, symbol, eqVolume, eqTurnover, eqOpen, eqHigh, eqLow, eqClose, eqTrades, eqDeliveryQty, eqDeliveryPct, futVolume, futOi, futOiChange, futTurnover, futTrades, optVolume, optOi, optTurnover, optTrades, ceVolume, peVolume, ceTrades, peTrades) VALUES ${values}`,
     );
   }
 }
@@ -346,19 +380,30 @@ interface FnOData {
   fut_oi_change: number;
   fut_volume: number;
   fut_turnover: number;
+  fut_trades: number;
   opt_oi: number;
   opt_volume: number;
   opt_turnover: number;
+  opt_trades: number;
   ce_volume: number;
   pe_volume: number;
+  ce_trades: number;
+  pe_trades: number;
 }
 
 interface EqData {
   eq_volume: number;
   eq_turnover: number;
+  eq_open: number;
   eq_high: number;
   eq_low: number;
   eq_close: number;
+  eq_trades: number;
+}
+
+interface MTOData {
+  eq_delivery_qty: number;
+  eq_delivery_pct: number;
 }
 
 function findNearestExpiry(expiryDates: string[], referenceDate: Date): string | null {
@@ -418,11 +463,15 @@ async function fetchFnOBhavcopy(date: Date, cookie = ''): Promise<Map<string, Fn
       fut_oi_change: Number.parseFloat(r.ChngInOpnIntrst) || 0,
       fut_volume: Number.parseFloat(r.TtlTradgVol) || 0,
       fut_turnover: Number.parseFloat(r.TtlTrfVal) || 0,
+      fut_trades: Number.parseInt(r.TtlNbOfTxsExctd, 10) || 0,
       opt_oi: 0,
       opt_volume: 0,
       opt_turnover: 0,
+      opt_trades: 0,
       ce_volume: 0,
       pe_volume: 0,
+      ce_trades: 0,
+      pe_trades: 0,
     });
   }
 
@@ -436,19 +485,26 @@ async function fetchFnOBhavcopy(date: Date, cookie = ''): Promise<Map<string, Fn
       existing.opt_oi += Number.parseFloat(row.OpnIntrst) || 0;
       existing.opt_volume += vol;
       existing.opt_turnover += Number.parseFloat(row.TtlTrfVal) || 0;
-      if (optType === 'CE') existing.ce_volume += vol;
-      else if (optType === 'PE') existing.pe_volume += vol;
+      const txs = Number.parseInt(row.TtlNbOfTxsExctd, 10) || 0;
+      existing.opt_trades += txs;
+      if (optType === 'CE') { existing.ce_volume += vol; existing.ce_trades += txs; }
+      else if (optType === 'PE') { existing.pe_volume += vol; existing.pe_trades += txs; }
     } else {
+      const txs = Number.parseInt(row.TtlNbOfTxsExctd, 10) || 0;
       result.set(symbol, {
         fut_oi: 0,
         fut_oi_change: 0,
         fut_volume: 0,
         fut_turnover: 0,
+        fut_trades: 0,
         opt_oi: Number.parseFloat(row.OpnIntrst) || 0,
         opt_volume: vol,
         opt_turnover: Number.parseFloat(row.TtlTrfVal) || 0,
+        opt_trades: txs,
         ce_volume: optType === 'CE' ? vol : 0,
         pe_volume: optType === 'PE' ? vol : 0,
+        ce_trades: optType === 'CE' ? txs : 0,
+        pe_trades: optType === 'PE' ? txs : 0,
       });
     }
   }
@@ -470,10 +526,56 @@ async function fetchEquityBhavcopy(date: Date, cookie = ''): Promise<Map<string,
     result.set(symbol, {
       eq_volume: Number.parseFloat(row.TtlTradgVol) || 0,
       eq_turnover: Number.parseFloat(row.TtlTrfVal) || 0,
+      eq_open: Number.parseFloat(row.OpnPric) || 0,
       eq_high: Number.parseFloat(row.HghPric) || 0,
       eq_low: Number.parseFloat(row.LwPric) || 0,
       eq_close: Number.parseFloat(row.ClsPric) || 0,
+      eq_trades: Number.parseInt(row.TtlNbOfTxsExctd, 10) || 0,
     });
   }
+  return result;
+}
+
+async function fetchMTODeliveryData(date: Date, cookie = ''): Promise<Map<string, MTOData>> {
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  // NSE archive uses https://nsearchives.nseindia.com/archives/equities/mto/MTO_DDMMYYYY.DAT
+  const url = `${NSE_BASE}/archives/equities/mto/MTO_${dd}${mm}${yyyy}.DAT`;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  const hdrs: Record<string, string> = { ...NSE_HEADERS };
+  if (cookie) hdrs.Cookie = cookie;
+
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: hdrs, signal: controller.signal });
+  } catch {
+    return new Map();
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  if (!res.ok) return new Map();
+  
+  const text = await res.text();
+  const result = new Map<string, MTOData>();
+  
+  const lines = text.split('\n');
+  for (const line of lines) {
+    if (line.startsWith('#') || !line.trim()) continue;
+    
+    // Format: Record Type(02/03), Sr No, Name of Security, Segment(EQ), Traded Qty, Deliverable Qty, Delivery %
+    const parts = line.split(',').map((p) => p.trim());
+    if (parts.length >= 7 && parts[3] === 'EQ') {
+      const symbol = parts[2];
+      result.set(symbol, {
+        eq_delivery_qty: Number.parseFloat(parts[5]) || 0,
+        eq_delivery_pct: Number.parseFloat(parts[6]) || 0,
+      });
+    }
+  }
+
   return result;
 }

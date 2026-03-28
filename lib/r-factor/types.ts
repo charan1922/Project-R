@@ -2,18 +2,26 @@
 export interface DailyStockData {
   eq_volume: number;
   eq_turnover: number;
+  eq_open: number;
   eq_high: number;
   eq_low: number;
   eq_close: number;
+  eq_trades: number;
+  eq_delivery_qty: number;
+  eq_delivery_pct: number;
   fut_volume: number;
   fut_oi: number;
   fut_oi_change: number;
   fut_turnover: number;
+  fut_trades: number;   // Total number of futures transactions (institutional block size signal)
   opt_volume: number;
   opt_oi: number;
   opt_turnover: number;
-  ce_volume: number; // Call options volume (for PCR)
-  pe_volume: number; // Put options volume (for PCR)
+  opt_trades: number;   // Total option transactions (CE + PE combined)
+  ce_volume: number;   // Call options volume (for PCR)
+  pe_volume: number;   // Put options volume (for PCR)
+  ce_trades: number;   // Call options trade count
+  pe_trades: number;   // Put options trade count
 }
 
 /** 8-factor model inputs derived from DailyStockData */
