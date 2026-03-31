@@ -8,7 +8,7 @@ import { Section, Table, PnLCell } from "./ui";
 interface Props { data: AnalyticsResult }
 
 export function TimingAnalysis({ data: { actual, timeBuckets } }: Props) {
-    const noTimeCount = actual.filter(t => !t.trade_time).length;
+    const noTimeCount = actual.filter(t => !t.sensibull_log_time).length;
 
     const rows = Object.values(timeBuckets)
         .sort((a, b) => b.count - a.count)

@@ -3,7 +3,7 @@ export interface RawTrade {
     month: string;
     year: string;
     trade_date: string;
-    trade_time: string | null;
+    sensibull_log_time: string | null;
     stock_name: string | null;
     spot_price: number | null;
     instrument_type: string | null;

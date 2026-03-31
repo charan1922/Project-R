@@ -136,7 +136,7 @@ export function computeAnalytics(trades: RawTrade[]): AnalyticsResult {
     // ── Time bucket analysis ───────────────────────────────────────────────────
     const timeBuckets: Record<string, { bucket: string; count: number; totalPnl: number }> = {};
     actual.forEach(t => {
-        const b = timeBucket(t.trade_time);
+        const b = timeBucket(t.sensibull_log_time);
         if (!timeBuckets[b]) timeBuckets[b] = { bucket: b, count: 0, totalPnl: 0 };
         timeBuckets[b].count++;
         timeBuckets[b].totalPnl += t.total_pnl;
