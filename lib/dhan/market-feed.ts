@@ -1,4 +1,4 @@
-import { getDhanAccessToken, hasDhanAuth } from '@/lib/dhan/auth';
+import { clearCachedToken, getDhanAccessToken, hasDhanAuth } from '@/lib/dhan/auth';
 import { env } from '@/lib/env';
 
 export interface MarketFeedQuote {
@@ -65,9 +65,7 @@ export async function dhanMarketFeed(
   const token = await getDhanAccessToken();
   const clientId = env.DHAN_CLIENT_ID!;
 
-  const requestPayload = Object.fromEntries(
-    Object.entries(securities).map(([segment, ids]) => [segment, ids.map((id) => String(id))]),
-  );
+  const requestPayload = securities;
 
   const resp = await fetch(`https://api.dhan.co/v2/marketfeed/${endpoint}`, {
     method: 'POST',
@@ -80,9 +78,11 @@ export async function dhanMarketFeed(
   });
 
   if (!resp.ok) {
-    console.warn(
-      `[Dhan] marketfeed/${endpoint} HTTP ${resp.status}${resp.status === 401 ? ' — TOKEN EXPIRED. Will auto-refresh on next call.' : ''}`,
-    );
+    const body = await resp.text().catch(() => '');
+    console.warn(`[Dhan] marketfeed/${endpoint} HTTP ${resp.status}: ${body}`);
+    if (resp.status === 401 || resp.status === 400) {
+      clearCachedToken();
+    }
     return {};
   }
 

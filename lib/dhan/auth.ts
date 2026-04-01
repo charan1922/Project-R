@@ -199,6 +199,17 @@ export async function getDhanAccessToken(): Promise<string> {
 }
 
 /**
+ * Clear cached token (in-memory + disk).
+ * Call when Dhan returns 400/401 — forces fresh TOTP generation on next request.
+ */
+export function clearCachedToken(): void {
+  g.__dhanToken = null;
+  g.__dhanExpiry = 0;
+  fs.unlink(TOKEN_CACHE_FILE).catch(() => {});
+  console.warn(`${TAG} Cleared cached token`);
+}
+
+/**
  * Check if Dhan credentials are available (either TOTP or static token).
  */
 export function hasDhanAuth(): boolean {

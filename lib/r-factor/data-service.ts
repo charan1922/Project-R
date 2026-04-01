@@ -826,12 +826,16 @@ export class RFactorDataService {
       const futIdToSym = new Map<number, string>();
       for (const [sym, id] of futIdMap) futIdToSym.set(id, sym);
 
-      // Fetch equity Quote (not OHLC — Quote includes volume + average_price) + futures depth.
-      // NO silent error swallowing — if Dhan fails, throw so retry/fallback kicks in.
-      const [eqData, futData] = await Promise.all([
-        eqIdMap.size > 0 ? dhanMarketFeed('quote', { NSE_EQ: Array.from(eqIdMap.values()) }) : Promise.resolve(null),
-        futIdMap.size > 0 ? dhanMarketFeed('quote', { NSE_FNO: Array.from(futIdMap.values()) }) : Promise.resolve(null),
-      ]);
+      // Fetch equity + futures in a SINGLE request (Dhan rate limit: 1 req/sec for Quote API).
+      const feedPayload: Record<string, number[]> = {};
+      if (eqIdMap.size > 0) feedPayload.NSE_EQ = Array.from(eqIdMap.values());
+      if (futIdMap.size > 0) feedPayload.NSE_FNO = Array.from(futIdMap.values());
+
+      const combinedData = Object.keys(feedPayload).length > 0
+        ? await dhanMarketFeed('quote', feedPayload)
+        : null;
+      const eqData = combinedData ? { NSE_EQ: combinedData.NSE_EQ } : null;
+      const futData = combinedData ? { NSE_FNO: combinedData.NSE_FNO } : null;
 
       if (eqData?.NSE_EQ) {
         for (const [secIdStr, quote] of Object.entries(eqData.NSE_EQ)) {
@@ -916,9 +920,9 @@ export class RFactorDataService {
           eq_trades: 0,
           eq_delivery_qty: 0,
           eq_delivery_pct: 0,
-          eq_high: eq.lastPrice ?? lastDay.eq_high,
-          eq_low: eq.lastPrice ?? lastDay.eq_low,
-          eq_close: eq.lastPrice ?? lastDay.eq_close,
+          eq_high: eq.high ?? lastDay.eq_high,
+          eq_low: eq.low ?? lastDay.eq_low,
+          eq_close: eq.close ?? lastDay.eq_close,
           eq_volume: eq.volume ?? 0,
           eq_turnover: eq ? eq.volume * eq.averagePrice : 0,
           fut_volume: futVolumeContracts,
