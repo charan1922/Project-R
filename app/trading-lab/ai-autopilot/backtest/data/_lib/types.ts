@@ -4,7 +4,7 @@ export interface TradeDataStatus {
   optionType: string;
   strike: number;
   pnl: number;
-  verified: boolean;
+  humanReview: boolean;
   entryTime?: string;
   entryPrice?: number;
   exitTime?: string;

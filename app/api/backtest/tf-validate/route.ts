@@ -113,7 +113,7 @@ export async function POST(req: Request) {
           optionType: t.optionType,
           strike: t.strike,
           pnl: t.pnl,
-          verified: !!(t.entryPrice && t.exitPrice),
+          humanReview: t.humanReview ?? false,
           entryTime: t.entryTime,
           entryPrice: t.entryPrice,
           exitTime: t.exitTime,

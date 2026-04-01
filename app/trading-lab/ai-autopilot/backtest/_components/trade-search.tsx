@@ -3,6 +3,7 @@
 import { Search } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { TFTradeItem } from '../_lib/types';
+import { HumanVerifiedBadge } from './human-verified-badge';
 
 interface TradeSearchProps {
   trades: TFTradeItem[];
@@ -77,7 +78,7 @@ export function TradeSearch({ trades, selectedIdx, onSelect }: TradeSearchProps)
 
   const selected = selectedIdx >= 0 ? trades[selectedIdx] : null;
   const displayText = selected
-    ? `${selected.entryPrice ? '\u2713 ' : ''}${selected.date} | ${selected.symbol} ${selected.optionType} ${selected.strike} | ${selected.pnl >= 0 ? '+' : ''}\u20B9${selected.pnl.toLocaleString()}`
+    ? `${selected.humanReview ? '\u2705 ' : ''}${selected.date} | ${selected.symbol} ${selected.optionType} ${selected.strike} | ${selected.pnl >= 0 ? '+' : ''}\u20B9${selected.pnl.toLocaleString()}`
     : '';
 
   return (
@@ -127,7 +128,6 @@ export function TradeSearch({ trades, selectedIdx, onSelect }: TradeSearchProps)
           {filtered.map((t, listIdx) => {
             const isSelected = t.idx === selectedIdx;
             const isHighlighted = listIdx === highlightIdx;
-            const hasVerified = !!t.entryPrice;
             return (
               <button
                 key={`${t.date}-${t.symbol}-${t.idx}`}
@@ -147,11 +147,7 @@ export function TradeSearch({ trades, selectedIdx, onSelect }: TradeSearchProps)
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    {hasVerified && (
-                      <span className="text-emerald-400 text-[10px] font-bold px-1 py-0.5 bg-emerald-500/10 rounded">
-                        VERIFIED
-                      </span>
-                    )}
+                    <HumanVerifiedBadge show={t.humanReview} />
                     <span className="text-white font-semibold text-sm">{t.symbol}</span>
                     <span className={`text-xs ${t.optionType === 'CE' ? 'text-emerald-400' : 'text-red-400'}`}>
                       {t.optionType} {t.strike}
@@ -162,7 +158,7 @@ export function TradeSearch({ trades, selectedIdx, onSelect }: TradeSearchProps)
                   </div>
                   <div className="text-[10px] text-slate-500 mt-0.5">
                     {t.date}
-                    {hasVerified && (
+                    {t.humanReview && t.entryPrice && (
                       <span className="text-slate-600 ml-2">
                         {'\u20B9'}
                         {t.entryPrice} &rarr; {'\u20B9'}

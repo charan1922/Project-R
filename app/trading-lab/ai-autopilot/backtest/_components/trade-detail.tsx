@@ -6,6 +6,7 @@ import type { TFTradeItem, TradeDetailData } from '../_lib/types';
 import { OptionChart } from './option-chart';
 import { PnlChart } from './pnl-chart';
 import { SignalChart } from './signal-chart';
+import { HumanVerifiedBadge } from './human-verified-badge';
 import { TradeSearch } from './trade-search';
 
 export function TradeDetailSection() {
@@ -209,7 +210,8 @@ export function TradeDetailSection() {
             <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 px-5 py-3">
               <div className="flex items-center justify-between">
                 <div className="text-xs text-slate-400">
-                  <span className="text-emerald-400 font-bold">Verified Trade:</span> Buy @ {'\u20B9'}
+                  <HumanVerifiedBadge show={selected.humanReview} />
+                  Buy @ {'\u20B9'}
                   {selected.entryPrice} ({selected.entryTime ?? detail.estimatedEntry?.time}) &rarr; Sell @ {'\u20B9'}
                   {selected.exitPrice} ({selected.exitTime ?? detail.estimatedExit?.time})
                 </div>

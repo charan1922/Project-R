@@ -222,6 +222,7 @@ export interface TFTrade {
   capitalUsed?: number; // Entry premium × quantity
   spotPrice?: number;
   expiry?: string;
+  humanReview?: boolean; // True when verified from broker screenshots
 }
 
 /**
@@ -279,6 +280,7 @@ export async function loadAllTFTrades(): Promise<{
         capitalUsed: t.capital_used ?? undefined,
         spotPrice: t.spot_price ?? undefined,
         expiry: t.expiry_date ?? undefined,
+        humanReview: t.humanReview ?? false,
       });
     } catch {}
   }

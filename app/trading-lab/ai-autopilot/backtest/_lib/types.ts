@@ -20,6 +20,7 @@ export interface TFTradeItem {
   exitTime?: string;
   exitPrice?: number;
   quantity?: number;
+  humanReview?: boolean;
 }
 
 export interface Signal {

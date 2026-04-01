@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, Download, ExternalLink, X } from 'lucide-react';
+import { HumanVerifiedBadge } from '../../_components/human-verified-badge';
 import { useState } from 'react';
 import type { TradeDataStatus } from '../_lib/types';
 
@@ -55,11 +56,7 @@ export function TradeList({ trades, disableActions, onRefresh }: TradeListProps)
               {/* Left: Trade info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  {t.verified && (
-                    <span className="text-emerald-400 text-[10px] font-bold px-1.5 py-0.5 bg-emerald-500/10 rounded border border-emerald-500/20">
-                      VERIFIED
-                    </span>
-                  )}
+                  <HumanVerifiedBadge show={t.humanReview} />
                   <span className="text-white font-bold text-sm">{t.symbol}</span>
                   <span
                     className={`text-xs font-medium ${t.optionType === 'CE' ? 'text-emerald-400' : 'text-red-400'}`}
@@ -69,7 +66,7 @@ export function TradeList({ trades, disableActions, onRefresh }: TradeListProps)
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-2">
                   <span className="font-mono">{t.date}</span>
-                  {t.verified && t.entryPrice && t.exitPrice && (
+                  {t.humanReview && t.entryPrice && t.exitPrice && (
                     <span className="text-slate-600">
                       {'\u20B9'}
                       {t.entryPrice} &rarr; {'\u20B9'}
