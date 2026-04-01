@@ -54,12 +54,18 @@ export function checkRisk(
   // Check: daily loss limit
   const dailyLossPct = (Math.abs(Math.min(0, portfolio.dailyPnL)) / portfolio.totalCapital) * 100;
   if (dailyLossPct >= config.maxDailyLoss) {
-    return { ...base, rejectReason: `Daily loss limit reached (${dailyLossPct.toFixed(1)}% >= ${config.maxDailyLoss}%)` };
+    return {
+      ...base,
+      rejectReason: `Daily loss limit reached (${dailyLossPct.toFixed(1)}% >= ${config.maxDailyLoss}%)`,
+    };
   }
 
   // Check: max open positions
   if (portfolio.openPositions.length >= config.maxOpenPositions) {
-    return { ...base, rejectReason: `Max positions reached (${portfolio.openPositions.length}/${config.maxOpenPositions})` };
+    return {
+      ...base,
+      rejectReason: `Max positions reached (${portfolio.openPositions.length}/${config.maxOpenPositions})`,
+    };
   }
 
   // Check: already have position in this symbol
@@ -74,7 +80,10 @@ export function checkRisk(
       .reduce((sum, p) => sum + p.capitalUsed, 0);
     const sectorPct = (sectorCapital / portfolio.totalCapital) * 100;
     if (sectorPct >= config.maxSectorExposure) {
-      return { ...base, rejectReason: `Sector ${sector} exposure ${sectorPct.toFixed(0)}% >= ${config.maxSectorExposure}%` };
+      return {
+        ...base,
+        rejectReason: `Sector ${sector} exposure ${sectorPct.toFixed(0)}% >= ${config.maxSectorExposure}%`,
+      };
     }
   }
 

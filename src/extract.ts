@@ -37,29 +37,49 @@ function parseContract(name: string) {
   const m = name.match(/(\d+)(?:st|nd|rd|th)?\s+(\w+)\s+(\d+(?:\.\d+)?)\s+(CE|PE)/i);
   if (m) {
     const [, d, mon, strike, type] = m;
-    const months: any = { 
-      jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
-      jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12' 
+    const months: any = {
+      jan: '01',
+      feb: '02',
+      mar: '03',
+      apr: '04',
+      may: '05',
+      jun: '06',
+      jul: '07',
+      aug: '08',
+      sep: '09',
+      oct: '10',
+      nov: '11',
+      dec: '12',
     };
     const month = months[mon.toLowerCase().slice(0, 3)] || '01';
     const year = ['01', '02'].includes(month) ? '2026' : '2025';
-    return { 
-      optionType: type.toUpperCase(), 
-      strike, 
-      expiry: `${year}-${month}-${d.padStart(2, '0')}` 
+    return {
+      optionType: type.toUpperCase(),
+      strike,
+      expiry: `${year}-${month}-${d.padStart(2, '0')}`,
     };
   }
-  return { 
-    optionType: 'STOCK', 
-    strike: '', 
-    expiry: '' 
+  return {
+    optionType: 'STOCK',
+    strike: '',
+    expiry: '',
   };
 }
 
 function parseDate(text: string, year: string) {
-  const months: any = { 
-    jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
-    jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12' 
+  const months: any = {
+    jan: '01',
+    feb: '02',
+    mar: '03',
+    apr: '04',
+    may: '05',
+    jun: '06',
+    jul: '07',
+    aug: '08',
+    sep: '09',
+    oct: '10',
+    nov: '11',
+    dec: '12',
   };
   const monthKeys = Object.keys(months).join('|');
   const regex = new RegExp(`(\\d{1,2})\\s*(${monthKeys})`, 'i');
@@ -68,7 +88,7 @@ function parseDate(text: string, year: string) {
   if (m) {
     const day = parseInt(m[1], 10);
     if (day > 31 || day < 1) {
-        return { date: `${year}-01-01`, year };
+      return { date: `${year}-01-01`, year };
     }
     const month = months[m[2].toLowerCase().slice(0, 3)];
     let y = year;
@@ -101,13 +121,13 @@ async function main() {
     console.log(`\n${'='.repeat(70)}`);
     console.log(`PAGE ${pg}/${TOTAL_PAGES}`);
     console.log('='.repeat(70));
-    
+
     await page.waitForTimeout(2000);
 
     // Get all day cards
     const cards: Locator[] = [];
     const seen = new Set<string>();
-    
+
     for (const elem of await page.locator('text=Total P&L').all()) {
       try {
         const card = elem.locator('xpath=../..');
@@ -118,16 +138,16 @@ async function main() {
         }
       } catch {}
     }
-    
+
     console.log(`Found ${cards.length} day cards`);
     let pageCount = 0;
 
     for (const card of cards) {
       try {
-        const cardText = await card.textContent() || '';
+        const cardText = (await card.textContent()) || '';
         const stockNameMatch = cardText.match(/^[a-zA-Z]+/);
         const stockName = stockNameMatch ? stockNameMatch[0] : 'UNKNOWN';
-        
+
         // Skip no trade days
         if (cardText.includes('NoTradeDay') || cardText.toLowerCase().includes('not shared')) {
           console.log('  [SKIP] No Trade Day');
@@ -137,7 +157,7 @@ async function main() {
         // Parse date
         const { date, year } = parseDate(cardText, currentYear);
         currentYear = year;
-        
+
         // Get daily stats before clicking
         let dailyTotalPnL = '';
         let timestamp = '';
@@ -145,7 +165,7 @@ async function main() {
           const headerText = await page.locator('text=/Taken @/').first().textContent({ timeout: 2000 });
           timestamp = headerText || '';
         } catch {}
-        
+
         // Click to expand
         await card.scrollIntoViewIfNeeded();
         await page.waitForTimeout(500);
@@ -154,67 +174,70 @@ async function main() {
 
         // Get expanded view stats
         try {
-          const expandedText = await page.locator('text=/Total P&L/i').first().locator('xpath=../..').textContent({ timeout: 2000 });
+          const expandedText = await page
+            .locator('text=/Total P&L/i')
+            .first()
+            .locator('xpath=../..')
+            .textContent({ timeout: 2000 });
           const pnlMatch = expandedText?.match(/[\+\-]?[\d,]+/);
           if (pnlMatch) dailyTotalPnL = cleanNum(pnlMatch[0]);
         } catch {}
 
         // Extract trades from table
         let dayTrades: Trade[] = [];
-        
+
         for (const row of await page.locator('tr:has(td)').all()) {
           try {
             const cells = await row.locator('td').all();
             if (cells.length >= 5) {
-              const name = (await cells[0].textContent() || '').trim();
+              const name = ((await cells[0].textContent()) || '').trim();
               if (!name || name === 'Name') continue;
-              
+
               const { optionType, strike, expiry } = parseContract(name);
-              
+
               dayTrades.push({
                 Date: date,
                 Symbol: stockName,
                 Option_Type: optionType,
                 Strike: strike,
                 Expiry: expiry,
-                Qty: cleanNum(await cells[1].textContent() || ''),
-                Avg_Price: cleanNum(await cells[2].textContent() || ''),
-                LTP: cleanNum(await cells[3].textContent() || ''),
-                P_L: cleanNum(await cells[4].textContent() || ''),
+                Qty: cleanNum((await cells[1].textContent()) || ''),
+                Avg_Price: cleanNum((await cells[2].textContent()) || ''),
+                LTP: cleanNum((await cells[3].textContent()) || ''),
+                P_L: cleanNum((await cells[4].textContent()) || ''),
                 Daily_Total_PnL: dailyTotalPnL,
                 Verification_Timestamp: timestamp,
-                Page: pg
+                Page: pg,
               });
             }
           } catch {}
         }
-        
+
         if (dayTrades.length > 0) {
           allTrades.push(...dayTrades);
           pageCount += dayTrades.length;
-          
+
           dailySummaries.push({
             date,
             totalPnL: dailyTotalPnL,
             timestamp,
             numTrades: dayTrades.length,
-            trades: dayTrades
+            trades: dayTrades,
           });
-          
+
           console.log(`  ${date}: ${dayTrades.length} trades | P&L: ${dailyTotalPnL || 'N/A'}`);
         }
-        
+
         // Collapse card
-        try { 
-          await card.click(); 
-          await page.waitForTimeout(300); 
+        try {
+          await card.click();
+          await page.waitForTimeout(300);
         } catch {}
-        
-      } catch (e) { 
-        console.log(`  [!] Error: ${e}`); 
+      } catch (e) {
+        console.log(`  [!] Error: ${e}`);
       }
     }
-    
+
     console.log(`Page ${pg} Total: ${pageCount} trades | Running: ${allTrades.length}`);
 
     // Navigate to next page
@@ -222,7 +245,7 @@ async function main() {
       console.log(`\nNavigating to page ${pg + 1}...`);
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
       await page.waitForTimeout(1000);
-      
+
       const btns = await page.locator('button:visible').all();
       if (btns.length >= 4) {
         await btns[2].click();
@@ -242,24 +265,41 @@ async function main() {
   if (allTrades.length > 0) {
     // Save CSV
     const headers = [
-      'Date', 'Symbol', 'Option_Type', 'Strike', 'Expiry', 
-      'Qty', 'Avg_Price', 'LTP', 'P_L', 
-      'Daily_Total_PnL', 'Verification_Timestamp', 'Page'
+      'Date',
+      'Symbol',
+      'Option_Type',
+      'Strike',
+      'Expiry',
+      'Qty',
+      'Avg_Price',
+      'LTP',
+      'P_L',
+      'Daily_Total_PnL',
+      'Verification_Timestamp',
+      'Page',
     ];
-    const rows = allTrades.map(t => 
-      headers.map(h => `"${String((t as any)[h] || '').replace(/"/g, '""')}"`).join(',')
+    const rows = allTrades.map((t) =>
+      headers.map((h) => `"${String((t as any)[h] || '').replace(/"/g, '""')}"`).join(','),
     );
     fs.writeFileSync(OUTPUT_CSV, [headers.join(','), ...rows].join('\n'), 'utf-8');
     console.log(`Saved CSV: ${OUTPUT_CSV}`);
 
     // Save JSON
-    fs.writeFileSync(OUTPUT_JSON, JSON.stringify({
-      totalTrades: allTrades.length,
-      totalDays: dailySummaries.length,
-      extractedAt: new Date().toISOString(),
-      trades: allTrades,
-      dailySummaries
-    }, null, 2), 'utf-8');
+    fs.writeFileSync(
+      OUTPUT_JSON,
+      JSON.stringify(
+        {
+          totalTrades: allTrades.length,
+          totalDays: dailySummaries.length,
+          extractedAt: new Date().toISOString(),
+          trades: allTrades,
+          dailySummaries,
+        },
+        null,
+        2,
+      ),
+      'utf-8',
+    );
     console.log(`Saved JSON: ${OUTPUT_JSON}`);
 
     // Generate HTML report
@@ -271,13 +311,17 @@ async function main() {
 
 function generateHTML(trades: Trade[], summaries: DailySummary[]) {
   const totalProfit = trades.reduce((sum, t) => sum + (parseFloat(t.P_L) || 0), 0);
-  const winningDays = summaries.filter(s => parseFloat(s.totalPnL) > 0).length;
-  const losingDays = summaries.filter(s => parseFloat(s.totalPnL) < 0).length;
-  const flatDays = summaries.filter(s => parseFloat(s.totalPnL) === 0).length;
-  
+  const winningDays = summaries.filter((s) => parseFloat(s.totalPnL) > 0).length;
+  const losingDays = summaries.filter((s) => parseFloat(s.totalPnL) < 0).length;
+  const flatDays = summaries.filter((s) => parseFloat(s.totalPnL) === 0).length;
+
   const symbolCount: Record<string, number> = {};
-  trades.forEach(t => { symbolCount[t.Symbol] = (symbolCount[t.Symbol] || 0) + 1; });
-  const topSymbols = Object.entries(symbolCount).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  trades.forEach((t) => {
+    symbolCount[t.Symbol] = (symbolCount[t.Symbol] || 0) + 1;
+  });
+  const topSymbols = Object.entries(symbolCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
 
   const html = `<!DOCTYPE html>
 <html>
@@ -325,7 +369,7 @@ function generateHTML(trades: Trade[], summaries: DailySummary[]) {
     <div class="section">
       <h2>Top Traded Symbols</h2>
       <table><thead><tr><th>Symbol</th><th>Count</th><th>%</th></tr></thead>
-      <tbody>${topSymbols.map(([sym, count]) => `<tr><td><strong>${sym}</strong></td><td>${count}</td><td>${((count/trades.length)*100).toFixed(1)}%</td></tr>`).join('')}</tbody></table>
+      <tbody>${topSymbols.map(([sym, count]) => `<tr><td><strong>${sym}</strong></td><td>${count}</td><td>${((count / trades.length) * 100).toFixed(1)}%</td></tr>`).join('')}</tbody></table>
     </div>
 
     <div class="section">
@@ -334,7 +378,7 @@ function generateHTML(trades: Trade[], summaries: DailySummary[]) {
       <div style="max-height: 600px; overflow: auto;">
         <table id="tradeTable">
           <thead><tr><th>Date</th><th>Symbol</th><th>Type</th><th>Strike</th><th>Expiry</th><th>Qty</th><th>Avg</th><th>LTP</th><th>P&L</th><th>Daily Total</th></tr></thead>
-          <tbody>${trades.map(t => `<tr><td>${t.Date}</td><td><strong>${t.Symbol}</strong></td><td><span class="badge badge-${t.Option_Type.toLowerCase()}">${t.Option_Type}</span></td><td>${t.Strike||'-'}</td><td>${t.Expiry||'-'}</td><td>${t.Qty}</td><td>${t.Avg_Price}</td><td>${t.LTP}</td><td class="${parseFloat(t.P_L)>=0?'profit':'loss'}">Rs.${parseFloat(t.P_L).toLocaleString()}</td><td>Rs.${parseFloat(t.Daily_Total_PnL||'0').toLocaleString()}</td></tr>`).join('')}</tbody>
+          <tbody>${trades.map((t) => `<tr><td>${t.Date}</td><td><strong>${t.Symbol}</strong></td><td><span class="badge badge-${t.Option_Type.toLowerCase()}">${t.Option_Type}</span></td><td>${t.Strike || '-'}</td><td>${t.Expiry || '-'}</td><td>${t.Qty}</td><td>${t.Avg_Price}</td><td>${t.LTP}</td><td class="${parseFloat(t.P_L) >= 0 ? 'profit' : 'loss'}">Rs.${parseFloat(t.P_L).toLocaleString()}</td><td>Rs.${parseFloat(t.Daily_Total_PnL || '0').toLocaleString()}</td></tr>`).join('')}</tbody>
         </table>
       </div>
     </div>
@@ -343,7 +387,7 @@ function generateHTML(trades: Trade[], summaries: DailySummary[]) {
       <h2>Daily Summary</h2>
       <div style="max-height: 400px; overflow: auto;">
         <table><thead><tr><th>Date</th><th>Trades</th><th>Total P&L</th><th>Verification</th></tr></thead>
-        <tbody>${summaries.map(s => `<tr><td>${s.date}</td><td>${s.numTrades}</td><td class="${parseFloat(s.totalPnL)>=0?'profit':'loss'}">Rs.${parseFloat(s.totalPnL||'0').toLocaleString()}</td><td>${s.timestamp}</td></tr>`).join('')}</tbody></table>
+        <tbody>${summaries.map((s) => `<tr><td>${s.date}</td><td>${s.numTrades}</td><td class="${parseFloat(s.totalPnL) >= 0 ? 'profit' : 'loss'}">Rs.${parseFloat(s.totalPnL || '0').toLocaleString()}</td><td>${s.timestamp}</td></tr>`).join('')}</tbody></table>
       </div>
     </div>
   </div>

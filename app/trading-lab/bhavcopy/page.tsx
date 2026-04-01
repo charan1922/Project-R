@@ -172,8 +172,8 @@ export default function BhavcopyPage() {
             <h1 className="text-lg font-bold tracking-tight">NSE Bhavcopy Intelligence</h1>
           </div>
           <p className="text-xs text-slate-500">
-            {dateRange ? `${dateRange.from} → ${dateRange.to}` : 'No data synced'} &middot;{' '}
-            {dates.length} trading days &middot; {total.toLocaleString()} records
+            {dateRange ? `${dateRange.from} → ${dateRange.to}` : 'No data synced'} &middot; {dates.length} trading days
+            &middot; {total.toLocaleString()} records
           </p>
         </div>
         <button
@@ -204,7 +204,11 @@ export default function BhavcopyPage() {
           { label: 'Trading Days', value: dates.length, color: 'text-slate-200' },
           { label: 'Total Records', value: total.toLocaleString(), color: 'text-slate-200' },
           { label: 'Latest Date', value: dateRange?.to ?? '—', color: 'text-amber-400' },
-          { label: 'Showing', value: `${rows.length.toLocaleString()} / ${total.toLocaleString()}`, color: 'text-slate-200' },
+          {
+            label: 'Showing',
+            value: `${rows.length.toLocaleString()} / ${total.toLocaleString()}`,
+            color: 'text-slate-200',
+          },
         ].map((s) => (
           <div key={s.label} className="bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-3">
             <div className="text-[11px] text-slate-500 mb-1">{s.label}</div>
@@ -305,7 +309,9 @@ export default function BhavcopyPage() {
                   <div className="text-slate-300 font-mono text-xs">{fmt(r.eqVolume)}</div>
                   <div className="text-slate-300 font-mono text-xs">{fmt(r.futVolume)}</div>
                   <div className="text-slate-300 font-mono text-xs">{fmt(r.futOi)}</div>
-                  <div className={`font-mono text-xs flex items-center gap-0.5 ${oiUp ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <div
+                    className={`font-mono text-xs flex items-center gap-0.5 ${oiUp ? 'text-emerald-400' : 'text-red-400'}`}
+                  >
                     {oiUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                     {fmt(Math.abs(r.futOiChange))}
                   </div>
@@ -357,9 +363,7 @@ export default function BhavcopyPage() {
                   <div className="text-slate-300 font-mono text-xs">{fmt(r.eqVolume)}</div>
                   <div className="text-slate-300 font-mono text-xs">₹{fmt(r.eqTurnover)}</div>
                   <div className="text-slate-400 font-mono text-xs">{r.eqTrades > 0 ? fmt(r.eqTrades) : '—'}</div>
-                  <div className={`font-mono text-xs font-medium ${sig.color}`}>
-                    {r.eqTrades > 0 ? sig.label : '—'}
-                  </div>
+                  <div className={`font-mono text-xs font-medium ${sig.color}`}>{r.eqTrades > 0 ? sig.label : '—'}</div>
                 </div>
               );
             })}
@@ -386,13 +390,22 @@ export default function BhavcopyPage() {
               const sig = institutionalScore(avgFut, r.futTurnover);
               const oiUp = r.futOiChange > 0;
               const priceUp = r.eqClose > r.eqOpen;
-              
+
               let bias = 'Neutral';
               let biasColor = 'text-slate-500';
-              if (priceUp && oiUp) { bias = 'Long Buildup'; biasColor = 'text-emerald-400'; }
-              else if (!priceUp && oiUp) { bias = 'Short Buildup'; biasColor = 'text-red-400'; }
-              else if (priceUp && !oiUp) { bias = 'Short Covering'; biasColor = 'text-blue-400'; }
-              else if (!priceUp && !oiUp) { bias = 'Unwinding'; biasColor = 'text-amber-400'; }
+              if (priceUp && oiUp) {
+                bias = 'Long Buildup';
+                biasColor = 'text-emerald-400';
+              } else if (!priceUp && oiUp) {
+                bias = 'Short Buildup';
+                biasColor = 'text-red-400';
+              } else if (priceUp && !oiUp) {
+                bias = 'Short Covering';
+                biasColor = 'text-blue-400';
+              } else if (!priceUp && !oiUp) {
+                bias = 'Unwinding';
+                biasColor = 'text-amber-400';
+              }
 
               return (
                 <div
@@ -410,7 +423,9 @@ export default function BhavcopyPage() {
                   </div>
                   <div className="text-white font-mono text-xs">{r.eqClose.toFixed(1)}</div>
                   <div className="text-slate-300 font-mono text-xs">{fmt(r.futOi)}</div>
-                  <div className={`font-mono text-xs flex items-center gap-0.5 ${oiUp ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <div
+                    className={`font-mono text-xs flex items-center gap-0.5 ${oiUp ? 'text-emerald-400' : 'text-red-400'}`}
+                  >
                     {oiUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                     {fmt(Math.abs(r.futOiChange))}
                   </div>
@@ -420,9 +435,7 @@ export default function BhavcopyPage() {
                   <div className={`font-mono text-xs font-medium ${sig.color}`}>
                     {r.futTrades > 0 ? `${sig.label}` : '—'}
                   </div>
-                  <div className={`text-[10px] font-bold uppercase tracking-tight ${biasColor}`}>
-                    {bias}
-                  </div>
+                  <div className={`text-[10px] font-bold uppercase tracking-tight ${biasColor}`}>{bias}</div>
                 </div>
               );
             })}
@@ -448,15 +461,12 @@ export default function BhavcopyPage() {
               const ratio = pcr(r);
               const isBullish = ratio !== null && ratio < 0.8;
               const isBearish = ratio !== null && ratio > 1.2;
-              
+
               const avgOpt = avgTradeSize(r.optTurnover, r.optTrades);
               const sig = institutionalScore(avgOpt, r.optTurnover);
 
               // Put-heavy trades vs call-heavy = bearish bias from institutional side
-              const tradesBias =
-                r.ceTrades + r.peTrades > 0
-                  ? r.peTrades / (r.ceTrades + r.peTrades)
-                  : null;
+              const tradesBias = r.ceTrades + r.peTrades > 0 ? r.peTrades / (r.ceTrades + r.peTrades) : null;
               return (
                 <div
                   key={r.id}
@@ -474,7 +484,9 @@ export default function BhavcopyPage() {
                   <div className="text-white font-mono text-xs">{r.eqClose.toFixed(1)}</div>
                   <div className="text-emerald-400 font-mono text-xs">{fmt(r.ceVolume)}</div>
                   <div className="text-red-400 font-mono text-xs">{fmt(r.peVolume)}</div>
-                  <div className={`font-mono text-xs font-semibold ${isBullish ? 'text-emerald-400' : isBearish ? 'text-red-400' : 'text-slate-300'}`}>
+                  <div
+                    className={`font-mono text-xs font-semibold ${isBullish ? 'text-emerald-400' : isBearish ? 'text-red-400' : 'text-slate-300'}`}
+                  >
                     {ratio !== null ? ratio.toFixed(2) : '—'}
                   </div>
                   <div className="text-emerald-400/70 font-mono text-xs">{r.ceTrades > 0 ? fmt(r.ceTrades) : '—'}</div>
@@ -482,8 +494,16 @@ export default function BhavcopyPage() {
                   <div className={`font-mono text-xs font-medium ${sig.color}`}>
                     {r.optTrades > 0 ? sig.label : '—'}
                   </div>
-                  <div className={`font-mono text-xs font-medium ${tradesBias !== null && tradesBias > 0.55 ? 'text-red-400' : tradesBias !== null && tradesBias < 0.45 ? 'text-emerald-400' : 'text-slate-500'}`}>
-                    {tradesBias !== null ? (tradesBias > 0.55 ? 'Bearish' : tradesBias < 0.45 ? 'Bullish' : 'Neutral') : '—'}
+                  <div
+                    className={`font-mono text-xs font-medium ${tradesBias !== null && tradesBias > 0.55 ? 'text-red-400' : tradesBias !== null && tradesBias < 0.45 ? 'text-emerald-400' : 'text-slate-500'}`}
+                  >
+                    {tradesBias !== null
+                      ? tradesBias > 0.55
+                        ? 'Bearish'
+                        : tradesBias < 0.45
+                          ? 'Bullish'
+                          : 'Neutral'
+                      : '—'}
                   </div>
                 </div>
               );
@@ -527,13 +547,13 @@ export default function BhavcopyPage() {
                   <div className="text-white font-mono text-xs">{r.eqClose.toFixed(1)}</div>
                   <div className="text-slate-300 font-mono text-xs">{fmt(r.eqVolume)}</div>
                   <div className="text-slate-300 font-mono text-xs">{fmt(r.eqDeliveryQty)}</div>
-                  <div className={`font-mono text-xs font-semibold ${delHigh ? 'text-emerald-400' : delLow ? 'text-red-400' : 'text-amber-400'}`}>
+                  <div
+                    className={`font-mono text-xs font-semibold ${delHigh ? 'text-emerald-400' : delLow ? 'text-red-400' : 'text-amber-400'}`}
+                  >
                     {r.eqDeliveryPct > 0 ? fmtPct(r.eqDeliveryPct) : '—'}
                   </div>
                   <div className="text-slate-400 font-mono text-xs">{r.eqTrades > 0 ? fmt(r.eqTrades) : '—'}</div>
-                  <div className="text-slate-300 font-mono text-xs">
-                    {r.eqTrades > 0 ? `₹${fmt(avgEq)}` : '—'}
-                  </div>
+                  <div className="text-slate-300 font-mono text-xs">{r.eqTrades > 0 ? `₹${fmt(avgEq)}` : '—'}</div>
                   <div className={`font-mono text-xs font-semibold ${sig.color}`}>
                     {r.eqTrades > 0 ? sig.label : '—'}
                   </div>

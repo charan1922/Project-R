@@ -10,16 +10,8 @@
  * Used by the option trading engine to find the exact contract to trade.
  */
 
-import {
-  dhanMarketFeed,
-  isMarketHours,
-} from '@/lib/dhan/market-feed';
-import {
-  resolveSymbol,
-  resolveOptionSecurity,
-  getStrikeStep,
-  nearestStrike,
-} from '@/lib/historify/master-contracts';
+import { dhanMarketFeed, isMarketHours } from '@/lib/dhan/market-feed';
+import { resolveSymbol, resolveOptionSecurity, getStrikeStep, nearestStrike } from '@/lib/historify/master-contracts';
 
 /** Fully resolved option contract ready for trading */
 export interface ResolvedOption {

@@ -104,7 +104,13 @@ export default function AIAutopilotPage() {
       <div className="grid grid-cols-5 gap-3">
         {[
           { label: 'Entry Window', value: `${config.entryWindowStart} - ${config.entryWindowEnd}` },
-          { label: 'Exit Mode', value: config.exitMode === 'fixed-profit' ? `₹${config.fixedProfitTarget.toLocaleString()} profit` : config.exitMode },
+          {
+            label: 'Exit Mode',
+            value:
+              config.exitMode === 'fixed-profit'
+                ? `₹${config.fixedProfitTarget.toLocaleString()} profit`
+                : config.exitMode,
+          },
           { label: 'Min R-Factor', value: config.minRFactorThreshold.toFixed(1) },
           { label: 'Min ADX', value: `${config.minADXThreshold}+` },
           { label: 'Max Positions', value: config.maxOpenPositions.toString() },
@@ -125,11 +131,7 @@ export default function AIAutopilotPage() {
       )}
 
       {/* Loading */}
-      {loading && (
-        <div className="text-center py-8 text-slate-500 text-sm">
-          Analyzing top stocks with AI...
-        </div>
-      )}
+      {loading && <div className="text-center py-8 text-slate-500 text-sm">Analyzing top stocks with AI...</div>}
 
       {/* Actionable Decisions */}
       {actionableResults.length > 0 && (
@@ -197,11 +199,16 @@ function DecisionCard({ result }: { result: AnalysisResult }) {
             <span className="text-white font-bold">{signal.symbol}</span>
             <span className="text-slate-500 text-xs ml-2">{signal.sector}</span>
           </div>
-          <span className={`px-2 py-0.5 text-xs font-bold rounded bg-${color}-500/20 text-${color}-400 border border-${color}-500/30`}>
+          <span
+            className={`px-2 py-0.5 text-xs font-bold rounded bg-${color}-500/20 text-${color}-400 border border-${color}-500/30`}
+          >
             {decision.action}
           </span>
           <span className="text-xs text-slate-500">
-            Confidence: <span className={decision.confidence > 0.7 ? 'text-emerald-400' : 'text-amber-400'}>{(decision.confidence * 100).toFixed(0)}%</span>
+            Confidence:{' '}
+            <span className={decision.confidence > 0.7 ? 'text-emerald-400' : 'text-amber-400'}>
+              {(decision.confidence * 100).toFixed(0)}%
+            </span>
           </span>
         </div>
         <div className="text-right text-xs">
@@ -209,9 +216,7 @@ function DecisionCard({ result }: { result: AnalysisResult }) {
           {decision.approved && !decision.rejectReason?.includes('PAPER') && (
             <span className="text-emerald-400 font-bold">APPROVED</span>
           )}
-          {decision.rejectReason?.includes('PAPER') && (
-            <span className="text-amber-400">PAPER MODE</span>
-          )}
+          {decision.rejectReason?.includes('PAPER') && <span className="text-amber-400">PAPER MODE</span>}
           {!decision.approved && !decision.rejectReason?.includes('PAPER') && (
             <span className="text-red-400">{decision.rejectReason}</span>
           )}
@@ -244,23 +249,29 @@ function DecisionCard({ result }: { result: AnalysisResult }) {
       {(decision.suggestedEntry || decision.suggestedStopLoss || decision.suggestedTarget) && (
         <div className="px-4 py-2 bg-slate-800/30 border-t border-slate-800/50 flex gap-6 text-xs">
           {decision.suggestedEntry && (
-            <span>Entry: <span className="text-white font-mono">₹{decision.suggestedEntry.toFixed(1)}</span></span>
+            <span>
+              Entry: <span className="text-white font-mono">₹{decision.suggestedEntry.toFixed(1)}</span>
+            </span>
           )}
           {decision.suggestedStopLoss && (
-            <span>SL: <span className="text-red-400 font-mono">₹{decision.suggestedStopLoss.toFixed(1)}</span></span>
+            <span>
+              SL: <span className="text-red-400 font-mono">₹{decision.suggestedStopLoss.toFixed(1)}</span>
+            </span>
           )}
           {decision.suggestedTarget && (
-            <span>Target: <span className="text-emerald-400 font-mono">₹{decision.suggestedTarget.toFixed(1)}</span></span>
+            <span>
+              Target: <span className="text-emerald-400 font-mono">₹{decision.suggestedTarget.toFixed(1)}</span>
+            </span>
           )}
           {decision.riskRewardRatio && (
-            <span>R:R <span className="text-white font-mono">{decision.riskRewardRatio.toFixed(1)}</span></span>
+            <span>
+              R:R <span className="text-white font-mono">{decision.riskRewardRatio.toFixed(1)}</span>
+            </span>
           )}
         </div>
       )}
 
-      <div className="px-4 py-2 border-t border-slate-800/50 text-xs text-slate-500">
-        {decision.rationale}
-      </div>
+      <div className="px-4 py-2 border-t border-slate-800/50 text-xs text-slate-500">{decision.rationale}</div>
     </div>
   );
 }

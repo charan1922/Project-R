@@ -69,8 +69,14 @@ export function predictOLS(current: FactorData, historical: FactorData[]): Model
       pcr_z: pcrZ,
       fut_turn_z: futTurnZ,
       fut_vol_z: futVolZ,
-      fut_avg_trade_size_z: calculateZScore(current.fut_avg_trade_size, historical.map(h => h.fut_avg_trade_size)),
-      opt_avg_trade_size_z: calculateZScore(current.opt_avg_trade_size, historical.map(h => h.opt_avg_trade_size)),
+      fut_avg_trade_size_z: calculateZScore(
+        current.fut_avg_trade_size,
+        historical.map((h) => h.fut_avg_trade_size),
+      ),
+      opt_avg_trade_size_z: calculateZScore(
+        current.opt_avg_trade_size,
+        historical.map((h) => h.opt_avg_trade_size),
+      ),
       interaction: current.spread * futTurnZ,
     },
   };
@@ -125,10 +131,7 @@ export function predictSpreadQuadratic(current: FactorData, historical: FactorDa
  * - Turnover acceleration
  * - Multi-day spread pattern
  */
-export function predictMomentum(
-  current: EnhancedFactorData,
-  _historical: EnhancedFactorData[],
-): ModelPrediction {
+export function predictMomentum(current: EnhancedFactorData, _historical: EnhancedFactorData[]): ModelPrediction {
   // Base R from simplified OLS (spread + turnover only)
   const baseR = 2.0 + (current.spread - 1.0) * 0.5;
 

@@ -79,7 +79,6 @@ export default function Sidebar() {
 
         {/* Navigation Sections */}
         <nav className="flex-1 py-4 px-3 space-y-4 overflow-y-auto custom-scrollbar">
-
           <div className="space-y-1">
             <div className="px-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
               <span>Current System</span>
@@ -109,7 +108,6 @@ export default function Sidebar() {
               <NavItem key={item.href} item={item} {...commonProps} />
             ))}
           </div>
-
 
           <div className="space-y-1">
             <div className="px-2 text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-2">

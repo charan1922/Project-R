@@ -415,8 +415,9 @@ export class RFactorEngine {
     const isElephant = zScores.oi_change > 1.0 && zScores.fut_turnover > 0.5;
 
     // Institutional "Whale" logic: Above average volume AND above average trade size
-    const isWhale = (zScores.fut_turnover > 1.0 || zScores.opt_volume > 1.0) &&
-                   (zScores.fut_avg_trade_size > 1.5 || zScores.eq_trade_size > 1.5 || zScores.opt_avg_trade_size > 1.5);
+    const isWhale =
+      (zScores.fut_turnover > 1.0 || zScores.opt_volume > 1.0) &&
+      (zScores.fut_avg_trade_size > 1.5 || zScores.eq_trade_size > 1.5 || zScores.opt_avg_trade_size > 1.5);
 
     if (isWhale) return 'Elephant'; // Reuse Elephant for heavy institutional
     if (isCheetah && (isElephant || isWhale)) return 'Hybrid';

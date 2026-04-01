@@ -691,7 +691,7 @@ async function ensureDhanTable() {
     'futTrades INTEGER DEFAULT 0',
     'optTrades INTEGER DEFAULT 0',
     'ceTrades INTEGER DEFAULT 0',
-    'peTrades INTEGER DEFAULT 0'
+    'peTrades INTEGER DEFAULT 0',
   ];
   for (const col of cols) {
     try {
@@ -710,7 +710,7 @@ async function ensureDhanStockDownloadTable() {
     'futTrades INTEGER DEFAULT 0',
     'optTrades INTEGER DEFAULT 0',
     'ceTrades INTEGER DEFAULT 0',
-    'peTrades INTEGER DEFAULT 0'
+    'peTrades INTEGER DEFAULT 0',
   ];
   for (const col of cols) {
     try {

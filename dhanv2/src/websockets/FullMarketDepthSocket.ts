@@ -50,172 +50,172 @@ const RECONNECT_BASE_DELAY_MS = 1_000;
 export type DepthLevel_ = '20' | '200';
 
 export declare interface FullMarketDepthSocket {
-    on(event: 'connect', listener: () => void): this;
-    on(event: 'depth', listener: (data: FullDepthData) => void): this;
-    on(event: 'error', listener: (error: Error) => void): this;
-    on(event: 'close', listener: () => void): this;
+  on(event: 'connect', listener: () => void): this;
+  on(event: 'depth', listener: (data: FullDepthData) => void): this;
+  on(event: 'error', listener: (error: Error) => void): this;
+  on(event: 'close', listener: () => void): this;
 }
 
 export class FullMarketDepthSocket extends EventEmitter {
-    private ws: WebSocket | null = null;
-    private reconnectAttempt = 0;
-    private _shouldReconnect = true;
-    private readonly url: string;
+  private ws: WebSocket | null = null;
+  private reconnectAttempt = 0;
+  private _shouldReconnect = true;
+  private readonly url: string;
 
-    constructor(
-        private readonly clientId: string,
-        private readonly accessToken: string,
-        depthLevel: DepthLevel_ = '20'
-    ) {
-        super();
-        this.url = `${depthLevel === '200' ? DEPTH_URL_200 : DEPTH_URL_20}`;
-    }
+  constructor(
+    private readonly clientId: string,
+    private readonly accessToken: string,
+    depthLevel: DepthLevel_ = '20',
+  ) {
+    super();
+    this.url = `${depthLevel === '200' ? DEPTH_URL_200 : DEPTH_URL_20}`;
+  }
 
-    /** Connect to the full market depth stream. */
-    public connect(): void {
-        this._shouldReconnect = true;
-        this._establish();
-    }
+  /** Connect to the full market depth stream. */
+  public connect(): void {
+    this._shouldReconnect = true;
+    this._establish();
+  }
 
-    /** Gracefully close the connection. */
-    public close(): void {
-        this._shouldReconnect = false;
-        this.ws?.close();
-        this.ws = null;
-    }
+  /** Gracefully close the connection. */
+  public close(): void {
+    this._shouldReconnect = false;
+    this.ws?.close();
+    this.ws = null;
+  }
 
-    /** Subscribe to instruments using RequestCode 23. */
-    public subscribe(instruments: FeedInstrument[]): void {
-        this._send({
-            RequestCode: SUBSCRIBE_REQUEST_CODE,
-            InstrumentCount: instruments.length,
-            InstrumentList: instruments.map((i) => ({
-                ExchangeSegment: i.exchangeSegment,
-                SecurityId: i.securityId,
-            })),
-        });
-    }
+  /** Subscribe to instruments using RequestCode 23. */
+  public subscribe(instruments: FeedInstrument[]): void {
+    this._send({
+      RequestCode: SUBSCRIBE_REQUEST_CODE,
+      InstrumentCount: instruments.length,
+      InstrumentList: instruments.map((i) => ({
+        ExchangeSegment: i.exchangeSegment,
+        SecurityId: i.securityId,
+      })),
+    });
+  }
 
-    /** Unsubscribe from instruments. */
-    public unsubscribe(instruments: FeedInstrument[]): void {
-        this._send({
-            RequestCode: UNSUBSCRIBE_REQUEST_CODE,
-            InstrumentCount: instruments.length,
-            InstrumentList: instruments.map((i) => ({
-                ExchangeSegment: i.exchangeSegment,
-                SecurityId: i.securityId,
-            })),
-        });
-    }
+  /** Unsubscribe from instruments. */
+  public unsubscribe(instruments: FeedInstrument[]): void {
+    this._send({
+      RequestCode: UNSUBSCRIBE_REQUEST_CODE,
+      InstrumentCount: instruments.length,
+      InstrumentList: instruments.map((i) => ({
+        ExchangeSegment: i.exchangeSegment,
+        SecurityId: i.securityId,
+      })),
+    });
+  }
 
-    private _establish(): void {
-        // Auth via query params (same as market feed)
-        const url = `${this.url}?token=${this.accessToken}&clientId=${this.clientId}`;
-        this.ws = new WebSocket(url);
-        this.ws.binaryType = 'nodebuffer';
+  private _establish(): void {
+    // Auth via query params (same as market feed)
+    const url = `${this.url}?token=${this.accessToken}&clientId=${this.clientId}`;
+    this.ws = new WebSocket(url);
+    this.ws.binaryType = 'nodebuffer';
 
-        this.ws.on('open', () => {
-            this.reconnectAttempt = 0;
-            this.emit('connect');
-        });
+    this.ws.on('open', () => {
+      this.reconnectAttempt = 0;
+      this.emit('connect');
+    });
 
-        this.ws.on('ping', () => {
-            this.ws?.pong();
-        });
+    this.ws.on('ping', () => {
+      this.ws?.pong();
+    });
 
-        this.ws.on('message', (data: WebSocket.RawData) => {
-            if (!Buffer.isBuffer(data)) return;
+    this.ws.on('message', (data: WebSocket.RawData) => {
+      if (!Buffer.isBuffer(data)) return;
 
-            const packets = this._parseDepthBuffer(data);
-            for (const pkt of packets) {
-                this.emit('depth', pkt);
-            }
-        });
+      const packets = this._parseDepthBuffer(data);
+      for (const pkt of packets) {
+        this.emit('depth', pkt);
+      }
+    });
 
-        this.ws.on('error', (err: Error) => {
-            this.emit('error', err);
-        });
+    this.ws.on('error', (err: Error) => {
+      this.emit('error', err);
+    });
 
-        this.ws.on('close', () => {
-            if (this._shouldReconnect && this.reconnectAttempt < MAX_RECONNECT_ATTEMPTS) {
-                const delay = RECONNECT_BASE_DELAY_MS * Math.pow(2, this.reconnectAttempt);
-                this.reconnectAttempt++;
-                setTimeout(() => this._establish(), delay);
-            } else {
-                this.emit('close');
-            }
-        });
-    }
+    this.ws.on('close', () => {
+      if (this._shouldReconnect && this.reconnectAttempt < MAX_RECONNECT_ATTEMPTS) {
+        const delay = RECONNECT_BASE_DELAY_MS * Math.pow(2, this.reconnectAttempt);
+        this.reconnectAttempt++;
+        setTimeout(() => this._establish(), delay);
+      } else {
+        this.emit('close');
+      }
+    });
+  }
 
-    /**
-     * Parse the 12-byte depth header and iterate over 16-byte depth-level packets.
-     *
-     * Handles stacked multi-instrument frames where Bid and Ask packets for multiple
-     * instruments are sequentially concatenated in one WebSocket frame.
-     */
-    private _parseDepthBuffer(buffer: Buffer): FullDepthData[] {
-        // Accumulate bid/ask per securityId across packets in the same frame
-        const depthMap = new Map<number, { bid: DepthLevel[]; ask: DepthLevel[]; exchangeSegment: number }>();
+  /**
+   * Parse the 12-byte depth header and iterate over 16-byte depth-level packets.
+   *
+   * Handles stacked multi-instrument frames where Bid and Ask packets for multiple
+   * instruments are sequentially concatenated in one WebSocket frame.
+   */
+  private _parseDepthBuffer(buffer: Buffer): FullDepthData[] {
+    // Accumulate bid/ask per securityId across packets in the same frame
+    const depthMap = new Map<number, { bid: DepthLevel[]; ask: DepthLevel[]; exchangeSegment: number }>();
 
-        let frameOffset = 0;
+    let frameOffset = 0;
 
-        while (frameOffset < buffer.length) {
-            if (buffer.length - frameOffset < DEPTH_HEADER_SIZE) break;
+    while (frameOffset < buffer.length) {
+      if (buffer.length - frameOffset < DEPTH_HEADER_SIZE) break;
 
-            // 12-byte header
-            const messageLength = buffer.readInt16LE(frameOffset);
-            const responseCode = buffer.readInt8(frameOffset + 2);
-            const exchangeSeg = buffer.readInt8(frameOffset + 3);
-            const securityId = buffer.readInt32LE(frameOffset + 4);
-            // numRows at offset 8 (uint32) — used for loop bounds cross-check
-            // const numRows = buffer.readUInt32LE(frameOffset + 8);
+      // 12-byte header
+      const messageLength = buffer.readInt16LE(frameOffset);
+      const responseCode = buffer.readInt8(frameOffset + 2);
+      const exchangeSeg = buffer.readInt8(frameOffset + 3);
+      const securityId = buffer.readInt32LE(frameOffset + 4);
+      // numRows at offset 8 (uint32) — used for loop bounds cross-check
+      // const numRows = buffer.readUInt32LE(frameOffset + 8);
 
-            if (!depthMap.has(securityId)) {
-                depthMap.set(securityId, { bid: [], ask: [], exchangeSegment: exchangeSeg });
-            }
-            const entry = depthMap.get(securityId)!;
+      if (!depthMap.has(securityId)) {
+        depthMap.set(securityId, { bid: [], ask: [], exchangeSegment: exchangeSeg });
+      }
+      const entry = depthMap.get(securityId)!;
 
-            // Parse 16-byte depth-level packets starting at header end
-            let currentOffset = frameOffset + DEPTH_HEADER_SIZE;
-            const endOffset = frameOffset + messageLength;
+      // Parse 16-byte depth-level packets starting at header end
+      let currentOffset = frameOffset + DEPTH_HEADER_SIZE;
+      const endOffset = frameOffset + messageLength;
 
-            while (currentOffset + DEPTH_PACKET_SIZE <= endOffset && currentOffset + DEPTH_PACKET_SIZE <= buffer.length) {
-                const price = buffer.readDoubleLE(currentOffset);         // float64, 8 bytes
-                const quantity = buffer.readUInt32LE(currentOffset + 8);    // uint32, 4 bytes
-                const numOrders = buffer.readUInt32LE(currentOffset + 12);   // uint32, 4 bytes
+      while (currentOffset + DEPTH_PACKET_SIZE <= endOffset && currentOffset + DEPTH_PACKET_SIZE <= buffer.length) {
+        const price = buffer.readDoubleLE(currentOffset); // float64, 8 bytes
+        const quantity = buffer.readUInt32LE(currentOffset + 8); // uint32, 4 bytes
+        const numOrders = buffer.readUInt32LE(currentOffset + 12); // uint32, 4 bytes
 
-                const level: DepthLevel = { price, quantity, numOrders };
+        const level: DepthLevel = { price, quantity, numOrders };
 
-                if (responseCode === FeedResponseCode.BID_PACKET) {
-                    entry.bid.push(level);
-                } else if (responseCode === FeedResponseCode.ASK_PACKET) {
-                    entry.ask.push(level);
-                }
-
-                currentOffset += DEPTH_PACKET_SIZE;
-            }
-
-            // Advance frame offset: header + total payload
-            frameOffset = endOffset > frameOffset ? endOffset : frameOffset + DEPTH_HEADER_SIZE;
+        if (responseCode === FeedResponseCode.BID_PACKET) {
+          entry.bid.push(level);
+        } else if (responseCode === FeedResponseCode.ASK_PACKET) {
+          entry.ask.push(level);
         }
 
-        // Convert accumulated map to FullDepthData array
-        const results: FullDepthData[] = [];
-        for (const [securityId, entry] of depthMap) {
-            results.push({
-                type: 'depth',
-                exchangeSegment: entry.exchangeSegment,
-                securityId,
-                bid: entry.bid,
-                ask: entry.ask,
-            });
-        }
-        return results;
+        currentOffset += DEPTH_PACKET_SIZE;
+      }
+
+      // Advance frame offset: header + total payload
+      frameOffset = endOffset > frameOffset ? endOffset : frameOffset + DEPTH_HEADER_SIZE;
     }
 
-    private _send(data: unknown): void {
-        if (this.ws?.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify(data));
-        }
+    // Convert accumulated map to FullDepthData array
+    const results: FullDepthData[] = [];
+    for (const [securityId, entry] of depthMap) {
+      results.push({
+        type: 'depth',
+        exchangeSegment: entry.exchangeSegment,
+        securityId,
+        bid: entry.bid,
+        ask: entry.ask,
+      });
     }
+    return results;
+  }
+
+  private _send(data: unknown): void {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(data));
+    }
+  }
 }

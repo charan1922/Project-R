@@ -116,7 +116,7 @@ function formatTime(unix: number): string {
  */
 async function getDailySpreadHistory(symbol: string, beforeDate: string, days = 20): Promise<number[]> {
   // Get distinct dates with their high/low/close from equity bars
-  const rows = await queryRows(`
+  const rows = (await queryRows(`
     SELECT date, MAX(high) as day_high, MIN(low) as day_low,
            (SELECT close FROM backtest_equity e2 WHERE e2.symbol = '${symbol}' AND e2.date = e.date ORDER BY timestamp DESC LIMIT 1) as last_close
     FROM backtest_equity e
@@ -124,7 +124,7 @@ async function getDailySpreadHistory(symbol: string, beforeDate: string, days = 
     GROUP BY date
     ORDER BY date DESC
     LIMIT ${days}
-  `) as { date: string; day_high: number; day_low: number; last_close: number }[];
+  `)) as { date: string; day_high: number; day_low: number; last_close: number }[];
 
   return rows
     .map((r) => {
@@ -139,13 +139,16 @@ async function getDailySpreadHistory(symbol: string, beforeDate: string, days = 
 /**
  * Get all 5-min equity bars for a stock on a specific date.
  */
-async function getEquityBars(symbol: string, date: string): Promise<{ timestamp: number; open: number; high: number; low: number; close: number; volume: number }[]> {
-  const rows = await queryRows(`
+async function getEquityBars(
+  symbol: string,
+  date: string,
+): Promise<{ timestamp: number; open: number; high: number; low: number; close: number; volume: number }[]> {
+  const rows = (await queryRows(`
     SELECT timestamp, open, high, low, close, volume
     FROM backtest_equity
     WHERE symbol = '${symbol}' AND date = '${date}'
     ORDER BY timestamp ASC
-  `) as { timestamp: number; open: number; high: number; low: number; close: number; volume: number }[];
+  `)) as { timestamp: number; open: number; high: number; low: number; close: number; volume: number }[];
   return rows.map((r) => ({
     timestamp: Number(r.timestamp),
     open: Number(r.open),
@@ -159,13 +162,17 @@ async function getEquityBars(symbol: string, date: string): Promise<{ timestamp:
 /**
  * Get option 5-min bars for a stock on a specific date.
  */
-async function getOptionBars(symbol: string, optionType: string, date: string): Promise<{ timestamp: number; open: number; high: number; low: number; close: number }[]> {
-  const rows = await queryRows(`
+async function getOptionBars(
+  symbol: string,
+  optionType: string,
+  date: string,
+): Promise<{ timestamp: number; open: number; high: number; low: number; close: number }[]> {
+  const rows = (await queryRows(`
     SELECT timestamp, open, high, low, close
     FROM backtest_options
     WHERE symbol = '${symbol}' AND option_type = '${optionType}' AND date = '${date}'
     ORDER BY timestamp ASC
-  `) as { timestamp: number; open: number; high: number; low: number; close: number }[];
+  `)) as { timestamp: number; open: number; high: number; low: number; close: number }[];
   return rows.map((r) => ({
     timestamp: Number(r.timestamp),
     open: Number(r.open),
@@ -179,7 +186,7 @@ async function getOptionBars(symbol: string, optionType: string, date: string): 
  * Get all unique symbols that have data.
  */
 async function getAvailableSymbols(): Promise<string[]> {
-  const rows = await queryRows(`SELECT DISTINCT symbol FROM backtest_equity`) as { symbol: string }[];
+  const rows = (await queryRows(`SELECT DISTINCT symbol FROM backtest_equity`)) as { symbol: string }[];
   return rows.map((r) => r.symbol);
 }
 
@@ -235,11 +242,28 @@ export async function runFullBacktest(): Promise<{ results: BacktestResult[]; su
       console.error(`[Backtest] Error on ${trade.date} ${trade.symbol}:`, error);
       results.push({
         date: trade.date,
-        tfStock: trade.symbol, tfCePe: trade.optionType, tfStrike: trade.strike, tfPnl: trade.pnl,
-        ourTopStock: '?', ourRank: 0, ourSpread: 0, ourDirection: 'CE', ourADX: 0,
-        stockMatch: false, directionMatch: false, tfInTop10: false,
-        entryTime: '', entryPrice: 0, exitTime: '', exitPrice: 0, exitReason: `Error: ${(error as Error).message}`,
-        lotSize: 0, grossPnl: 0, charges: 0, netPnl: 0, profitable: false,
+        tfStock: trade.symbol,
+        tfCePe: trade.optionType,
+        tfStrike: trade.strike,
+        tfPnl: trade.pnl,
+        ourTopStock: '?',
+        ourRank: 0,
+        ourSpread: 0,
+        ourDirection: 'CE',
+        ourADX: 0,
+        stockMatch: false,
+        directionMatch: false,
+        tfInTop10: false,
+        entryTime: '',
+        entryPrice: 0,
+        exitTime: '',
+        exitPrice: 0,
+        exitReason: `Error: ${(error as Error).message}`,
+        lotSize: 0,
+        grossPnl: 0,
+        charges: 0,
+        netPnl: 0,
+        profitable: false,
       });
     }
   }
@@ -269,7 +293,7 @@ export async function runFullBacktest(): Promise<{ results: BacktestResult[]; su
  */
 async function evaluateSingleTrade(trade: TFTrade, allSymbols: string[]): Promise<BacktestResult> {
   const ENTRY_BAR_INDEX = 6; // 9:45 AM = 6th bar after 9:15 (bars at 9:15, 9:20, 9:25, 9:30, 9:35, 9:40, 9:45)
-  const SL_PCT = 0.30; // 30% stop-loss on option premium
+  const SL_PCT = 0.3; // 30% stop-loss on option premium
   const LOT_SIZE_FALLBACK = 1000; // Fallback lot size if not found
 
   // Step 1: Load equity bars for ALL symbols on this date and rank by spread
@@ -280,9 +304,8 @@ async function evaluateSingleTrade(trade: TFTrade, allSymbols: string[]): Promis
     if (bars.length < ENTRY_BAR_INDEX + 1) continue;
 
     const avgSpreadHistory = await getDailySpreadHistory(sym, trade.date, 20);
-    const avgDailySpread = avgSpreadHistory.length > 0
-      ? avgSpreadHistory.reduce((a, b) => a + b, 0) / avgSpreadHistory.length
-      : 0;
+    const avgDailySpread =
+      avgSpreadHistory.length > 0 ? avgSpreadHistory.reduce((a, b) => a + b, 0) / avgSpreadHistory.length : 0;
 
     const signals = computeSignals(bars, ENTRY_BAR_INDEX, avgDailySpread);
     stockSignals.push({ symbol: sym, ...signals });
@@ -302,15 +325,28 @@ async function evaluateSingleTrade(trade: TFTrade, allSymbols: string[]): Promis
   if (optionBars.length < ENTRY_BAR_INDEX + 1) {
     return {
       date: trade.date,
-      tfStock: trade.symbol, tfCePe: trade.optionType, tfStrike: trade.strike, tfPnl: trade.pnl,
-      ourTopStock: ourTop.symbol, ourRank: tfRank, ourSpread: ourTop.spreadRatio,
-      ourDirection, ourADX: ourTop.adx,
+      tfStock: trade.symbol,
+      tfCePe: trade.optionType,
+      tfStrike: trade.strike,
+      tfPnl: trade.pnl,
+      ourTopStock: ourTop.symbol,
+      ourRank: tfRank,
+      ourSpread: ourTop.spreadRatio,
+      ourDirection,
+      ourADX: ourTop.adx,
       stockMatch: ourTop.symbol === trade.symbol,
       directionMatch: ourDirection === trade.optionType,
       tfInTop10: tfRank > 0 && tfRank <= 10,
-      entryTime: '', entryPrice: 0, exitTime: '', exitPrice: 0,
+      entryTime: '',
+      entryPrice: 0,
+      exitTime: '',
+      exitPrice: 0,
       exitReason: 'No option data for this date',
-      lotSize: 0, grossPnl: 0, charges: 0, netPnl: 0, profitable: false,
+      lotSize: 0,
+      grossPnl: 0,
+      charges: 0,
+      netPnl: 0,
+      profitable: false,
     };
   }
 
@@ -405,7 +441,16 @@ export interface TradeDetailSignal {
 }
 
 export interface TradeDetail {
-  optionBars: { timestamp: number; time: string; open: number; high: number; low: number; close: number; volume: number; oi: number }[];
+  optionBars: {
+    timestamp: number;
+    time: string;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+    oi: number;
+  }[];
   equityBars: { timestamp: number; time: string; open: number; high: number; low: number; close: number }[];
   futuresBars: { timestamp: number; time: string; close: number; oi: number }[];
   signals: TradeDetailSignal[];
@@ -433,12 +478,12 @@ export interface SimulationResult {
 
 /** Get option bars WITH strike filter (fixes existing bug) */
 async function getFullOptionBars(symbol: string, optionType: string, strike: number, date: string) {
-  const rows = await queryRows(`
+  const rows = (await queryRows(`
     SELECT timestamp, open, high, low, close, volume, oi
     FROM backtest_options
     WHERE symbol = '${symbol}' AND option_type = '${optionType}' AND CAST(strike AS REAL) = ${strike} AND date = '${date}'
     ORDER BY timestamp ASC
-  `) as { timestamp: number; open: number; high: number; low: number; close: number; volume: number; oi: number }[];
+  `)) as { timestamp: number; open: number; high: number; low: number; close: number; volume: number; oi: number }[];
   return rows.map((r) => ({
     timestamp: Number(r.timestamp),
     time: formatTime(Number(r.timestamp)),
@@ -453,12 +498,12 @@ async function getFullOptionBars(symbol: string, optionType: string, strike: num
 
 /** Get futures bars with OI */
 async function getFullFuturesBars(symbol: string, date: string) {
-  const rows = await queryRows(`
+  const rows = (await queryRows(`
     SELECT timestamp, open, high, low, close, volume, oi
     FROM backtest_futures
     WHERE symbol = '${symbol}' AND date = '${date}'
     ORDER BY timestamp ASC
-  `) as { timestamp: number; open: number; high: number; low: number; close: number; volume: number; oi: number }[];
+  `)) as { timestamp: number; open: number; high: number; low: number; close: number; volume: number; oi: number }[];
   return rows.map((r) => ({
     timestamp: Number(r.timestamp),
     time: formatTime(Number(r.timestamp)),
@@ -512,9 +557,8 @@ export async function getTradeDetail(params: {
 
   // Get 20-day spread history for R-Factor baseline
   const avgSpreadHistory = await getDailySpreadHistory(symbol, date, 20);
-  const avgDailySpread = avgSpreadHistory.length > 0
-    ? avgSpreadHistory.reduce((a, b) => a + b, 0) / avgSpreadHistory.length
-    : 0;
+  const avgDailySpread =
+    avgSpreadHistory.length > 0 ? avgSpreadHistory.reduce((a, b) => a + b, 0) / avgSpreadHistory.length : 0;
 
   // Compute signals at EVERY equity bar
   const signals: TradeDetailSignal[] = [];
@@ -606,7 +650,7 @@ export async function getTradeDetail(params: {
     // ESTIMATED: reverse-engineer from P&L
     const entryPrice = estimatedEntry.optionPrice;
     if (entryPrice > 0) {
-      const impliedExitPrice = entryPrice + (params.tfPnl / lotSize);
+      const impliedExitPrice = entryPrice + params.tfPnl / lotSize;
       let bestIdx = optionBarsRaw.length - 1;
       let bestDiff = Infinity;
       for (let i = estimatedEntry.barIndex + 1; i < optionBarsRaw.length; i++) {
@@ -685,7 +729,17 @@ export async function simulateTrade(params: {
   const exitBar = optBars.find((b) => b.timestamp === params.exitTimestamp) ?? optBars[optBars.length - 1];
 
   if (!entryBar || !exitBar) {
-    return { entryPrice: 0, exitPrice: 0, lotSize, grossPnl: 0, charges: { brokerage: 0, stt: 0, exchangeTxn: 0, gst: 0, sebi: 0, stampDuty: 0, total: 0 }, netPnl: 0, pnlPct: 0, tfPnl: params.tfPnl ?? 0, pnlDifference: 0 };
+    return {
+      entryPrice: 0,
+      exitPrice: 0,
+      lotSize,
+      grossPnl: 0,
+      charges: { brokerage: 0, stt: 0, exchangeTxn: 0, gst: 0, sebi: 0, stampDuty: 0, total: 0 },
+      netPnl: 0,
+      pnlPct: 0,
+      tfPnl: params.tfPnl ?? 0,
+      pnlDifference: 0,
+    };
   }
 
   const entryPrice = entryBar.close;

@@ -1,12 +1,12 @@
-import { NseIndia } from "stock-nse-india";
-import { FactorData, SignalOutput, engine } from "./r-factor";
-import { promises as fs } from "fs";
-import path from "path";
+import { NseIndia } from 'stock-nse-india';
+import { FactorData, SignalOutput, engine } from './r-factor';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 const nseIndia = new NseIndia();
 
 export class NseService {
-  private readonly CACHE_DIR = path.join(process.cwd(), "lib", "cache");
+  private readonly CACHE_DIR = path.join(process.cwd(), 'lib', 'cache');
   private readonly CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours for historical data
 
   /**
@@ -14,12 +14,12 @@ export class NseService {
    */
   async getFnOStocks(): Promise<string[]> {
     try {
-      const filePath = path.join(process.cwd(), "lib", "data", "fno_stocks_list.json");
-      const data = await fs.readFile(filePath, "utf8");
+      const filePath = path.join(process.cwd(), 'lib', 'data', 'fno_stocks_list.json');
+      const data = await fs.readFile(filePath, 'utf8');
       const json = JSON.parse(data);
       return json.stocks;
     } catch (err) {
-      return ["PNB", "RELIANCE", "TCS", "HDFCBANK", "INFY"];
+      return ['PNB', 'RELIANCE', 'TCS', 'HDFCBANK', 'INFY'];
     }
   }
 
@@ -32,7 +32,7 @@ export class NseService {
     try {
       const stats = await fs.stat(cacheFile);
       if (Date.now() - stats.mtimeMs < this.CACHE_TTL) {
-        const cachedData = await fs.readFile(cacheFile, "utf8");
+        const cachedData = await fs.readFile(cacheFile, 'utf8');
         return JSON.parse(cachedData);
       }
     } catch (e) {
@@ -99,7 +99,7 @@ export class NseService {
   async getRFactorSignal(symbol: string): Promise<SignalOutput> {
     const [historical, current] = await Promise.all([
       this.getHistoricalFactorData(symbol),
-      this.getCurrentFactorData(symbol)
+      this.getCurrentFactorData(symbol),
     ]);
 
     if (historical.length < 15) {
@@ -116,12 +116,12 @@ export class NseService {
     try {
       const files = await fs.readdir(this.CACHE_DIR);
       for (const file of files) {
-        if (file.endsWith(".json")) {
+        if (file.endsWith('.json')) {
           await fs.unlink(path.join(this.CACHE_DIR, file));
         }
       }
     } catch (e) {
-      console.error("Failed to clear cache:", e);
+      console.error('Failed to clear cache:', e);
     }
   }
 
@@ -132,13 +132,11 @@ export class NseService {
     const symbols = await this.getFnOStocks();
     const targetSymbols = symbols.slice(0, limit);
 
-    const results = await Promise.allSettled(
-      targetSymbols.map(s => this.getRFactorSignal(s))
-    );
+    const results = await Promise.allSettled(targetSymbols.map((s) => this.getRFactorSignal(s)));
 
     return results
       .filter((r): r is PromiseFulfilledResult<SignalOutput> => r.status === 'fulfilled')
-      .map(r => r.value);
+      .map((r) => r.value);
   }
 }
 

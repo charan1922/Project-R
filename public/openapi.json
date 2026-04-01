@@ -628,7 +628,10 @@
             "name": "preset",
             "in": "query",
             "description": "Date range preset",
-            "schema": { "type": "string", "enum": ["Last 7 Days", "Last 30 Days", "Last 90 Days", "Year to Date", "Last 1 Year", "All Time"] }
+            "schema": {
+              "type": "string",
+              "enum": ["Last 7 Days", "Last 30 Days", "Last 90 Days", "Year to Date", "Last 1 Year", "All Time"]
+            }
           },
           {
             "name": "format",
@@ -1016,12 +1019,32 @@
                 "properties": {
                   "action": {
                     "type": "string",
-                    "enum": ["download", "status", "backtest", "all-tf-trades", "symbol-status", "download-symbols", "download-all-tf", "trade-detail", "simulate", "tf-trades-list", "debug"]
+                    "enum": [
+                      "download",
+                      "status",
+                      "backtest",
+                      "all-tf-trades",
+                      "symbol-status",
+                      "download-symbols",
+                      "download-all-tf",
+                      "trade-detail",
+                      "simulate",
+                      "tf-trades-list",
+                      "debug"
+                    ]
                   },
-                  "symbols": { "type": "array", "items": { "type": "string" }, "description": "For download-symbols action" },
+                  "symbols": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "For download-symbols action"
+                  },
                   "fromDate": { "type": "string", "format": "date" },
                   "toDate": { "type": "string", "format": "date" },
-                  "options": { "type": "array", "items": { "type": "object" }, "description": "Option contracts to download" },
+                  "options": {
+                    "type": "array",
+                    "items": { "type": "object" },
+                    "description": "Option contracts to download"
+                  },
                   "symbol": { "type": "string", "description": "For trade-detail/simulate" },
                   "date": { "type": "string", "format": "date", "description": "Trade date" },
                   "optionType": { "type": "string", "enum": ["CE", "PE"] },
@@ -1108,7 +1131,10 @@
             "description": "SSE progress stream",
             "content": {
               "text/event-stream": {
-                "schema": { "type": "string", "description": "Events: progress, step-done, symbol-done, complete, error" }
+                "schema": {
+                  "type": "string",
+                  "description": "Events: progress, step-done, symbol-done, complete, error"
+                }
               }
             },
             "headers": {
@@ -1143,10 +1169,22 @@
                   "startDate": { "type": "string", "format": "date" },
                   "endDate": { "type": "string", "format": "date" },
                   "initialCash": { "type": "number", "default": 1000000 },
-                  "allocation": { "type": "number", "default": 0.75, "description": "Fraction of capital to deploy per trade" },
-                  "params": { "type": "object", "description": "Strategy-specific parameters", "additionalProperties": true },
+                  "allocation": {
+                    "type": "number",
+                    "default": 0.75,
+                    "description": "Fraction of capital to deploy per trade"
+                  },
+                  "params": {
+                    "type": "object",
+                    "description": "Strategy-specific parameters",
+                    "additionalProperties": true
+                  },
                   "slippageBps": { "type": "integer", "default": 5, "description": "Slippage in basis points" },
-                  "maxDrawdownLimit": { "type": "number", "default": 0, "description": "Max drawdown % to halt trading (0 = disabled)" }
+                  "maxDrawdownLimit": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "Max drawdown % to halt trading (0 = disabled)"
+                  }
                 }
               }
             }
@@ -1212,7 +1250,13 @@
                   "model": {
                     "type": "string",
                     "default": "deepseek/deepseek-chat",
-                    "enum": ["deepseek/deepseek-chat", "deepseek/deepseek-reasoner", "anthropic/claude-sonnet-4-6", "openai/gpt-4o", "google/gemini-2.5-flash"]
+                    "enum": [
+                      "deepseek/deepseek-chat",
+                      "deepseek/deepseek-reasoner",
+                      "anthropic/claude-sonnet-4-6",
+                      "openai/gpt-4o",
+                      "google/gemini-2.5-flash"
+                    ]
                   }
                 }
               }
@@ -1914,8 +1958,16 @@
           "paperTrading": { "type": "boolean", "description": "Log only, no real orders", "default": true },
           "entryWindowStart": { "type": "string", "description": "HH:MM IST", "default": "09:45" },
           "entryWindowEnd": { "type": "string", "description": "HH:MM IST", "default": "11:00" },
-          "exitMode": { "type": "string", "enum": ["ai", "fixed-profit", "fixed-time", "trailing-sl"], "default": "fixed-profit" },
-          "fixedProfitTarget": { "type": "number", "description": "INR profit per trade to auto-exit", "default": 5000 },
+          "exitMode": {
+            "type": "string",
+            "enum": ["ai", "fixed-profit", "fixed-time", "trailing-sl"],
+            "default": "fixed-profit"
+          },
+          "fixedProfitTarget": {
+            "type": "number",
+            "description": "INR profit per trade to auto-exit",
+            "default": 5000
+          },
           "fixedExitTime": { "type": "string", "description": "HH:MM IST force-exit time", "default": "15:10" },
           "trailingSlPct": { "type": "number", "description": "Trailing stop-loss %", "default": 1.0 }
         }
@@ -2255,7 +2307,11 @@
                 {
                   "type": "object",
                   "properties": {
-                    "tfRFactor": { "type": "number", "nullable": true, "description": "TradeFinder R-Factor for comparison" }
+                    "tfRFactor": {
+                      "type": "number",
+                      "nullable": true,
+                      "description": "TradeFinder R-Factor for comparison"
+                    }
                   }
                 }
               ]
@@ -2379,7 +2435,11 @@
           "success": { "type": "boolean", "example": false },
           "error": { "type": "string" },
           "code": { "type": "string", "example": "SYNC_REQUIRED" },
-          "syncTarget": { "type": "string", "enum": ["master-contracts", "bhavcopy"], "description": "Which data source needs to be synced" }
+          "syncTarget": {
+            "type": "string",
+            "enum": ["master-contracts", "bhavcopy"],
+            "description": "Which data source needs to be synced"
+          }
         }
       }
     }

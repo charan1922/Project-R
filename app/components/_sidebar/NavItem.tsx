@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { NavItemType } from "./nav-data";
+import Link from 'next/link';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { NavItemType } from './nav-data';
 
 interface NavItemProps {
   item: NavItemType;
@@ -13,14 +13,7 @@ interface NavItemProps {
   onMobileClick: () => void;
 }
 
-export function NavItem({
-  item,
-  depth = 0,
-  isActive,
-  expandedItems,
-  toggleExpand,
-  onMobileClick,
-}: NavItemProps) {
+export function NavItem({ item, depth = 0, isActive, expandedItems, toggleExpand, onMobileClick }: NavItemProps) {
   const hasChildren = item.children && item.children.length > 0;
   const isExpanded = expandedItems.includes(item.href);
   const active = isActive(item.href);
@@ -29,7 +22,7 @@ export function NavItem({
     <div key={item.href}>
       <div className="flex items-center">
         <Link
-          href={hasChildren ? "#" : item.href}
+          href={hasChildren ? '#' : item.href}
           onClick={(e) => {
             if (hasChildren) {
               e.preventDefault();
@@ -39,13 +32,13 @@ export function NavItem({
           }}
           className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-all duration-200 ease-in-out flex-1 ${
             active
-              ? "bg-slate-800/80 text-slate-100 shadow-sm"
-              : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
-          } ${depth > 0 ? `ml-${depth * 4} text-[13px]` : "text-[13px] font-medium"}`}
+              ? 'bg-slate-800/80 text-slate-100 shadow-sm'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+          } ${depth > 0 ? `ml-${depth * 4} text-[13px]` : 'text-[13px] font-medium'}`}
         >
           <div
             className={`flex-shrink-0 transition-colors ${
-              active ? "text-sky-400" : "text-slate-500 group-hover:text-slate-300"
+              active ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-300'
             }`}
           >
             {item.icon}
@@ -54,17 +47,17 @@ export function NavItem({
           {item.badge && (
             <span
               className={`px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-sm ${
-                item.badge === "LIVE"
-                  ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
-                  : item.badge === "NEW"
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                  : item.badge === "PRO"
-                  ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
-                  : item.badge === "ANALYTICS"
-                  ? "bg-violet-500/10 text-violet-400 border border-violet-500/20"
-                  : item.badge === "DATA"
-                  ? "bg-teal-500/10 text-teal-400 border border-teal-500/20"
-                  : "bg-slate-800 text-slate-400 border border-slate-700"
+                item.badge === 'LIVE'
+                  ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
+                  : item.badge === 'NEW'
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    : item.badge === 'PRO'
+                      ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                      : item.badge === 'ANALYTICS'
+                        ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
+                        : item.badge === 'DATA'
+                          ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20'
+                          : 'bg-slate-800 text-slate-400 border border-slate-700'
               }`}
             >
               {item.badge}
@@ -72,11 +65,7 @@ export function NavItem({
           )}
           {hasChildren && (
             <span className="p-0.5 text-slate-500 group-hover:text-slate-300 transition-colors">
-              {isExpanded ? (
-                <ChevronDown className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5" />
-              )}
+              {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
             </span>
           )}
         </Link>

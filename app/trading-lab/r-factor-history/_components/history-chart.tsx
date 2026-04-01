@@ -15,9 +15,15 @@ export function HistoryChart({ data }: { data: StockHistoryEntry[] }) {
       <div className="flex items-center gap-4 mb-4">
         <p className="text-xs text-slate-500 uppercase tracking-wider">R-Factor + ADX + Spread</p>
         <div className="flex items-center gap-3 text-[10px]">
-          <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-sky-400 inline-block" /> R-Factor</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-emerald-400 inline-block" /> Spread</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-amber-400 inline-block border-t border-dashed border-amber-400" /> ADX</span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-0.5 bg-sky-400 inline-block" /> R-Factor
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-0.5 bg-emerald-400 inline-block" /> Spread
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-0.5 bg-amber-400 inline-block border-t border-dashed border-amber-400" /> ADX
+          </span>
         </div>
       </div>
       <ResponsiveContainer width="100%" height={250}>

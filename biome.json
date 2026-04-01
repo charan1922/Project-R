@@ -2,7 +2,15 @@
   "$schema": "https://biomejs.dev/schemas/2.4.7/schema.json",
   "files": {
     "includes": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"],
-    "experimentalScannerIgnores": ["**/node_modules", "**/dist", "**/.next", "**/dhanv2", "**/data", "**/lib/cache", "**/derive-r"]
+    "experimentalScannerIgnores": [
+      "**/node_modules",
+      "**/dist",
+      "**/.next",
+      "**/dhanv2",
+      "**/data",
+      "**/lib/cache",
+      "**/derive-r"
+    ]
   },
   "formatter": {
     "indentStyle": "space",

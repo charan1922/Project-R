@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 async function run() {
   console.log('🧹 Purging outdated bhavcopy data...');
-  
+
   // 1. Delete rows from SQLite
   const deleted = await prisma.bhavcopyDay.deleteMany({});
   console.log(`✅ Deleted ${deleted.count} rows from bhavcopy_days table.`);
@@ -27,11 +27,13 @@ async function run() {
     console.log('⚠️ No JSON cache found or error clearing it (likely fine):', String(e));
   }
 
-  console.log('🎉 Reset complete. You can now press "Sync" on the Bhavcopy page to download fresh data with Delivery metrics!');
+  console.log(
+    '🎉 Reset complete. You can now press "Sync" on the Bhavcopy page to download fresh data with Delivery metrics!',
+  );
   process.exit(0);
 }
 
-run().catch(e => {
+run().catch((e) => {
   console.error(e);
   process.exit(1);
 });

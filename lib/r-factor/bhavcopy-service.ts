@@ -487,8 +487,13 @@ async function fetchFnOBhavcopy(date: Date, cookie = ''): Promise<Map<string, Fn
       existing.opt_turnover += Number.parseFloat(row.TtlTrfVal) || 0;
       const txs = Number.parseInt(row.TtlNbOfTxsExctd, 10) || 0;
       existing.opt_trades += txs;
-      if (optType === 'CE') { existing.ce_volume += vol; existing.ce_trades += txs; }
-      else if (optType === 'PE') { existing.pe_volume += vol; existing.pe_trades += txs; }
+      if (optType === 'CE') {
+        existing.ce_volume += vol;
+        existing.ce_trades += txs;
+      } else if (optType === 'PE') {
+        existing.pe_volume += vol;
+        existing.pe_trades += txs;
+      }
     } else {
       const txs = Number.parseInt(row.TtlNbOfTxsExctd, 10) || 0;
       result.set(symbol, {
@@ -558,14 +563,14 @@ async function fetchMTODeliveryData(date: Date, cookie = ''): Promise<Map<string
   }
 
   if (!res.ok) return new Map();
-  
+
   const text = await res.text();
   const result = new Map<string, MTOData>();
-  
+
   const lines = text.split('\n');
   for (const line of lines) {
     if (line.startsWith('#') || !line.trim()) continue;
-    
+
     // Format: Record Type(02/03), Sr No, Name of Security, Segment(EQ), Traded Qty, Deliverable Qty, Delivery %
     const parts = line.split(',').map((p) => p.trim());
     if (parts.length >= 7 && parts[3] === 'EQ') {

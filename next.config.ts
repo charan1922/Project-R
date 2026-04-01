@@ -1,6 +1,6 @@
-import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
-import nextra from "nextra";
+import type { NextConfig } from 'next';
+import { withSentryConfig } from '@sentry/nextjs';
+import nextra from 'nextra';
 
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true
+    unoptimized: true,
   },
   serverExternalPackages: ['duckdb', '@duckdb/node-api', '@prisma/client', '.prisma/client'],
   turbopack: {},
@@ -45,8 +45,8 @@ const nextConfig: NextConfig = {
     config.resolve.extensions = [...(config.resolve.extensions || []), '.json'];
     config.resolve.fallback = {
       ...config.resolve.fallback,
-      "fs": false,
-      "path": false,
+      fs: false,
+      path: false,
     };
     return config;
   },
@@ -60,7 +60,7 @@ export default withSentryConfig(withNextra(nextConfig), {
   silent: true,
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
-  tunnelRoute: "/monitoring",
+  tunnelRoute: '/monitoring',
   sourcemaps: {
     disable: !process.env.SENTRY_ORG,
   },

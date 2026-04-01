@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Activity, BarChart2, Search, RefreshCw, AlertCircle } from "lucide-react";
-import { MarketScanner } from "./MarketScanner";
+import Link from 'next/link';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Activity, BarChart2, Search, RefreshCw, AlertCircle } from 'lucide-react';
+import { MarketScanner } from './MarketScanner';
 
 const caseStudies: any[] = [
   // ... existing case studies ...
@@ -22,25 +22,25 @@ const factorTable: any[] = [
 ];
 
 export default function RFactorEnginePage() {
-  const [symbol, setSymbol] = useState("");
+  const [symbol, setSymbol] = useState('');
   const [loading, setLoading] = useState(false);
   const [signal, setSignal] = useState<any>(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const fetchSignal = async () => {
     if (!symbol) return;
     setLoading(true);
-    setError("");
+    setError('');
     try {
       const res = await fetch(`/api/r-factor?symbol=${symbol}`);
       const result = await res.json();
       if (result.success) {
         setSignal(result.data);
       } else {
-        setError(result.error || "Failed to fetch signal");
+        setError(result.error || 'Failed to fetch signal');
       }
     } catch (err) {
-      setError("Network error");
+      setError('Network error');
     } finally {
       setLoading(false);
     }
@@ -71,8 +71,8 @@ export default function RFactorEnginePage() {
           </div>
         </div>
         <p className="text-slate-400 max-w-2xl">
-          Comprehensive R-Factor model documentation with real case studies from February 2026 data,
-          12:40 PM volume profiles, and the complete 4-Factor component breakdown.
+          Comprehensive R-Factor model documentation with real case studies from February 2026 data, 12:40 PM volume
+          profiles, and the complete 4-Factor component breakdown.
         </p>
       </div>
 
@@ -94,12 +94,8 @@ export default function RFactorEnginePage() {
                 className="bg-slate-950 border-slate-800"
                 onKeyDown={(e) => e.key === 'Enter' && fetchSignal()}
               />
-              <Button
-                onClick={fetchSignal}
-                disabled={loading || !symbol}
-                className="bg-sky-600 hover:bg-sky-500"
-              >
-                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : "Scan"}
+              <Button onClick={fetchSignal} disabled={loading || !symbol} className="bg-sky-600 hover:bg-sky-500">
+                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Scan'}
               </Button>
             </div>
 
@@ -115,7 +111,9 @@ export default function RFactorEnginePage() {
                 <Card className="bg-slate-950 border-slate-800">
                   <CardContent className="pt-6">
                     <p className="text-xs text-slate-500 uppercase">Composite R-Factor</p>
-                    <p className={`text-2xl font-bold ${signal.compositeRFactor > 2 ? 'text-emerald-400' : 'text-slate-300'}`}>
+                    <p
+                      className={`text-2xl font-bold ${signal.compositeRFactor > 2 ? 'text-emerald-400' : 'text-slate-300'}`}
+                    >
                       {signal.compositeRFactor.toFixed(2)}
                     </p>
                   </CardContent>
@@ -123,7 +121,9 @@ export default function RFactorEnginePage() {
                 <Card className="bg-slate-950 border-slate-800">
                   <CardContent className="pt-6">
                     <p className="text-xs text-slate-500 uppercase">Regime</p>
-                    <p className={`text-2xl font-bold ${signal.regime === 'Cheetah' ? 'text-amber-400' : 'text-sky-400'}`}>
+                    <p
+                      className={`text-2xl font-bold ${signal.regime === 'Cheetah' ? 'text-amber-400' : 'text-sky-400'}`}
+                    >
                       {signal.regime}
                     </p>
                   </CardContent>
@@ -146,10 +146,12 @@ export default function RFactorEnginePage() {
                       { label: 'OI', val: signal.zScores.oi },
                       { label: 'Turnover', val: signal.zScores.turnover },
                       { label: 'Spread', val: signal.zScores.spread },
-                    ].map(z => (
+                    ].map((z) => (
                       <div key={z.label} className="p-2 rounded bg-slate-950 border border-slate-800">
                         <p className="text-[10px] text-slate-500">{z.label}</p>
-                        <p className={`text-sm font-mono font-bold ${z.val > 2 ? 'text-emerald-400' : 'text-slate-300'}`}>
+                        <p
+                          className={`text-sm font-mono font-bold ${z.val > 2 ? 'text-emerald-400' : 'text-slate-300'}`}
+                        >
                           {z.val.toFixed(2)}
                         </p>
                       </div>
@@ -211,8 +213,8 @@ export default function RFactorEnginePage() {
         <CardHeader>
           <CardTitle className="text-slate-100">12:40 PM Cumulative Volume Profiles</CardTitle>
           <p className="text-sm text-slate-400">
-            The 12:40 PM timestamp is a structural pivot in the Indian market due to the European
-            market overlap. Volume completion varies by regime classification.
+            The 12:40 PM timestamp is a structural pivot in the Indian market due to the European market overlap. Volume
+            completion varies by regime classification.
           </p>
         </CardHeader>
         <CardContent>
@@ -233,13 +235,13 @@ export default function RFactorEnginePage() {
                     <td className="py-3 px-2">
                       <Badge
                         className={
-                          vp.regime.includes("Elephant")
-                            ? "bg-sky-500/20 text-sky-400"
-                            : vp.regime.includes("Cheetah")
-                              ? "bg-amber-500/20 text-amber-400"
-                              : vp.regime.includes("Defensive")
-                                ? "bg-slate-600/20 text-slate-400"
-                                : "bg-indigo-500/20 text-indigo-400"
+                          vp.regime.includes('Elephant')
+                            ? 'bg-sky-500/20 text-sky-400'
+                            : vp.regime.includes('Cheetah')
+                              ? 'bg-amber-500/20 text-amber-400'
+                              : vp.regime.includes('Defensive')
+                                ? 'bg-slate-600/20 text-slate-400'
+                                : 'bg-indigo-500/20 text-indigo-400'
                         }
                       >
                         {vp.regime}
@@ -291,10 +293,20 @@ export default function RFactorEnginePage() {
             <CardTitle className="text-emerald-400 text-base">Elephant Protocol</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-slate-400 space-y-2">
-            <p><strong className="text-slate-200">Trigger:</strong> Z(Vol) {'>'} 2.0 (Higher threshold to filter noise)</p>
-            <p><strong className="text-slate-200">Confirmation:</strong> Cumulative Turnover shows convex slope over 15-30 minutes</p>
-            <p><strong className="text-slate-200">Execution:</strong> Limit Orders pegged to Bid</p>
-            <p><strong className="text-slate-200">12:40 Rule:</strong> If trend persists past 12:40 PM, pyramid the position</p>
+            <p>
+              <strong className="text-slate-200">Trigger:</strong> Z(Vol) {'>'} 2.0 (Higher threshold to filter noise)
+            </p>
+            <p>
+              <strong className="text-slate-200">Confirmation:</strong> Cumulative Turnover shows convex slope over
+              15-30 minutes
+            </p>
+            <p>
+              <strong className="text-slate-200">Execution:</strong> Limit Orders pegged to Bid
+            </p>
+            <p>
+              <strong className="text-slate-200">12:40 Rule:</strong> If trend persists past 12:40 PM, pyramid the
+              position
+            </p>
           </CardContent>
         </Card>
         <Card className="bg-slate-900 border-slate-800">
@@ -302,10 +314,18 @@ export default function RFactorEnginePage() {
             <CardTitle className="text-amber-400 text-base">Cheetah Protocol</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-slate-400 space-y-2">
-            <p><strong className="text-slate-200">Trigger:</strong> Z(Vol) {'>'} 1.5 + Price {'>'} Opening Range High</p>
-            <p><strong className="text-slate-200">Confirmation:</strong> Spread expansion (panic buying/selling detected)</p>
-            <p><strong className="text-slate-200">Execution:</strong> Market Orders for urgency</p>
-            <p><strong className="text-slate-200">Stop Loss:</strong> Volatility-adjusted (wider) to avoid noise</p>
+            <p>
+              <strong className="text-slate-200">Trigger:</strong> Z(Vol) {'>'} 1.5 + Price {'>'} Opening Range High
+            </p>
+            <p>
+              <strong className="text-slate-200">Confirmation:</strong> Spread expansion (panic buying/selling detected)
+            </p>
+            <p>
+              <strong className="text-slate-200">Execution:</strong> Market Orders for urgency
+            </p>
+            <p>
+              <strong className="text-slate-200">Stop Loss:</strong> Volatility-adjusted (wider) to avoid noise
+            </p>
           </CardContent>
         </Card>
       </div>

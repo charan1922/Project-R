@@ -38,9 +38,7 @@ function LeaderRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
       <span className="text-slate-600 font-mono">{rank}</span>
       <div className="flex items-center gap-2">
         <span className="font-semibold text-white">{entry.symbol}</span>
-        {entry.isBlastTrade && (
-          <Flame className="w-3 h-3 text-emerald-400" />
-        )}
+        {entry.isBlastTrade && <Flame className="w-3 h-3 text-emerald-400" />}
       </div>
       <span className="text-[9px] text-slate-500">{entry.sector ?? '—'}</span>
       <span className={`font-mono font-bold ${getRFactorColor(entry.compositeRFactor)}`}>

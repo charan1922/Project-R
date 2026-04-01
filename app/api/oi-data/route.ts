@@ -1,19 +1,63 @@
-import { NextResponse } from "next/server";
-import { NseIndia } from "stock-nse-india";
+import { NextResponse } from 'next/server';
+import { NseIndia } from 'stock-nse-india';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 const nseIndia = new NseIndia();
 
 // Top F&O stocks to scan
 const SCAN_STOCKS = [
-  "RELIANCE", "TCS", "HDFCBANK", "ICICIBANK", "INFY", "HINDUNILVR", "ITC", "SBIN",
-  "BHARTIARTL", "KOTAKBANK", "AXISBANK", "LT", "HCLTECH", "ASIANPAINT", "MARUTI",
-  "SUNPHARMA", "TITAN", "BAJFINANCE", "WIPRO", "ULTRACEMCO", "NESTLEIND", "POWERGRID",
-  "M&M", "ADANIENT", "NTPC", "GRASIM", "JSWSTEEL", "TATAMOTORS", "TECHM", "HDFCLIFE",
-  "TATASTEEL", "BAJAJFINSV", "CIPLA", "ONGC", "DRREDDY", "DIVISLAB", "HEROMOTOCO",
-  "COALINDIA", "HINDALCO", "ADANIPORTS", "BPCL", "EICHERMOT", "SBILIFE", "APOLLOHOSP",
-  "BRITANNIA", "SHREECEM", "INDUSINDBK", "UPL", "TORNTPHARM", "MARICO", "PIDILITIND"
+  'RELIANCE',
+  'TCS',
+  'HDFCBANK',
+  'ICICIBANK',
+  'INFY',
+  'HINDUNILVR',
+  'ITC',
+  'SBIN',
+  'BHARTIARTL',
+  'KOTAKBANK',
+  'AXISBANK',
+  'LT',
+  'HCLTECH',
+  'ASIANPAINT',
+  'MARUTI',
+  'SUNPHARMA',
+  'TITAN',
+  'BAJFINANCE',
+  'WIPRO',
+  'ULTRACEMCO',
+  'NESTLEIND',
+  'POWERGRID',
+  'M&M',
+  'ADANIENT',
+  'NTPC',
+  'GRASIM',
+  'JSWSTEEL',
+  'TATAMOTORS',
+  'TECHM',
+  'HDFCLIFE',
+  'TATASTEEL',
+  'BAJAJFINSV',
+  'CIPLA',
+  'ONGC',
+  'DRREDDY',
+  'DIVISLAB',
+  'HEROMOTOCO',
+  'COALINDIA',
+  'HINDALCO',
+  'ADANIPORTS',
+  'BPCL',
+  'EICHERMOT',
+  'SBILIFE',
+  'APOLLOHOSP',
+  'BRITANNIA',
+  'SHREECEM',
+  'INDUSINDBK',
+  'UPL',
+  'TORNTPHARM',
+  'MARICO',
+  'PIDILITIND',
 ];
 
 export async function GET() {
@@ -53,26 +97,26 @@ export async function GET() {
           const changePercent = priceInfo?.pChange || 0;
 
           // Determine signal based on price movement and OI
-          let signal: "BUY" | "SELL" | "NEUTRAL" = "NEUTRAL";
-          let strength: "STRONG" | "MODERATE" | "WEAK" = "WEAK";
+          let signal: 'BUY' | 'SELL' | 'NEUTRAL' = 'NEUTRAL';
+          let strength: 'STRONG' | 'MODERATE' | 'WEAK' = 'WEAK';
 
           // Buy: Price up + High Put/Call ratio (more puts = sellers bearish = bullish)
           if (changePercent > 1.5 && putCallRatio > 1.0) {
-            signal = "BUY";
-            strength = changePercent > 3 && putCallRatio > 1.3 ? "STRONG" : "MODERATE";
+            signal = 'BUY';
+            strength = changePercent > 3 && putCallRatio > 1.3 ? 'STRONG' : 'MODERATE';
           }
           // Sell: Price down + Low Put/Call ratio (more calls = sellers bullish = bearish)
           else if (changePercent < -1.5 && putCallRatio < 1.0) {
-            signal = "SELL";
-            strength = changePercent < -3 && putCallRatio < 0.8 ? "STRONG" : "MODERATE";
+            signal = 'SELL';
+            strength = changePercent < -3 && putCallRatio < 0.8 ? 'STRONG' : 'MODERATE';
           }
           // Also check extreme price moves
           else if (changePercent > 2) {
-            signal = "BUY";
-            strength = "MODERATE";
+            signal = 'BUY';
+            strength = 'MODERATE';
           } else if (changePercent < -2) {
-            signal = "SELL";
-            strength = "MODERATE";
+            signal = 'SELL';
+            strength = 'MODERATE';
           }
 
           return {
@@ -97,7 +141,7 @@ export async function GET() {
           console.error(`Error fetching ${symbol}:`, (err as Error).message);
           return null;
         }
-      })
+      }),
     );
 
     // Filter out nulls and sort by signal strength
@@ -113,11 +157,8 @@ export async function GET() {
       successful: validResults.length,
     });
   } catch (error) {
-    console.error("API Error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch OI data" },
-      { status: 500 }
-    );
+    console.error('API Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch OI data' }, { status: 500 });
   }
 }
 

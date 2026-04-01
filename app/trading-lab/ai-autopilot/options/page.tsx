@@ -107,7 +107,9 @@ export default function OptionTraderPage() {
       {pick && option && (
         <div className="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden">
           {/* Header */}
-          <div className={`px-5 py-4 ${isBull ? 'bg-emerald-500/5 border-b border-emerald-500/20' : 'bg-red-500/5 border-b border-red-500/20'}`}>
+          <div
+            className={`px-5 py-4 ${isBull ? 'bg-emerald-500/5 border-b border-emerald-500/20' : 'bg-red-500/5 border-b border-red-500/20'}`}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {isBull ? (
@@ -121,13 +123,17 @@ export default function OptionTraderPage() {
                   </div>
                   <div className="text-xs text-slate-500">{option.optionSymbol}</div>
                 </div>
-                <span className={`px-2 py-1 text-xs font-bold rounded ${isBull ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                <span
+                  className={`px-2 py-1 text-xs font-bold rounded ${isBull ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}
+                >
                   {isBull ? 'BULLISH' : 'BEARISH'}
                 </span>
               </div>
               <div className="text-right">
                 <div className="text-xs text-slate-500">AI Confidence</div>
-                <div className={`text-lg font-bold ${pick.confidence > 0.7 ? 'text-emerald-400' : pick.confidence > 0.4 ? 'text-amber-400' : 'text-red-400'}`}>
+                <div
+                  className={`text-lg font-bold ${pick.confidence > 0.7 ? 'text-emerald-400' : pick.confidence > 0.4 ? 'text-amber-400' : 'text-red-400'}`}
+                >
                   {(pick.confidence * 100).toFixed(0)}%
                 </div>
               </div>
@@ -153,10 +159,26 @@ export default function OptionTraderPage() {
           {/* Entry/SL/Target */}
           {(pick.suggestedEntry || pick.suggestedStopLoss || pick.suggestedTarget) && (
             <div className="px-5 py-3 bg-slate-800/30 border-t border-slate-800/50 flex gap-6 text-sm">
-              {pick.suggestedEntry && <span className="text-slate-400">Entry: <span className="text-white font-mono">₹{pick.suggestedEntry.toFixed(1)}</span></span>}
-              {pick.suggestedStopLoss && <span className="text-slate-400">SL: <span className="text-red-400 font-mono">₹{pick.suggestedStopLoss.toFixed(1)}</span></span>}
-              {pick.suggestedTarget && <span className="text-slate-400">Target: <span className="text-emerald-400 font-mono">₹{pick.suggestedTarget.toFixed(1)}</span></span>}
-              {pick.riskRewardRatio && <span className="text-slate-400">R:R <span className="text-white font-mono">{pick.riskRewardRatio.toFixed(1)}</span></span>}
+              {pick.suggestedEntry && (
+                <span className="text-slate-400">
+                  Entry: <span className="text-white font-mono">₹{pick.suggestedEntry.toFixed(1)}</span>
+                </span>
+              )}
+              {pick.suggestedStopLoss && (
+                <span className="text-slate-400">
+                  SL: <span className="text-red-400 font-mono">₹{pick.suggestedStopLoss.toFixed(1)}</span>
+                </span>
+              )}
+              {pick.suggestedTarget && (
+                <span className="text-slate-400">
+                  Target: <span className="text-emerald-400 font-mono">₹{pick.suggestedTarget.toFixed(1)}</span>
+                </span>
+              )}
+              {pick.riskRewardRatio && (
+                <span className="text-slate-400">
+                  R:R <span className="text-white font-mono">{pick.riskRewardRatio.toFixed(1)}</span>
+                </span>
+              )}
             </div>
           )}
 
@@ -195,11 +217,25 @@ export default function OptionTraderPage() {
 
       {/* How It Works */}
       <div className="rounded-lg bg-slate-900/50 border border-slate-800/50 px-4 py-3 text-[10px] text-slate-600 leading-relaxed space-y-1">
-        <p><span className="text-slate-400">Strategy:</span> Buy ATM CE (bullish) or PE (bearish) on the top R-Factor stock with ADX trend confirmation.</p>
-        <p><span className="text-slate-400">Selection:</span> R-Factor {'>'} 2.0 + ADX {'>'} 28 + |%change| {'>'} 1%. One stock per day.</p>
-        <p><span className="text-slate-400">Direction:</span> +DI {'>'} -DI = buy CE (call). -DI {'>'} +DI = buy PE (put).</p>
-        <p><span className="text-slate-400">Strike:</span> ATM (nearest to spot). Monthly expiry with 7+ DTE.</p>
-        <p><span className="text-slate-400">Risk:</span> Max premium ₹500/unit. Max 2% capital per trade. Option buying = max loss is premium paid.</p>
+        <p>
+          <span className="text-slate-400">Strategy:</span> Buy ATM CE (bullish) or PE (bearish) on the top R-Factor
+          stock with ADX trend confirmation.
+        </p>
+        <p>
+          <span className="text-slate-400">Selection:</span> R-Factor {'>'} 2.0 + ADX {'>'} 28 + |%change| {'>'} 1%. One
+          stock per day.
+        </p>
+        <p>
+          <span className="text-slate-400">Direction:</span> +DI {'>'} -DI = buy CE (call). -DI {'>'} +DI = buy PE
+          (put).
+        </p>
+        <p>
+          <span className="text-slate-400">Strike:</span> ATM (nearest to spot). Monthly expiry with 7+ DTE.
+        </p>
+        <p>
+          <span className="text-slate-400">Risk:</span> Max premium ₹500/unit. Max 2% capital per trade. Option buying =
+          max loss is premium paid.
+        </p>
       </div>
     </div>
   );

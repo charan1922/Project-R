@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { 
-  Cpu, 
-  Zap, 
-  TrendingUp, 
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Cpu,
+  Zap,
+  TrendingUp,
   TrendingDown,
   Activity,
   Bell,
@@ -16,8 +16,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  Loader2
-} from "lucide-react";
+  Loader2,
+} from 'lucide-react';
 
 interface ScanResult {
   symbol: string;
@@ -32,8 +32,8 @@ interface ScanResult {
   totalCallOI: number;
   totalPutOI: number;
   putCallRatio: number;
-  signal: "BUY" | "SELL" | "NEUTRAL";
-  strength: "STRONG" | "MODERATE" | "WEAK";
+  signal: 'BUY' | 'SELL' | 'NEUTRAL';
+  strength: 'STRONG' | 'MODERATE' | 'WEAK';
   timestamp: string;
 }
 
@@ -43,20 +43,20 @@ export default function ScannerPage() {
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [alertsEnabled, setAlertsEnabled] = useState(false);
-  const [lastScan, setLastScan] = useState<string>("");
+  const [lastScan, setLastScan] = useState<string>('');
 
   const scan = async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch("/api/oi-data");
-      if (!res.ok) throw new Error("Failed to fetch");
+      const res = await fetch('/api/oi-data');
+      if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setResults(data.stocks);
       setLastScan(data.scannedAt);
     } catch (err) {
-      setError("Failed to fetch live data. Please try again.");
-      console.error("Scan error:", err);
+      setError('Failed to fetch live data. Please try again.');
+      console.error('Scan error:', err);
     } finally {
       setLoading(false);
     }
@@ -64,16 +64,16 @@ export default function ScannerPage() {
 
   useEffect(() => {
     scan();
-    
+
     if (autoRefresh) {
       const interval = setInterval(scan, 30000);
       return () => clearInterval(interval);
     }
   }, [autoRefresh]);
 
-  const buySignals = results.filter(r => r.signal === "BUY");
-  const sellSignals = results.filter(r => r.signal === "SELL");
-  const strongSignals = results.filter(r => r.strength === "STRONG");
+  const buySignals = results.filter((r) => r.signal === 'BUY');
+  const sellSignals = results.filter((r) => r.signal === 'SELL');
+  const strongSignals = results.filter((r) => r.strength === 'STRONG');
 
   return (
     <div className="p-6 space-y-6">
@@ -84,26 +84,24 @@ export default function ScannerPage() {
             <Cpu className="w-8 h-8 text-emerald-400" />
             Live Scanner
           </h1>
-          <p className="text-slate-400">
-            Real-time OI + Breakout detection using live NSE data
-          </p>
+          <p className="text-slate-400">Real-time OI + Breakout detection using live NSE data</p>
         </div>
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
             onClick={() => setAlertsEnabled(!alertsEnabled)}
-            className={alertsEnabled ? "border-emerald-500 text-emerald-400" : ""}
+            className={alertsEnabled ? 'border-emerald-500 text-emerald-400' : ''}
           >
-            <Bell className={`w-4 h-4 mr-2 ${alertsEnabled ? "fill-current" : ""}`} />
-            Alerts {alertsEnabled ? "ON" : "OFF"}
+            <Bell className={`w-4 h-4 mr-2 ${alertsEnabled ? 'fill-current' : ''}`} />
+            Alerts {alertsEnabled ? 'ON' : 'OFF'}
           </Button>
           <Button
             variant="outline"
             onClick={() => setAutoRefresh(!autoRefresh)}
-            className={autoRefresh ? "border-blue-500 text-blue-400" : ""}
+            className={autoRefresh ? 'border-blue-500 text-blue-400' : ''}
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${autoRefresh ? "animate-spin" : ""}`} />
-            Auto {autoRefresh ? "ON" : "OFF"}
+            <RefreshCw className={`w-4 h-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
+            Auto {autoRefresh ? 'ON' : 'OFF'}
           </Button>
           <Button onClick={scan} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600">
             {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
@@ -182,9 +180,7 @@ export default function ScannerPage() {
             </div>
           </div>
           {lastScan && (
-            <p className="mt-3 text-xs text-slate-500">
-              Last updated: {new Date(lastScan).toLocaleString()}
-            </p>
+            <p className="mt-3 text-xs text-slate-500">Last updated: {new Date(lastScan).toLocaleString()}</p>
           )}
         </CardContent>
       </Card>
@@ -206,25 +202,35 @@ export default function ScannerPage() {
           </Card>
         ) : (
           results.map((result) => (
-            <Card 
-              key={result.symbol} 
+            <Card
+              key={result.symbol}
               className={`bg-slate-900 border-slate-800 hover:border-slate-700 transition-colors ${
-                result.signal !== "NEUTRAL" ? "border-l-4" : ""
-              } ${result.signal === "BUY" ? "border-l-emerald-500" : result.signal === "SELL" ? "border-l-red-500" : ""}`}
+                result.signal !== 'NEUTRAL' ? 'border-l-4' : ''
+              } ${result.signal === 'BUY' ? 'border-l-emerald-500' : result.signal === 'SELL' ? 'border-l-red-500' : ''}`}
             >
               <CardContent className="p-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   {/* Symbol & Name */}
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                      result.signal === "BUY" ? "bg-emerald-500/20" : 
-                      result.signal === "SELL" ? "bg-red-500/20" : "bg-slate-800"
-                    }`}>
-                      <span className={`font-bold ${
-                        result.signal === "BUY" ? "text-emerald-400" : 
-                        result.signal === "SELL" ? "text-red-400" : "text-slate-400"
-                      }`}>
-                        {result.signal === "NEUTRAL" ? "-" : result.signal[0]}
+                    <div
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                        result.signal === 'BUY'
+                          ? 'bg-emerald-500/20'
+                          : result.signal === 'SELL'
+                            ? 'bg-red-500/20'
+                            : 'bg-slate-800'
+                      }`}
+                    >
+                      <span
+                        className={`font-bold ${
+                          result.signal === 'BUY'
+                            ? 'text-emerald-400'
+                            : result.signal === 'SELL'
+                              ? 'text-red-400'
+                              : 'text-slate-400'
+                        }`}
+                      >
+                        {result.signal === 'NEUTRAL' ? '-' : result.signal[0]}
                       </span>
                     </div>
                     <div>
@@ -237,9 +243,16 @@ export default function ScannerPage() {
                   <div className="flex items-center gap-6">
                     <div className="text-right">
                       <div className="text-xl font-bold text-white">₹{result.price.toFixed(2)}</div>
-                      <div className={`text-sm flex items-center gap-1 ${result.changePercent >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {result.changePercent >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                        {result.changePercent > 0 ? "+" : ""}{result.changePercent}%
+                      <div
+                        className={`text-sm flex items-center gap-1 ${result.changePercent >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
+                      >
+                        {result.changePercent >= 0 ? (
+                          <TrendingUp className="w-4 h-4" />
+                        ) : (
+                          <TrendingDown className="w-4 h-4" />
+                        )}
+                        {result.changePercent > 0 ? '+' : ''}
+                        {result.changePercent}%
                       </div>
                     </div>
                   </div>
@@ -248,7 +261,9 @@ export default function ScannerPage() {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <div className="text-sm text-slate-400">P/C Ratio</div>
-                      <div className={`font-semibold ${result.putCallRatio > 1.2 ? "text-emerald-400" : result.putCallRatio < 0.8 ? "text-red-400" : "text-slate-300"}`}>
+                      <div
+                        className={`font-semibold ${result.putCallRatio > 1.2 ? 'text-emerald-400' : result.putCallRatio < 0.8 ? 'text-red-400' : 'text-slate-300'}`}
+                      >
                         {result.putCallRatio.toFixed(2)}
                       </div>
                     </div>
@@ -262,16 +277,16 @@ export default function ScannerPage() {
 
                   {/* Signal Badge */}
                   <div className="flex items-center gap-2">
-                    {result.signal !== "NEUTRAL" && (
-                      <Badge className={result.signal === "BUY" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}>
+                    {result.signal !== 'NEUTRAL' && (
+                      <Badge
+                        className={
+                          result.signal === 'BUY' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                        }
+                      >
                         {result.signal}
                       </Badge>
                     )}
-                    {result.strength === "STRONG" && (
-                      <Badge className="bg-purple-500/20 text-purple-400">
-                        Strong
-                      </Badge>
-                    )}
+                    {result.strength === 'STRONG' && <Badge className="bg-purple-500/20 text-purple-400">Strong</Badge>}
                     <span className="text-xs text-slate-500">
                       <Clock className="w-3 h-3 inline mr-1" />
                       {new Date(result.timestamp).toLocaleTimeString()}
@@ -293,15 +308,21 @@ export default function ScannerPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-emerald-500" />
-              <span className="text-slate-300"><strong>BUY:</strong> Price up + P/C Ratio &gt; 1.2 (Put OI high)</span>
+              <span className="text-slate-300">
+                <strong>BUY:</strong> Price up + P/C Ratio &gt; 1.2 (Put OI high)
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-red-500" />
-              <span className="text-slate-300"><strong>SELL:</strong> Price down + P/C Ratio &lt; 0.8 (Call OI high)</span>
+              <span className="text-slate-300">
+                <strong>SELL:</strong> Price down + P/C Ratio &lt; 0.8 (Call OI high)
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-slate-600" />
-              <span className="text-slate-300"><strong>NEUTRAL:</strong> No clear OI signal</span>
+              <span className="text-slate-300">
+                <strong>NEUTRAL:</strong> No clear OI signal
+              </span>
             </div>
           </div>
         </CardContent>

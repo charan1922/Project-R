@@ -4,17 +4,13 @@ import type { StockHistoryEntry, Summary } from '../_hooks/use-history-data';
 export function SummaryCards({ summary, history }: { summary: Summary; history?: StockHistoryEntry[] }) {
   // Count HOT days from history
   const hotDays = history
-    ? history.filter((d) =>
-        d.compositeRFactor >= 2.0
-        && (d.adx ?? 0) >= 28
-        && Math.abs(d.pctChange ?? 0) >= 1
-      ).length
+    ? history.filter((d) => d.compositeRFactor >= 2.0 && (d.adx ?? 0) >= 28 && Math.abs(d.pctChange ?? 0) >= 1).length
     : 0;
 
   // Best day
-  const bestDay = history?.reduce((best, d) =>
-    d.compositeRFactor > (best?.compositeRFactor ?? 0) ? d : best,
-    history[0]
+  const bestDay = history?.reduce(
+    (best, d) => (d.compositeRFactor > (best?.compositeRFactor ?? 0) ? d : best),
+    history[0],
   );
 
   return (

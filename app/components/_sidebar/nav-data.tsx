@@ -222,8 +222,6 @@ export const historifyItems: NavItemType[] = [
   },
 ];
 
-
-
 export const aiTradingItems: NavItemType[] = [
   {
     label: 'AI Trading',

@@ -52,7 +52,5 @@ export function filterCandidates(signals: BoostSignal[], config: RiskConfig): Bo
 /** Get top N candidates sorted by R-Factor */
 export function getTopCandidates(signals: BoostSignal[], config: RiskConfig, limit = 10): BoostSignal[] {
   const filtered = filterCandidates(signals, config);
-  return filtered
-    .sort((a, b) => b.compositeRFactor - a.compositeRFactor)
-    .slice(0, limit);
+  return filtered.sort((a, b) => b.compositeRFactor - a.compositeRFactor).slice(0, limit);
 }

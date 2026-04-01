@@ -1,23 +1,21 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { Upload, Download, HardDrive, BarChart2, Clock, List } from "lucide-react";
+import Link from 'next/link';
+import { Upload, Download, HardDrive, BarChart2, Clock, List } from 'lucide-react';
 
 const QUICK_ACTIONS = [
-  { label: "Import Symbols", href: "/historify/import", icon: Upload },
-  { label: "Bulk Download", href: "/historify/download", icon: Download },
-  { label: "Export Data", href: "/historify/export", icon: HardDrive },
-  { label: "View Charts", href: "/historify/charts", icon: BarChart2 },
-  { label: "Manage Scheduler", href: "/historify/scheduler", icon: Clock },
-  { label: "View Watchlist", href: "/historify/watchlist", icon: List },
+  { label: 'Import Symbols', href: '/historify/import', icon: Upload },
+  { label: 'Bulk Download', href: '/historify/download', icon: Download },
+  { label: 'Export Data', href: '/historify/export', icon: HardDrive },
+  { label: 'View Charts', href: '/historify/charts', icon: BarChart2 },
+  { label: 'Manage Scheduler', href: '/historify/scheduler', icon: Clock },
+  { label: 'View Watchlist', href: '/historify/watchlist', icon: List },
 ];
 
 export function QuickActions() {
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-lg p-5">
-      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
-        QUICK ACTIONS
-      </h2>
+      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">QUICK ACTIONS</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
         {QUICK_ACTIONS.map(({ label, href, icon: Icon }) => (
           <Link

@@ -21,10 +21,7 @@ import { DEFAULT_RISK_CONFIG } from '@/lib/ai-trading/types';
 export async function POST(req: Request) {
   try {
     if (!hasAIConfig()) {
-      return NextResponse.json(
-        { success: false, error: 'AI_GATEWAY_API_KEY not configured' },
-        { status: 503 },
-      );
+      return NextResponse.json({ success: false, error: 'AI_GATEWAY_API_KEY not configured' }, { status: 503 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -43,9 +40,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('[AI Options] Analysis error:', error);
-    return NextResponse.json(
-      { success: false, error: (error as Error).message },
-      { status: 500 },
-    );
+    return NextResponse.json({ success: false, error: (error as Error).message }, { status: 500 });
   }
 }

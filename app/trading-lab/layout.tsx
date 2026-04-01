@@ -1,7 +1,3 @@
-export default function TradingLabLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function TradingLabLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

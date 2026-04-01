@@ -135,13 +135,7 @@ export async function runDecisionCycle(
         }
 
         // Step 4: Risk check
-        const executable = checkRisk(
-          decision,
-          portfolio,
-          config,
-          boost.lotValue ?? null,
-          boost.sector ?? null,
-        );
+        const executable = checkRisk(decision, portfolio, config, boost.lotValue ?? null, boost.sector ?? null);
 
         result.decisions.push(executable);
       } catch (error) {
@@ -167,7 +161,10 @@ export function shouldExit(
   switch (config.exitMode) {
     case 'fixed-profit':
       if (pnl >= config.fixedProfitTarget) {
-        return { shouldExit: true, reason: `Profit target ₹${config.fixedProfitTarget} reached (P&L: ₹${pnl.toFixed(0)})` };
+        return {
+          shouldExit: true,
+          reason: `Profit target ₹${config.fixedProfitTarget} reached (P&L: ₹${pnl.toFixed(0)})`,
+        };
       }
       break;
 
@@ -180,7 +177,10 @@ export function shouldExit(
     case 'trailing-sl': {
       const trailingSL = position.peakPrice * (1 - config.trailingSlPct / 100);
       if (position.currentPrice <= trailingSL) {
-        return { shouldExit: true, reason: `Trailing SL hit (${config.trailingSlPct}% from peak ₹${position.peakPrice.toFixed(0)})` };
+        return {
+          shouldExit: true,
+          reason: `Trailing SL hit (${config.trailingSlPct}% from peak ₹${position.peakPrice.toFixed(0)})`,
+        };
       }
       break;
     }

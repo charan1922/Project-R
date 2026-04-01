@@ -5,4 +5,4 @@ export default {
   engines: 'Engines',
   'trading-lab': 'Trading lab',
   sdk: 'Dhan V2 SDK',
-}
+};

@@ -58,9 +58,7 @@ export async function POST(req: NextRequest) {
 
     // Top N analysis
     const scanResult = await rFactorService.scanLive({ useOptionChain: false });
-    const topStocks = scanResult.signals
-      .sort((a, b) => b.compositeRFactor - a.compositeRFactor)
-      .slice(0, topN);
+    const topStocks = scanResult.signals.sort((a, b) => b.compositeRFactor - a.compositeRFactor).slice(0, topN);
 
     const results = [];
     for (const boost of topStocks) {
@@ -84,9 +82,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('[AI Trading] Analysis error:', error);
-    return NextResponse.json(
-      { success: false, error: (error as Error).message },
-      { status: 500 },
-    );
+    return NextResponse.json({ success: false, error: (error as Error).message }, { status: 500 });
   }
 }

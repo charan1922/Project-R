@@ -2,10 +2,22 @@
   "payload": {
     "data": {
       "intraday_boost": [
-        { "Symbol": "WAAREEENER", "param_0": 3174.9, "param_1": 3184.8, "param_2": -0.31, "param_3": 5.459191961186935 },
+        {
+          "Symbol": "WAAREEENER",
+          "param_0": 3174.9,
+          "param_1": 3184.8,
+          "param_2": -0.31,
+          "param_3": 5.459191961186935
+        },
         { "Symbol": "TATATECH", "param_0": 525.85, "param_1": 548.6, "param_2": -4.15, "param_3": 5.01814584392507 },
         { "Symbol": "SBICARD", "param_0": 693.95, "param_1": 715.55, "param_2": -3.02, "param_3": 4.577099726663205 },
-        { "Symbol": "DELHIVERY", "param_0": 414.45, "param_1": 422.55, "param_2": -1.92, "param_3": 3.8344334330650987 },
+        {
+          "Symbol": "DELHIVERY",
+          "param_0": 414.45,
+          "param_1": 422.55,
+          "param_2": -1.92,
+          "param_3": 3.8344334330650987
+        },
         { "Symbol": "PREMIERENE", "param_0": 863.5, "param_1": 869.6, "param_2": -0.7, "param_3": 3.813944538650944 },
         { "Symbol": "ANGELONE", "param_0": 233.53, "param_1": 236.21, "param_2": -1.13, "param_3": 3.6514887556603313 },
         { "Symbol": "JIOFIN", "param_0": 240.15, "param_1": 248.2, "param_2": -3.24, "param_3": 3.5619531079274336 },
@@ -16,7 +28,13 @@
         { "Symbol": "PAGEIND", "param_0": 31335, "param_1": 31720, "param_2": -1.21, "param_3": 3.07651343220074 },
         { "Symbol": "MPHASIS", "param_0": 2045, "param_1": 2123.8, "param_2": -3.71, "param_3": 3.0672847414904516 },
         { "Symbol": "PRESTIGE", "param_0": 1275.5, "param_1": 1321.4, "param_2": -3.47, "param_3": 2.792796403534181 },
-        { "Symbol": "TATAELXSI", "param_0": 4072.1, "param_1": 4207.4, "param_2": -3.22, "param_3": 2.7623661273177085 },
+        {
+          "Symbol": "TATAELXSI",
+          "param_0": 4072.1,
+          "param_1": 4207.4,
+          "param_2": -3.22,
+          "param_3": 2.7623661273177085
+        },
         { "Symbol": "INFY", "param_0": 1231.7, "param_1": 1267.1, "param_2": -2.79, "param_3": 2.718133774391663 },
         { "Symbol": "PERSISTENT", "param_0": 4622, "param_1": 4698.6, "param_2": -1.63, "param_3": 2.675803244441326 },
         { "Symbol": "MANAPPURAM", "param_0": 267.9, "param_1": 270, "param_2": -0.78, "param_3": 2.665487954560952 },
@@ -27,7 +45,13 @@
         { "Symbol": "HDFCAMC", "param_0": 2402.4, "param_1": 2468.9, "param_2": -2.69, "param_3": 2.5395610867101217 },
         { "Symbol": "HCLTECH", "param_0": 1327.9, "param_1": 1357.2, "param_2": -2.16, "param_3": 2.533843440821011 },
         { "Symbol": "NAUKRI", "param_0": 975.3, "param_1": 994.9, "param_2": -1.97, "param_3": 2.4388079443963546 },
-        { "Symbol": "SUPREMEIND", "param_0": 3876.6, "param_1": 4010.8, "param_2": -3.35, "param_3": 2.4055922794080096 },
+        {
+          "Symbol": "SUPREMEIND",
+          "param_0": 3876.6,
+          "param_1": 4010.8,
+          "param_2": -3.35,
+          "param_3": 2.4055922794080096
+        },
         { "Symbol": "GLENMARK", "param_0": 2123.4, "param_1": 2186.3, "param_2": -2.88, "param_3": 2.36193066028402 },
         { "Symbol": "GODREJPROP", "param_0": 1565.2, "param_1": 1643, "param_2": -4.74, "param_3": 2.321291414355968 },
         { "Symbol": "CAMS", "param_0": 645.95, "param_1": 658.15, "param_2": -1.85, "param_3": 2.292511132141143 },
@@ -35,8 +59,20 @@
         { "Symbol": "ICICIGI", "param_0": 1811.2, "param_1": 1831.2, "param_2": -1.09, "param_3": 2.2806824208279526 },
         { "Symbol": "SYNGENE", "param_0": 409.15, "param_1": 419.85, "param_2": -2.55, "param_3": 2.280504096897895 },
         { "Symbol": "DMART", "param_0": 3841.5, "param_1": 3844, "param_2": -0.07, "param_3": 2.279696617715129 },
-        { "Symbol": "PNBHOUSING", "param_0": 785.65, "param_1": 807.65, "param_2": -2.72, "param_3": 2.236740840263258 },
-        { "Symbol": "PHOENIXLTD", "param_0": 1581.6, "param_1": 1627.3, "param_2": -2.81, "param_3": 2.3005424721615073 },
+        {
+          "Symbol": "PNBHOUSING",
+          "param_0": 785.65,
+          "param_1": 807.65,
+          "param_2": -2.72,
+          "param_3": 2.236740840263258
+        },
+        {
+          "Symbol": "PHOENIXLTD",
+          "param_0": 1581.6,
+          "param_1": 1627.3,
+          "param_2": -2.81,
+          "param_3": 2.3005424721615073
+        },
         { "Symbol": "IEX", "param_0": 118.95, "param_1": 123.06, "param_2": -3.34, "param_3": 2.181869641049568 },
         { "Symbol": "BAJFINANCE", "param_0": 838.35, "param_1": 880.1, "param_2": -4.74, "param_3": 2.136172484541922 },
         { "Symbol": "INDHOTEL", "param_0": 617.35, "param_1": 636.95, "param_2": -3.08, "param_3": 2.124479987267102 },
@@ -45,11 +81,29 @@
         { "Symbol": "KPITTECH", "param_0": 658.7, "param_1": 688.25, "param_2": -4.29, "param_3": 2.099281312225507 },
         { "Symbol": "TITAN", "param_0": 4083, "param_1": 4145.5, "param_2": -1.51, "param_3": 2.0878101167810295 },
         { "Symbol": "360ONE", "param_0": 1050.7, "param_1": 1069.8, "param_2": -1.79, "param_3": 2.087203607817422 },
-        { "Symbol": "PIDILITIND", "param_0": 1326.6, "param_1": 1384.4, "param_2": -4.18, "param_3": 2.072922984679665 },
-        { "Symbol": "FEDERALBNK", "param_0": 267.45, "param_1": 271.5, "param_2": -1.49, "param_3": 2.0653153169603877 },
+        {
+          "Symbol": "PIDILITIND",
+          "param_0": 1326.6,
+          "param_1": 1384.4,
+          "param_2": -4.18,
+          "param_3": 2.072922984679665
+        },
+        {
+          "Symbol": "FEDERALBNK",
+          "param_0": 267.45,
+          "param_1": 271.5,
+          "param_2": -1.49,
+          "param_3": 2.0653153169603877
+        },
         { "Symbol": "JUBLFOOD", "param_0": 457.45, "param_1": 477.95, "param_2": -4.29, "param_3": 2.061437166304431 },
         { "Symbol": "FORTIS", "param_0": 817.95, "param_1": 846, "param_2": -3.32, "param_3": 2.0372694982710295 },
-        { "Symbol": "APLAPOLLO", "param_0": 1946.1, "param_1": 2013.4, "param_2": -3.34, "param_3": 2.0128491800535824 },
+        {
+          "Symbol": "APLAPOLLO",
+          "param_0": 1946.1,
+          "param_1": 2013.4,
+          "param_2": -3.34,
+          "param_3": 2.0128491800535824
+        },
         { "Symbol": "KEI", "param_0": 4232.5, "param_1": 4390, "param_2": -3.59, "param_3": 1.9938401695404553 },
         { "Symbol": "INOXWIND", "param_0": 78.67, "param_1": 81.99, "param_2": -4.05, "param_3": 1.9837181480495865 },
         { "Symbol": "DALBHARAT", "param_0": 1850.5, "param_1": 1916, "param_2": -3.42, "param_3": 1.9646957929452797 },
@@ -58,24 +112,60 @@
         { "Symbol": "LTM", "param_0": 4216.6, "param_1": 4298.8, "param_2": -1.91, "param_3": 1.9416713024142347 },
         { "Symbol": "SBILIFE", "param_0": 1919.6, "param_1": 1962.5, "param_2": -2.19, "param_3": 1.9402047469210275 },
         { "Symbol": "WIPRO", "param_0": 189.2, "param_1": 194.3, "param_2": -2.62, "param_3": 1.9400659523751687 },
-        { "Symbol": "ADANIENSOL", "param_0": 1011.6, "param_1": 1036.7, "param_2": -2.42, "param_3": 1.921310789011172 },
+        {
+          "Symbol": "ADANIENSOL",
+          "param_0": 1011.6,
+          "param_1": 1036.7,
+          "param_2": -2.42,
+          "param_3": 1.921310789011172
+        },
         { "Symbol": "DLF", "param_0": 542.2, "param_1": 563.1, "param_2": -3.71, "param_3": 1.92046155253944 },
         { "Symbol": "MANKIND", "param_0": 2029.7, "param_1": 2103.1, "param_2": -3.49, "param_3": 1.9049588727691424 },
         { "Symbol": "MAZDOCK", "param_0": 2383, "param_1": 2456.9, "param_2": -3.01, "param_3": 1.9011671116198736 },
-        { "Symbol": "ABCAPITAL", "param_0": 314.05, "param_1": 328.45, "param_2": -4.38, "param_3": 1.8646542729533109 },
+        {
+          "Symbol": "ABCAPITAL",
+          "param_0": 314.05,
+          "param_1": 328.45,
+          "param_2": -4.38,
+          "param_3": 1.8646542729533109
+        },
         { "Symbol": "BRITANNIA", "param_0": 5690, "param_1": 5885, "param_2": -3.31, "param_3": 1.8334687305661819 },
         { "Symbol": "PFC", "param_0": 414.5, "param_1": 432.25, "param_2": -4.11, "param_3": 1.8154126646834199 },
-        { "Symbol": "PPLPHARMA", "param_0": 136.57, "param_1": 143.12, "param_2": -4.58, "param_3": 1.7965017137918537 },
+        {
+          "Symbol": "PPLPHARMA",
+          "param_0": 136.57,
+          "param_1": 143.12,
+          "param_2": -4.58,
+          "param_3": 1.7965017137918537
+        },
         { "Symbol": "RVNL", "param_0": 264.75, "param_1": 275.1, "param_2": -3.76, "param_3": 1.7961005869309359 },
         { "Symbol": "HDFCLIFE", "param_0": 636.8, "param_1": 643.35, "param_2": -1.02, "param_3": 1.7887017961448732 },
         { "Symbol": "SRF", "param_0": 2491.9, "param_1": 2569.4, "param_2": -3.02, "param_3": 1.7816042564952421 },
         { "Symbol": "COALINDIA", "param_0": 455.2, "param_1": 455.2, "param_2": 0, "param_3": 1.77642409491509 },
         { "Symbol": "BAJAJHLDNG", "param_0": 9662, "param_1": 9859, "param_2": -2, "param_3": 1.7616325447069792 },
-        { "Symbol": "OBEROIRLTY", "param_0": 1438.8, "param_1": 1472.8, "param_2": -2.31, "param_3": 1.7235914246898347 },
+        {
+          "Symbol": "OBEROIRLTY",
+          "param_0": 1438.8,
+          "param_1": 1472.8,
+          "param_2": -2.31,
+          "param_3": 1.7235914246898347
+        },
         { "Symbol": "DIXON", "param_0": 10315, "param_1": 10709, "param_2": -3.68, "param_3": 1.7119783379118547 },
-        { "Symbol": "POLICYBZR", "param_0": 1488.6, "param_1": 1538.7, "param_2": -3.26, "param_3": 1.7065876611714568 },
+        {
+          "Symbol": "POLICYBZR",
+          "param_0": 1488.6,
+          "param_1": 1538.7,
+          "param_2": -3.26,
+          "param_3": 1.7065876611714568
+        },
         { "Symbol": "TCS", "param_0": 2371.3, "param_1": 2440.8, "param_2": -2.85, "param_3": 1.651942773380308 },
-        { "Symbol": "SUNPHARMA", "param_0": 1760.8, "param_1": 1778.3, "param_2": -0.98, "param_3": 1.6226496176824612 },
+        {
+          "Symbol": "SUNPHARMA",
+          "param_0": 1760.8,
+          "param_1": 1778.3,
+          "param_2": -0.98,
+          "param_3": 1.6226496176824612
+        },
         { "Symbol": "CIPLA", "param_0": 1244.5, "param_1": 1268.5, "param_2": -1.89, "param_3": 1.6214297394731165 },
         { "Symbol": "NHPC", "param_0": 76.35, "param_1": 77.36, "param_2": -1.31, "param_3": 1.614188790452591 },
         { "Symbol": "BIOCON", "param_0": 369.4, "param_1": 382.6, "param_2": -3.45, "param_3": 1.5959938135659462 },

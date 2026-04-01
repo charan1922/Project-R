@@ -54,81 +54,77 @@ import { FullMarketDepthSocket, DepthLevel_ } from './websockets/FullMarketDepth
  * credential isolation pattern.
  */
 export class DhanHQClient {
-    private readonly core: DhanHQ;
+  private readonly core: DhanHQ;
 
-    /** Standard & slice order management. */
-    public readonly orders: OrdersApi;
-    /** Bracket orders (entry + target + stop-loss). */
-    public readonly superOrders: SuperOrdersApi;
-    /** Forever / GTT orders. */
-    public readonly foreverOrders: ForeverOrdersApi;
-    /** Holdings, positions, eDIS workflow. */
-    public readonly portfolio: PortfolioApi;
-    /** Fund limits and margin calculators. */
-    public readonly funds: FundsApi;
-    /** Ledger and trade history statements. */
-    public readonly statements: StatementsApi;
-    /** Snapshot market quotes (LTP, OHLC, full depth). */
-    public readonly marketQuotes: MarketQuotesApi;
-    /** Historical OHLC charts and option chain analytics. */
-    public readonly historical: HistoricalApi;
-    /** Kill switch, P&L exit, and IP setup. */
-    public readonly traderControl: TraderControlApi;
-    /** Conditional triggers / price & technical alerts. */
-    public readonly alerts: AlertsApi;
+  /** Standard & slice order management. */
+  public readonly orders: OrdersApi;
+  /** Bracket orders (entry + target + stop-loss). */
+  public readonly superOrders: SuperOrdersApi;
+  /** Forever / GTT orders. */
+  public readonly foreverOrders: ForeverOrdersApi;
+  /** Holdings, positions, eDIS workflow. */
+  public readonly portfolio: PortfolioApi;
+  /** Fund limits and margin calculators. */
+  public readonly funds: FundsApi;
+  /** Ledger and trade history statements. */
+  public readonly statements: StatementsApi;
+  /** Snapshot market quotes (LTP, OHLC, full depth). */
+  public readonly marketQuotes: MarketQuotesApi;
+  /** Historical OHLC charts and option chain analytics. */
+  public readonly historical: HistoricalApi;
+  /** Kill switch, P&L exit, and IP setup. */
+  public readonly traderControl: TraderControlApi;
+  /** Conditional triggers / price & technical alerts. */
+  public readonly alerts: AlertsApi;
 
-    constructor(
-        clientId: string,
-        accessToken: string,
-        environment: 'prod' | 'sandbox' = 'prod'
-    ) {
-        this.core = new DhanHQ(clientId, accessToken, environment);
-        const http = this.core.http;
+  constructor(clientId: string, accessToken: string, environment: 'prod' | 'sandbox' = 'prod') {
+    this.core = new DhanHQ(clientId, accessToken, environment);
+    const http = this.core.http;
 
-        this.orders = new OrdersApi(http, clientId);
-        this.superOrders = new SuperOrdersApi(http, clientId);
-        this.foreverOrders = new ForeverOrdersApi(http, clientId);
-        this.portfolio = new PortfolioApi(http, clientId);
-        this.funds = new FundsApi(http, clientId);
-        this.statements = new StatementsApi(http);
-        this.marketQuotes = new MarketQuotesApi(http);
-        this.historical = new HistoricalApi(http);
-        this.traderControl = new TraderControlApi(http, clientId);
-        this.alerts = new AlertsApi(http, clientId);
-    }
+    this.orders = new OrdersApi(http, clientId);
+    this.superOrders = new SuperOrdersApi(http, clientId);
+    this.foreverOrders = new ForeverOrdersApi(http, clientId);
+    this.portfolio = new PortfolioApi(http, clientId);
+    this.funds = new FundsApi(http, clientId);
+    this.statements = new StatementsApi(http);
+    this.marketQuotes = new MarketQuotesApi(http);
+    this.historical = new HistoricalApi(http);
+    this.traderControl = new TraderControlApi(http, clientId);
+    this.alerts = new AlertsApi(http, clientId);
+  }
 
-    // ─── WebSocket factories ─────────────────────────────────────────────────
+  // ─── WebSocket factories ─────────────────────────────────────────────────
 
-    /**
-     * Create a new real-time order update WebSocket.
-     * The socket is not connected until you call `.connect()`.
-     */
-    createOrderUpdateSocket(): OrderUpdateSocket {
-        return new OrderUpdateSocket(this.core.clientId, this._accessToken);
-    }
+  /**
+   * Create a new real-time order update WebSocket.
+   * The socket is not connected until you call `.connect()`.
+   */
+  createOrderUpdateSocket(): OrderUpdateSocket {
+    return new OrderUpdateSocket(this.core.clientId, this._accessToken);
+  }
 
-    /**
-     * Create a new high-frequency binary market feed WebSocket.
-     * - Max 5 simultaneous connections.
-     * - Max 1,000 instruments per connection.
-     * - Subscription payloads are auto-batched to 100 instruments each.
-     */
-    createMarketFeed(): MarketFeedSocket {
-        return new MarketFeedSocket(this.core.clientId, this._accessToken);
-    }
+  /**
+   * Create a new high-frequency binary market feed WebSocket.
+   * - Max 5 simultaneous connections.
+   * - Max 1,000 instruments per connection.
+   * - Subscription payloads are auto-batched to 100 instruments each.
+   */
+  createMarketFeed(): MarketFeedSocket {
+    return new MarketFeedSocket(this.core.clientId, this._accessToken);
+  }
 
-    /**
-     * Create a new full market depth WebSocket.
-     * @param depthLevel - '20' for 20-level depth (50 instruments), '200' for premium 200-level (1 instrument).
-     */
-    createMarketDepthFeed(depthLevel: DepthLevel_ = '20'): FullMarketDepthSocket {
-        return new FullMarketDepthSocket(this.core.clientId, this._accessToken, depthLevel);
-    }
+  /**
+   * Create a new full market depth WebSocket.
+   * @param depthLevel - '20' for 20-level depth (50 instruments), '200' for premium 200-level (1 instrument).
+   */
+  createMarketDepthFeed(depthLevel: DepthLevel_ = '20'): FullMarketDepthSocket {
+    return new FullMarketDepthSocket(this.core.clientId, this._accessToken, depthLevel);
+  }
 
-    /** @internal Expose token only to factories, not as a public API. */
-    private get _accessToken(): string {
-        return (this.core as unknown as { context: { accessToken: string } }).context.accessToken;
-    }
+  /** @internal Expose token only to factories, not as a public API. */
+  private get _accessToken(): string {
+    return (this.core as unknown as { context: { accessToken: string } }).context.accessToken;
+  }
 }
 
 // ─── Re-exports ──────────────────────────────────────────────────────────────

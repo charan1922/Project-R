@@ -16,10 +16,7 @@ import type { AIModelProvider } from '@/lib/ai-trading/types';
  */
 export async function GET(req: NextRequest) {
   if (!hasAIConfig()) {
-    return NextResponse.json(
-      { success: false, error: 'AI_GATEWAY_API_KEY not configured' },
-      { status: 503 },
-    );
+    return NextResponse.json({ success: false, error: 'AI_GATEWAY_API_KEY not configured' }, { status: 503 });
   }
 
   const modelId = (req.nextUrl.searchParams.get('model') ?? 'deepseek/deepseek-chat') as AIModelProvider;

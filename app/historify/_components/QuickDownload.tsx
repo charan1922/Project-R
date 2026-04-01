@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Download, ChevronDown, ChevronUp, Loader2, Play } from "lucide-react";
-import { DATE_PRESETS, computeFromDate } from "@/lib/historify/utils";
-import { WatchlistItem } from "@/lib/historify/types";
+import { useState } from 'react';
+import { Download, ChevronDown, ChevronUp, Loader2, Play } from 'lucide-react';
+import { DATE_PRESETS, computeFromDate } from '@/lib/historify/utils';
+import { WatchlistItem } from '@/lib/historify/types';
 
 interface QuickDownloadProps {
   watchlist: WatchlistItem[];
@@ -13,26 +13,26 @@ interface QuickDownloadProps {
 export function QuickDownload({ watchlist, onRefresh }: QuickDownloadProps) {
   const [showQuickDl, setShowQuickDl] = useState(false);
   const [dlChecked, setDlChecked] = useState<Set<string>>(new Set());
-  const [dlInterval, setDlInterval] = useState("Daily");
-  const [dlPreset, setDlPreset] = useState("30d");
-  const [dlMode, setDlMode] = useState<"fresh" | "continue">("continue");
+  const [dlInterval, setDlInterval] = useState('Daily');
+  const [dlPreset, setDlPreset] = useState('30d');
+  const [dlMode, setDlMode] = useState<'fresh' | 'continue'>('continue');
   const [dlRunning, setDlRunning] = useState(false);
 
   const startQuickDownload = async () => {
     if (dlChecked.size === 0) return;
     setDlRunning(true);
     const fromDate = computeFromDate(dlPreset);
-    const toDate = new Date().toISOString().split("T")[0];
-    
+    const toDate = new Date().toISOString().split('T')[0];
+
     for (const sym of dlChecked) {
       const wItem = watchlist.find((w) => w.symbol === sym);
       try {
-        await fetch("/api/historify/sync", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        await fetch('/api/historify/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             symbol: sym,
-            exchange: wItem?.exchange ?? "NSE",
+            exchange: wItem?.exchange ?? 'NSE',
             interval: dlInterval,
             fromDate,
             toDate,
@@ -42,7 +42,7 @@ export function QuickDownload({ watchlist, onRefresh }: QuickDownloadProps) {
         console.error(`Failed to sync ${sym}:`, err);
       }
     }
-    
+
     setDlRunning(false);
     await onRefresh();
   };
@@ -75,9 +75,7 @@ export function QuickDownload({ watchlist, onRefresh }: QuickDownloadProps) {
       >
         <div className="flex items-center gap-2">
           <Download className="w-4 h-4 text-sky-400" />
-          <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">
-            Quick Data Download
-          </span>
+          <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">Quick Data Download</span>
         </div>
         {showQuickDl ? (
           <ChevronUp className="w-4 h-4 text-slate-500" />
@@ -85,20 +83,15 @@ export function QuickDownload({ watchlist, onRefresh }: QuickDownloadProps) {
           <ChevronDown className="w-4 h-4 text-slate-500" />
         )}
       </button>
-      
+
       {showQuickDl && (
         <div className="border-t border-slate-800 p-5 space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-slate-500 uppercase tracking-wider">
-                  Select Symbols
-                </span>
-                <button
-                  onClick={toggleAll}
-                  className="text-xs text-teal-400 hover:text-teal-300"
-                >
-                  {dlChecked.size === watchlist.length ? "Deselect All" : "Select All"}
+                <span className="text-xs text-slate-500 uppercase tracking-wider">Select Symbols</span>
+                <button onClick={toggleAll} className="text-xs text-teal-400 hover:text-teal-300">
+                  {dlChecked.size === watchlist.length ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
               <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 max-h-40 overflow-y-auto space-y-1">
@@ -123,26 +116,22 @@ export function QuickDownload({ watchlist, onRefresh }: QuickDownloadProps) {
                 )}
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-slate-500 uppercase tracking-wider mb-1 block">
-                  Interval
-                </label>
+                <label className="text-xs text-slate-500 uppercase tracking-wider mb-1 block">Interval</label>
                 <select
                   value={dlInterval}
                   onChange={(e) => setDlInterval(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-teal-500"
                 >
-                  {["1min", "5min", "15min", "30min", "1hour", "Daily"].map((i) => (
+                  {['1min', '5min', '15min', '30min', '1hour', 'Daily'].map((i) => (
                     <option key={i}>{i}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="text-xs text-slate-500 uppercase tracking-wider mb-1 block">
-                  Date Range
-                </label>
+                <label className="text-xs text-slate-500 uppercase tracking-wider mb-1 block">Date Range</label>
                 <select
                   value={dlPreset}
                   onChange={(e) => setDlPreset(e.target.value)}
@@ -156,15 +145,15 @@ export function QuickDownload({ watchlist, onRefresh }: QuickDownloadProps) {
                 </select>
               </div>
               <div className="flex gap-1 p-1 bg-slate-800 border border-slate-700 rounded-lg">
-                {(["continue", "fresh"] as const).map((m) => (
+                {(['continue', 'fresh'] as const).map((m) => (
                   <button
                     key={m}
                     onClick={() => setDlMode(m)}
                     className={`flex-1 py-1.5 rounded-md text-xs font-medium capitalize transition-all ${
-                      dlMode === m ? "bg-slate-700 text-white" : "text-slate-400"
+                      dlMode === m ? 'bg-slate-700 text-white' : 'text-slate-400'
                     }`}
                   >
-                    {m === "continue" ? "Incremental" : "Fresh"}
+                    {m === 'continue' ? 'Incremental' : 'Fresh'}
                   </button>
                 ))}
               </div>
@@ -174,7 +163,7 @@ export function QuickDownload({ watchlist, onRefresh }: QuickDownloadProps) {
                 className="w-full flex items-center justify-center gap-2 py-2.5 text-sm bg-sky-600 hover:bg-sky-500 disabled:bg-slate-700 disabled:text-slate-500 rounded-lg text-white font-medium"
               >
                 {dlRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                {dlRunning ? "Downloading…" : `Start Download (${dlChecked.size} symbols)`}
+                {dlRunning ? 'Downloading…' : `Start Download (${dlChecked.size} symbols)`}
               </button>
             </div>
           </div>

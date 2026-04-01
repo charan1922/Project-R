@@ -215,9 +215,7 @@ export function adjustZScoreForDhan(
 
   // Futures Z-scores may need shrinkage due to calibration uncertainty
   const calibration =
-    DHAN_NSE_CALIBRATION[
-      field === 'volume' ? 'futuresVolume' : field === 'turnover' ? 'futuresTurnover' : 'futuresOI'
-    ];
+    DHAN_NSE_CALIBRATION[field === 'volume' ? 'futuresVolume' : field === 'turnover' ? 'futuresTurnover' : 'futuresOI'];
 
   const confidence = 'confidence' in calibration ? calibration.confidence : 0.85;
 

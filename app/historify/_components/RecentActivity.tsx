@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { Activity, AlertCircle, Loader2 } from "lucide-react";
-import { ACTIVITY_CONFIG, DEFAULT_ACTIVITY_CONFIG } from "@/lib/historify/utils";
-import { ActivityItem } from "@/lib/historify/types";
+import { Activity, AlertCircle, Loader2 } from 'lucide-react';
+import { ACTIVITY_CONFIG, DEFAULT_ACTIVITY_CONFIG } from '@/lib/historify/utils';
+import { ActivityItem } from '@/lib/historify/types';
 
 interface RecentActivityProps {
   activity: ActivityItem[];
@@ -22,9 +22,7 @@ export function RecentActivity({ activity, loading }: RecentActivityProps) {
       ) : activity.length === 0 ? (
         <div className="p-8 text-center">
           <AlertCircle className="w-8 h-8 text-slate-700 mx-auto mb-2" />
-          <p className="text-sm text-slate-600">
-            No activity yet. Start by importing symbols and syncing data.
-          </p>
+          <p className="text-sm text-slate-600">No activity yet. Start by importing symbols and syncing data.</p>
         </div>
       ) : (
         <div className="divide-y divide-slate-800/50">
@@ -33,23 +31,19 @@ export function RecentActivity({ activity, loading }: RecentActivityProps) {
             const Icon = cfg.icon;
             return (
               <div key={i} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-800/30">
-                <div
-                  className={`w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 ${cfg.bg}`}
-                >
+                <div className={`w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
                   <Icon className={`w-4 h-4 ${cfg.ic}`} />
                 </div>
-                <span className="text-xs text-slate-500 capitalize">
-                  {a.action.replace(/_/g, " ")}
-                </span>
+                <span className="text-xs text-slate-500 capitalize">{a.action.replace(/_/g, ' ')}</span>
                 <span className="font-mono font-bold text-sm text-white">{a.symbol}</span>
                 <span className="text-xs text-slate-500">{a.exchange}</span>
                 <span className="text-xs text-slate-500">{a.interval}</span>
                 <span className="ml-auto text-xs text-slate-500">
-                  {a.rows_count > 0 ? `${a.rows_count.toLocaleString()} rows` : ""}
+                  {a.rows_count > 0 ? `${a.rows_count.toLocaleString()} rows` : ''}
                 </span>
                 <span className="text-xs text-slate-600">
-                  {new Date(a.createdAt * 1000).toLocaleTimeString("en-IN", {
-                    timeZone: "Asia/Kolkata",
+                  {new Date(a.createdAt * 1000).toLocaleTimeString('en-IN', {
+                    timeZone: 'Asia/Kolkata',
                   })}
                 </span>
               </div>

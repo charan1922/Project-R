@@ -38,9 +38,7 @@ function ZScoreRow({ entry, symbol }: { entry: StockHistoryEntry; symbol?: strin
   const isHot = entry.compositeRFactor >= 2.0 && adx >= 28 && Math.abs(pct) >= 1;
 
   // Regime override when ADX confirms trend
-  const effectiveRegime = adx >= 28 && entry.compositeRFactor >= 2.0
-    ? (isUp ? 'Cheetah' : 'Hybrid')
-    : entry.regime;
+  const effectiveRegime = adx >= 28 && entry.compositeRFactor >= 2.0 ? (isUp ? 'Cheetah' : 'Hybrid') : entry.regime;
 
   return (
     <div
@@ -61,8 +59,11 @@ function ZScoreRow({ entry, symbol }: { entry: StockHistoryEntry; symbol?: strin
           {entry.compositeRFactor.toFixed(2)}
         </span>
         {entry.delta !== null && (
-          <span className={`text-[9px] ${entry.delta > 0 ? 'text-emerald-400/60' : entry.delta < 0 ? 'text-red-400/60' : 'text-slate-600'}`}>
-            {entry.delta > 0 ? '+' : ''}{entry.delta.toFixed(1)}
+          <span
+            className={`text-[9px] ${entry.delta > 0 ? 'text-emerald-400/60' : entry.delta < 0 ? 'text-red-400/60' : 'text-slate-600'}`}
+          >
+            {entry.delta > 0 ? '+' : ''}
+            {entry.delta.toFixed(1)}
           </span>
         )}
       </span>
@@ -95,7 +96,9 @@ function ZScoreRow({ entry, symbol }: { entry: StockHistoryEntry; symbol?: strin
       </span>
 
       {/* Confidence */}
-      <span className={`text-[9px] ${(entry.confidence ?? 0) > 0.7 ? 'text-emerald-400' : (entry.confidence ?? 0) > 0.5 ? 'text-amber-400' : 'text-slate-500'}`}>
+      <span
+        className={`text-[9px] ${(entry.confidence ?? 0) > 0.7 ? 'text-emerald-400' : (entry.confidence ?? 0) > 0.5 ? 'text-amber-400' : 'text-slate-500'}`}
+      >
         {entry.confidence != null ? `${(entry.confidence * 100).toFixed(0)}%` : '—'}
       </span>
     </div>

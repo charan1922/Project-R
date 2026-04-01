@@ -2310,7 +2310,7 @@
             "enum": [
               "TECHNICAL_WITH_VALUE",
               "TECHNICAL_WITH_INDICATOR",
-              "TECHNICAL_WITH_CLOSE",
+              "TECHNICAL_WITH_2CLOSE",
               "PRICE_WITH_VALUE"
             ]
           },

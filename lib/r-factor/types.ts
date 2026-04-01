@@ -13,15 +13,15 @@ export interface DailyStockData {
   fut_oi: number;
   fut_oi_change: number;
   fut_turnover: number;
-  fut_trades: number;   // Total number of futures transactions (institutional block size signal)
+  fut_trades: number; // Total number of futures transactions (institutional block size signal)
   opt_volume: number;
   opt_oi: number;
   opt_turnover: number;
-  opt_trades: number;   // Total option transactions (CE + PE combined)
-  ce_volume: number;   // Call options volume (for PCR)
-  pe_volume: number;   // Put options volume (for PCR)
-  ce_trades: number;   // Call options trade count
-  pe_trades: number;   // Put options trade count
+  opt_trades: number; // Total option transactions (CE + PE combined)
+  ce_volume: number; // Call options volume (for PCR)
+  pe_volume: number; // Put options volume (for PCR)
+  ce_trades: number; // Call options trade count
+  pe_trades: number; // Put options trade count
 }
 
 /** 8-factor model inputs derived from DailyStockData */
@@ -152,7 +152,7 @@ export const DEFAULT_CONFIG: EngineConfig = {
   },
   ensembleWeights: {
     ols: 0.05,
-    spreadQuad: 0.90,
+    spreadQuad: 0.9,
     momentum: 0.05,
   },
   robustRegression: {
@@ -179,10 +179,7 @@ export function transformToFactorData(daily: DailyStockData[]): FactorData[] {
     const currentSpread = d.eq_close > 0 ? (d.eq_high - d.eq_low) / d.eq_close : 0;
 
     // Compute 20-day average OI level for ratio (captures sustained accumulation)
-    const avgOi =
-      lookback.length > 0
-        ? lookback.reduce((sum, h) => sum + h.fut_oi, 0) / lookback.length
-        : 0;
+    const avgOi = lookback.length > 0 ? lookback.reduce((sum, h) => sum + h.fut_oi, 0) / lookback.length : 0;
 
     return {
       fut_turnover: d.fut_turnover,
@@ -250,10 +247,7 @@ export function transformToEnhancedFactorData(daily: DailyStockData[]): Enhanced
  * Calculate momentum signal based on current vs 3-day average.
  * Returns: 1 (improving), 0 (neutral), -1 (deteriorating)
  */
-function calculateMomentumSignal(
-  current: FactorData,
-  avg: { spread: number; fut_turnover: number },
-): number {
+function calculateMomentumSignal(current: FactorData, avg: { spread: number; fut_turnover: number }): number {
   let signal = 0;
 
   // Spread improving (current > avg by 10%+)

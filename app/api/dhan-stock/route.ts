@@ -36,9 +36,8 @@ export async function GET(req: Request) {
 
     const fnoSymbols = getFnoSymbols();
     const suggestions = await searchSymbols(query, 'NSE');
-    const filtered = fnoSymbols.size > 0
-      ? suggestions.filter((entry) => fnoSymbols.has(entry.symbol.toUpperCase()))
-      : suggestions;
+    const filtered =
+      fnoSymbols.size > 0 ? suggestions.filter((entry) => fnoSymbols.has(entry.symbol.toUpperCase())) : suggestions;
 
     return NextResponse.json({
       success: true,

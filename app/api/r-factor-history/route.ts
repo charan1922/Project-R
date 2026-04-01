@@ -96,9 +96,8 @@ async function getSymbolHistory(symbol: string, days: number) {
       // Previous day's R for delta computation
       const prevR = results.length > 0 ? (results[results.length - 1].compositeRFactor as number) : null;
       // % change from previous day's close
-      const pctChange = prevRow && prevRow.eqClose > 0
-        ? ((raw.eqClose - prevRow.eqClose) / prevRow.eqClose) * 100
-        : null;
+      const pctChange =
+        prevRow && prevRow.eqClose > 0 ? ((raw.eqClose - prevRow.eqClose) / prevRow.eqClose) * 100 : null;
 
       // Institutional Bias logic
       const oiUp = raw.futOiChange > 0;

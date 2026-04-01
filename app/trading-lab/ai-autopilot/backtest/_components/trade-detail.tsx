@@ -99,7 +99,7 @@ export function TradeDetailSection() {
           setTrades((prev) => prev.map((item, i) => (i === idx ? { ...item, hasData: true } : item)));
           await loadDetail(idx);
         } else {
-          const errors = data.errors?.length ? data.errors.join('\n') : data.error ?? 'Download failed';
+          const errors = data.errors?.length ? data.errors.join('\n') : (data.error ?? 'Download failed');
           setDownloadProgress(`Error: ${errors}`);
         }
       } catch (e) {
@@ -150,11 +150,13 @@ export function TradeDetailSection() {
 
       {/* Error/progress message — always visible */}
       {downloadProgress && !downloadingTrade && (
-        <div className={`px-4 py-3 rounded-xl text-xs font-mono whitespace-pre-wrap ${
-          downloadProgress.startsWith('Error')
-            ? 'bg-red-500/10 border border-red-500/30 text-red-400'
-            : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
-        }`}>
+        <div
+          className={`px-4 py-3 rounded-xl text-xs font-mono whitespace-pre-wrap ${
+            downloadProgress.startsWith('Error')
+              ? 'bg-red-500/10 border border-red-500/30 text-red-400'
+              : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
+          }`}
+        >
           {downloadProgress}
         </div>
       )}

@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { 
-  LineChart, 
-  Play, 
-  TrendingUp, 
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  LineChart,
+  Play,
+  TrendingUp,
   TrendingDown,
   Target,
   AlertTriangle,
@@ -16,8 +16,8 @@ import {
   ArrowDownRight,
   Loader2,
   Database,
-  Info
-} from "lucide-react";
+  Info,
+} from 'lucide-react';
 
 interface BacktestResult {
   symbol: string;
@@ -27,13 +27,13 @@ interface BacktestResult {
   exitPrice: number;
   pnl: number;
   pnlPercent: number;
-  signal: "BUY" | "SELL";
-  status: "WIN" | "LOSS";
+  signal: 'BUY' | 'SELL';
+  status: 'WIN' | 'LOSS';
 }
 
 export default function BacktestPage() {
-  const [symbol, setSymbol] = useState("RELIANCE");
-  const [days, setDays] = useState("30");
+  const [symbol, setSymbol] = useState('RELIANCE');
+  const [days, setDays] = useState('30');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<BacktestResult[] | null>(null);
   const [stats, setStats] = useState<any>(null);
@@ -42,17 +42,19 @@ export default function BacktestPage() {
   const runBacktest = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // Call the real backtest API
       const res = await fetch(`/api/backtest?symbol=${symbol}&days=${days}`);
-      if (!res.ok) throw new Error("Backtest failed");
-      
+      if (!res.ok) throw new Error('Backtest failed');
+
       const data = await res.json();
       setResults(data.trades);
       setStats(data.stats);
     } catch (err) {
-      setError("Backtest requires historical OI data API. This feature needs integration with historical data provider.");
+      setError(
+        'Backtest requires historical OI data API. This feature needs integration with historical data provider.',
+      );
     } finally {
       setLoading(false);
     }
@@ -66,9 +68,7 @@ export default function BacktestPage() {
           <LineChart className="w-8 h-8 text-blue-400" />
           Strategy Backtest
         </h1>
-        <p className="text-slate-400">
-          Test the OI + Breakout strategy on historical data
-        </p>
+        <p className="text-slate-400">Test the OI + Breakout strategy on historical data</p>
       </div>
 
       {/* Info Card */}
@@ -78,8 +78,7 @@ export default function BacktestPage() {
           <div>
             <h4 className="font-semibold text-amber-400 mb-1">Historical Data Required</h4>
             <p className="text-sm text-slate-400">
-              Backtesting requires historical Open Interest data. To implement this feature, 
-              you need access to:
+              Backtesting requires historical Open Interest data. To implement this feature, you need access to:
             </p>
             <ul className="mt-2 text-sm text-slate-400 list-disc list-inside">
               <li>Historical option chain data (OI by strike)</li>
@@ -119,15 +118,15 @@ export default function BacktestPage() {
               />
             </div>
             <div className="flex items-end">
-              <Button 
-                onClick={runBacktest} 
-                disabled={loading}
-                className="bg-blue-500 hover:bg-blue-600 w-full"
-              >
+              <Button onClick={runBacktest} disabled={loading} className="bg-blue-500 hover:bg-blue-600 w-full">
                 {loading ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Running...</>
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Running...
+                  </>
                 ) : (
-                  <><Play className="w-4 h-4 mr-2" /> Run Backtest</>
+                  <>
+                    <Play className="w-4 h-4 mr-2" /> Run Backtest
+                  </>
                 )}
               </Button>
             </div>
@@ -165,7 +164,9 @@ export default function BacktestPage() {
             </Card>
             <Card className="bg-slate-900 border-slate-800">
               <CardContent className="p-4">
-                <div className={`text-2xl font-bold ${stats.profitFactor >= 1.5 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                <div
+                  className={`text-2xl font-bold ${stats.profitFactor >= 1.5 ? 'text-emerald-400' : 'text-amber-400'}`}
+                >
                   {stats.profitFactor}
                 </div>
                 <div className="text-sm text-slate-400">Profit Factor</div>
@@ -174,7 +175,8 @@ export default function BacktestPage() {
             <Card className="bg-slate-900 border-slate-800">
               <CardContent className="p-4">
                 <div className={`text-2xl font-bold ${stats.totalReturn >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {stats.totalReturn >= 0 ? '+' : ''}{stats.totalReturn}%
+                  {stats.totalReturn >= 0 ? '+' : ''}
+                  {stats.totalReturn}%
                 </div>
                 <div className="text-sm text-slate-400">Total Return</div>
               </CardContent>
@@ -205,18 +207,34 @@ export default function BacktestPage() {
                         <td className="py-3 text-slate-300">{trade.entryDate}</td>
                         <td className="font-semibold text-white">{trade.symbol}</td>
                         <td>
-                          <Badge className={trade.signal === "BUY" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}>
+                          <Badge
+                            className={
+                              trade.signal === 'BUY'
+                                ? 'bg-emerald-500/20 text-emerald-400'
+                                : 'bg-red-500/20 text-red-400'
+                            }
+                          >
                             {trade.signal}
                           </Badge>
                         </td>
                         <td className="text-slate-300">₹{trade.entryPrice}</td>
                         <td className="text-slate-300">₹{trade.exitPrice}</td>
-                        <td className={trade.pnl >= 0 ? "text-emerald-400" : "text-red-400"}>
-                          {trade.pnl >= 0 ? <ArrowUpRight className="w-4 h-4 inline" /> : <ArrowDownRight className="w-4 h-4 inline" />}
+                        <td className={trade.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                          {trade.pnl >= 0 ? (
+                            <ArrowUpRight className="w-4 h-4 inline" />
+                          ) : (
+                            <ArrowDownRight className="w-4 h-4 inline" />
+                          )}
                           {trade.pnlPercent}%
                         </td>
                         <td>
-                          <Badge className={trade.status === "WIN" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}>
+                          <Badge
+                            className={
+                              trade.status === 'WIN'
+                                ? 'bg-emerald-500/20 text-emerald-400'
+                                : 'bg-red-500/20 text-red-400'
+                            }
+                          >
                             {trade.status}
                           </Badge>
                         </td>

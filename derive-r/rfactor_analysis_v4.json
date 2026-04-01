@@ -6,10 +6,7 @@
   "models": {
     "best_2_feature": {
       "formula": "R = 3.1434 + 0.7239 * fut_turn_z + 0.4271 * eq_trade_size_z",
-      "features": [
-        "fut_turn_z",
-        "eq_trade_size_z"
-      ],
+      "features": ["fut_turn_z", "eq_trade_size_z"],
       "in_sample": {
         "R2": 0.8072,
         "MAE": 0.255,
@@ -24,11 +21,7 @@
     },
     "best_3_feature": {
       "formula": "R = 4.9359 + 1.6630 * fut_vol_z - 1.9419 * fut_vol_r + 0.5112 * eq_trade_size_z",
-      "features": [
-        "fut_vol_z",
-        "fut_vol_r",
-        "eq_trade_size_z"
-      ],
+      "features": ["fut_vol_z", "fut_vol_r", "eq_trade_size_z"],
       "in_sample": {
         "R2": 0.9143,
         "MAE": 0.187,

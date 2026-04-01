@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { 
-  FlaskConical, 
-  LineChart, 
-  Cpu, 
-  Play, 
-  TrendingUp, 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  FlaskConical,
+  LineChart,
+  Cpu,
+  Play,
+  TrendingUp,
   Eye,
   Target,
   Shield,
   ArrowRight,
   Youtube,
   ExternalLink,
-  BookOpen
-} from "lucide-react";
-import Link from "next/link";
+  BookOpen,
+} from 'lucide-react';
+import Link from 'next/link';
 
 export default function TradingLabPage() {
   return (
@@ -27,9 +27,7 @@ export default function TradingLabPage() {
           <FlaskConical className="w-8 h-8 text-purple-400" />
           Trading Lab
         </h1>
-        <p className="text-slate-400">
-          Algorithmic trading strategies based on Open Interest + Breakout analysis
-        </p>
+        <p className="text-slate-400">Algorithmic trading strategies based on Open Interest + Breakout analysis</p>
       </div>
 
       {/* Video Resources */}
@@ -42,9 +40,9 @@ export default function TradingLabPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <a 
-              href="https://www.youtube.com/watch?v=rdcV5u5cKmg&t=11s" 
-              target="_blank" 
+            <a
+              href="https://www.youtube.com/watch?v=rdcV5u5cKmg&t=11s"
+              target="_blank"
               rel="noopener noreferrer"
               className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors"
             >
@@ -57,15 +55,15 @@ export default function TradingLabPage() {
                   <ExternalLink className="w-3 h-3 text-slate-500" />
                 </h4>
                 <p className="text-sm text-slate-400 mt-1">
-                  Learn how to read OI from the seller's perspective. Understand Put/Call 
-                  OI and how large players build positions.
+                  Learn how to read OI from the seller's perspective. Understand Put/Call OI and how large players build
+                  positions.
                 </p>
               </div>
             </a>
-            
-            <a 
-              href="https://www.youtube.com/watch?v=RfIg4D4C_Q0" 
-              target="_blank" 
+
+            <a
+              href="https://www.youtube.com/watch?v=RfIg4D4C_Q0"
+              target="_blank"
               rel="noopener noreferrer"
               className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors"
             >
@@ -78,8 +76,8 @@ export default function TradingLabPage() {
                   <ExternalLink className="w-3 h-3 text-slate-500" />
                 </h4>
                 <p className="text-sm text-slate-400 mt-1">
-                  Complete breakdown of the OI + Breakout strategy. How to identify 
-                  stocks with large-scale participation.
+                  Complete breakdown of the OI + Breakout strategy. How to identify stocks with large-scale
+                  participation.
                 </p>
               </div>
             </a>
@@ -103,8 +101,8 @@ export default function TradingLabPage() {
                 1. Breakout Detection
               </h3>
               <p className="text-sm text-slate-400">
-                Identify stocks breaking important resistance/support levels with 
-                significant price movement (2%+ in a day).
+                Identify stocks breaking important resistance/support levels with significant price movement (2%+ in a
+                day).
               </p>
             </div>
             <div className="p-4 rounded-lg bg-slate-800/50">
@@ -113,21 +111,18 @@ export default function TradingLabPage() {
                 2. Open Interest Analysis
               </h3>
               <p className="text-sm text-slate-400">
-                Analyze OI from the seller's perspective. Increasing Put OI suggests 
-                large players are bullish (selling puts). Increasing Call OI suggests bearish.
+                Analyze OI from the seller's perspective. Increasing Put OI suggests large players are bullish (selling
+                puts). Increasing Call OI suggests bearish.
               </p>
             </div>
           </div>
-          
+
           <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
-            <h3 className="text-lg font-semibold text-purple-400 mb-2">
-              🎯 The Edge: Seller's Perspective
-            </h3>
+            <h3 className="text-lg font-semibold text-purple-400 mb-2">🎯 The Edge: Seller's Perspective</h3>
             <p className="text-sm text-slate-300">
-              Options sellers deploy more capital and conduct deeper research. When Put OI 
-              increases significantly while price breaks out, it indicates institutional 
-              players are building bullish positions. This combination has high probability 
-              of sustained momentum.
+              Options sellers deploy more capital and conduct deeper research. When Put OI increases significantly while
+              price breaks out, it indicates institutional players are building bullish positions. This combination has
+              high probability of sustained momentum.
             </p>
           </div>
 
@@ -159,8 +154,7 @@ export default function TradingLabPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-slate-400">
-              Test the OI + Breakout strategy on historical data. 
-              See win rate, profit factor, and drawdown analysis.
+              Test the OI + Breakout strategy on historical data. See win rate, profit factor, and drawdown analysis.
             </p>
             <Link href="/trading-lab/backtest">
               <Button className="w-full bg-blue-500 hover:bg-blue-600">
@@ -180,8 +174,7 @@ export default function TradingLabPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-slate-400">
-              Real-time scanner for breakout stocks with OI confirmation. 
-              Auto-identifies high-probability setups.
+              Real-time scanner for breakout stocks with OI confirmation. Auto-identifies high-probability setups.
             </p>
             <Link href="/trading-lab/scanner">
               <Button className="w-full bg-emerald-500 hover:bg-emerald-600">
@@ -201,8 +194,7 @@ export default function TradingLabPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-slate-400">
-              Deploy the algorithm with auto-execution. 
-              Set risk parameters and let it trade.
+              Deploy the algorithm with auto-execution. Set risk parameters and let it trade.
             </p>
             <Link href="/trading-lab/execute">
               <Button className="w-full bg-purple-500 hover:bg-purple-600">
@@ -221,9 +213,8 @@ export default function TradingLabPage() {
           <div>
             <h4 className="font-semibold text-amber-400 mb-1">Risk Disclaimer</h4>
             <p className="text-sm text-slate-400">
-              Algorithmic trading involves significant risk. Past performance does not guarantee 
-              future results. Always use proper risk management and position sizing. 
-              Start with paper trading before deploying real capital.
+              Algorithmic trading involves significant risk. Past performance does not guarantee future results. Always
+              use proper risk management and position sizing. Start with paper trading before deploying real capital.
             </p>
           </div>
         </CardContent>
