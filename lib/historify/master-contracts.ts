@@ -185,9 +185,8 @@ async function syncFromDhan(today: string): Promise<void> {
 
   console.log(`[MasterContracts] Parsed ${entries.length} entries, inserting into DB...`);
 
-  // Remove only current-date entries (preserve historical contracts from previous syncs)
-  const syncDay = new Date().toISOString().split('T')[0];
-  await prisma.$executeRawUnsafe(`DELETE FROM master_contracts WHERE syncDate = '${syncDay}'`);
+  // Clear all rows before re-inserting — ensures syncDate is always today
+  await prisma.$executeRawUnsafe('DELETE FROM master_contracts');
 
   // Bulk insert using raw SQL for speed
   const CHUNK_SIZE = 500;
