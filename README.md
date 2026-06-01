@@ -97,6 +97,82 @@ Sovereign, layered architecture inspired by the **OpenClaw topology**:
 - **Charting**: Lightweight Charts v5 (Real-time)
 - **Package Manager**: pnpm 10.x
 
+## ⚡ Getting Started
+
+### Prerequisites
+
+- **Node.js** 22+
+- **pnpm** 10.x (`packageManager: pnpm@10.29.2`)
+- **Git LFS** — required to fetch the bundled database backup (see the Database section below)
+
+### Installation
+
+```bash
+# 1. Clone and fetch LFS-tracked assets (e.g. the DB backup)
+git clone https://github.com/charan1922/Project-R.git
+cd Project-R
+git lfs install
+git lfs pull
+
+# 2. Install dependencies
+pnpm install
+
+# 3. Generate the Prisma client (REQUIRED — not run automatically by pnpm install)
+pnpm db:generate
+
+# 4. Configure environment (see below), then start the dev server
+pnpm dev            # http://localhost:5000
+```
+
+> **Heads up:** `pnpm install` does **not** generate the Prisma client on this setup
+> (pnpm no longer reads the `pnpm` field in `package.json`). If the dev server crashes
+> with `Cannot find module '.prisma/client/default'`, run `pnpm db:generate` and restart.
+
+### Commands
+
+| Command | Description |
+| --- | --- |
+| `pnpm dev` | Dev server on port 5000 |
+| `pnpm build` | Production build (output: `dist/`) |
+| `pnpm start` | Production server on port 5000 |
+| `pnpm lint` | Biome check (lint + format) |
+| `pnpm format` | Biome format (write) |
+| `pnpm db:generate` | Regenerate the Prisma client |
+| `pnpm db:migrate` | Create/apply Prisma migrations |
+| `pnpm db:push` | Push schema to the DB (no migration file) |
+| `pnpm db:studio` | Open Prisma Studio (visual DB editor) |
+| `pnpm mcp` | Start the MCP server for AI queries |
+| `pnpm extract` | Run the Playwright data extractor |
+| `pnpm install:browsers` | Install Playwright browsers (needed for `extract`) |
+
+### Environment Variables
+
+Create a `.env.local` file in the project root (never commit it):
+
+```bash
+DHAN_CLIENT_ID=<client-id>
+DHAN_ACCESS_TOKEN=<jwt-token>        # Optional if TOTP is configured
+DHAN_PIN=<6-digit-pin>               # For TOTP auto-token generation
+DHAN_TOTP_SECRET=<base32-secret>     # From the Dhan authenticator setup
+DATABASE_URL=<url>                   # Optional: defaults to SQLite file:data/project-r.db
+NEXT_PUBLIC_SENTRY_DSN=<sentry-dsn>  # Optional: error tracking
+SENTRY_ORG=<org>                     # Optional: source maps
+SENTRY_PROJECT=<project>             # Optional: source maps
+```
+
+## 🗄️ Database
+
+- **Engine:** SQLite via Prisma (`@prisma/adapter-better-sqlite3`); large market datasets use DuckDB/Parquet.
+- **Location:** `data/project-r.db` (gitignored — never committed directly).
+- **Schema:** `prisma/schema.prisma`. After install, run `pnpm db:generate`; apply migrations with `pnpm db:migrate`.
+- **Backup via Git LFS:** Database snapshots (`*.db.bak-*`) are tracked with **Git LFS** so the
+  ~100 MB+ binaries stay out of regular git history. After cloning, run `git lfs install && git lfs pull`
+  to download them. To restore a snapshot, copy it over the active DB:
+
+```bash
+cp project-r.db.bak-<timestamp> data/project-r.db
+```
+
 ## 📚 Resources & References
 
 - **Verified Performance**: [Sensibull Verified P&L (fanged-okra)](https://web.sensibull.com/verified-pnl/fanged-okra/uQmeTrztNOWqFt)
