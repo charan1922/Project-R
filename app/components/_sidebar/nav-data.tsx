@@ -10,6 +10,7 @@ import {
   Download,
   Flame,
   FlaskConical,
+  Gauge,
   HardDrive,
   History,
   Layers,
@@ -39,6 +40,12 @@ export const v1Items: NavItemType[] = [
     href: '/v1',
     icon: <Zap className="w-4 h-4" />,
     children: [
+      {
+        label: 'Market Simulator',
+        href: '/trading-lab/simulator',
+        icon: <Gauge className="w-4 h-4" />,
+        badge: 'SIM',
+      },
       {
         label: 'Intraday Boost Live',
         href: '/trading-lab/intraday-boost?tab=live',
